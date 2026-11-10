@@ -2,13 +2,13 @@
 
 A new, Docker-first Laravel rebuild of [FlipRadar / Marketplace_finder](https://github.com/irincovictor-cmd/Marketplace_finder).
 
-**Status:** Phase 2 Laravel-native milestone. A redesigned Blade dashboard and a functional PHP calculator endpoint are now stored in `laravel-overlay/`, and installed into the Laravel container on startup. The original FlipRadar remains accessible at `/flipradar/index.html` for functional comparison. The scanner, watchlist, saved data and geographic filters are **not yet ported to Laravel**.
+**Status:** Phase 3 initial API milestone. The redesigned Blade dashboard, PHP profit calculator, and **opt-in, single-keyword Laravel Apify scan endpoint** are tracked under `laravel-overlay/`. Legacy FlipRadar remains at `/flipradar/index.html`. Advanced normalization/classification, Bohol location-confidence filters, saved items, watchlist, and historical first-seen tracking **have not yet been migrated**.
 
 ## Requirements
 - Docker Desktop with Linux containers and WSL integration (Windows), or Docker Engine with Compose (Linux/macOS)
 - Internet on first initialization to download the Laravel skeleton and dependencies
 
-No host PHP, Composer or Node.js is required.
+No host PHP, Composer or Node.js is required. Docker published ports are restricted to localhost for this development-stage API.
 
 ## Setup
 ```bash
@@ -32,7 +32,35 @@ docker compose exec -T app php artisan test --filter=MarketplaceCalculatorTest
 curl -I http://localhost:8000/
 ```
 
-The dashboard is a working Blade page with example listings and browser-side sample filtering. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. No paid Apify requests occur from the new dashboard.
+The dashboard is a working Blade page with example listings and browser-side sample filtering. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. A **separate, disabled-by-default** live scan panel calls POST `/marketplace/scan` only after a checkbox and native browser confirmation. No paid Apify requests occur at page load, build, or test time.
+
+## Phase 3 live scanning (optional, paid)
+The Apify Marketplace actor may incur charges and may not provide reliable Bohol-only data. Never assume its `maxTotalChargeUsd=0.10` parameter guarantees a real billing cap.
+
+To enable manually, edit **the local untracked** `laravel/.env` file. Never commit it:
+
+```dotenv
+APIFY_TOKEN=your_private_apify_api_token_here
+MARKETPLACE_SCAN_ENABLED=true
+```
+
+Then restart the app container:
+
+```bash
+docker compose restart app
+```
+
+Visit http://localhost:8000, scroll to **Live Marketplace scan**, review the warning, and confirm a single request. At most two attempts per minute are allowed on the backend. The actor token is sent in the server-side Authorization header, not in the browser or query string.
+
+**Limitations:** Returned items are basic raw-result mappings, *not* fully cleaned or independently verified results. The requested radius/sort may not be honored by the actor. Do not use these as guaranteed local deals. The original FlipRadar page still uses its old browser-side token handling, so prefer the new Laravel panel for any new token setup. The development endpoints bind to `127.0.0.1` only and do not implement user accounts; do **not** deploy this app publicly before authentication, secure scan authorization, spend limits and server-side rate limiting are reviewed.
+
+To verify without any paid requests:
+
+```bash
+docker compose exec -T app php artisan test --filter=MarketplaceScanTest
+docker compose exec -T app php artisan test --filter=MarketplaceCalculatorTest
+```
+
 
 ## Operational commands
 ```bash
