@@ -14,7 +14,7 @@ for path in index.html classify.js discovery.js plan.js nav.js seen.js bohol-geo
 done
 
 echo "Checking HTTP endpoint..."
-curl -fsS http://localhost:8000/flipradar/index.html -o /dev/null
+curl --retry 15 --retry-delay 2 --retry-connrefused -fsS http://localhost:8000/flipradar/index.html -o /dev/null
 echo "  OK: http://localhost:8000/flipradar/index.html"
 
 echo "Smoke test passed. Live Apify scans and browser interactions are NOT covered by this test."
