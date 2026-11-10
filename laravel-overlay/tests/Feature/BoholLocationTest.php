@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Services\BoholLocationService;
 use App\Services\ListingArchiveService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BoholLocationTest extends TestCase
@@ -39,6 +40,29 @@ class BoholLocationTest extends TestCase
             ->assertJsonCount(1, 'items')
             ->assertJsonPath('items.0.title', 'RTX 5060 Bohol')
             ->assertJsonPath('items.0.location_status', 'bohol');
+    }
+
+    public function test_nested_provider_reverse_geocode_is_filtered_after_scan(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([
+            ['id' => 'fb-1', 'marketplace_listing_title' => 'RTX 5060 Cebu',
+             'listing_price' => ['amount' => 27000],
+             'location' => ['reverse_geocode' => ['city' => 'Mandaue', 'state' => 'Cebu']]],
+            ['id' => 'fb-2', 'marketplace_listing_title' => 'RTX 5060 Bohol',
+             'listing_price' => ['amount' => 23000],
+             'location' => ['reverse_geocode' => ['city' => 'Tagbilaran City', 'state' => 'Bohol']]],
+        ], 200)]);
+        $this->postJson('/marketplace/scan', [
+            'keyword' => 'rtx 5060', 'latitude' => 9.6477, 'longitude' => 123.8547,
+            'radius_km' => 40, 'sort_by' => 'creation_time_descend',
+            'confirm_paid_scan' => true,
+        ])->assertOk()->assertJsonPath('archived_count', 2);
+        $this->getJson('/listings')->assertOk()
+            ->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.title', 'RTX 5060 Bohol')
+            ->assertJsonPath('excluded_unverified', 1);
     }
 
     public function test_coordinates_outside_bohol_override_town_label(): void
