@@ -40,6 +40,8 @@ cp /opt/marketplace/laravel-overlay/app/Http/Controllers/MarketplaceCollectionsC
 cp /opt/marketplace/laravel-overlay/app/Http/Controllers/DiscoveredListingController.php app/Http/Controllers/DiscoveredListingController.php
 cp /opt/marketplace/laravel-overlay/app/Models/DiscoveredListing.php app/Models/DiscoveredListing.php
 cp /opt/marketplace/laravel-overlay/app/Services/ListingArchiveService.php app/Services/ListingArchiveService.php
+cp /opt/marketplace/laravel-overlay/app/Services/BoholLocationService.php app/Services/BoholLocationService.php
+cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000003_add_discovery_location_evidence.php database/migrations/2026_11_11_000003_add_discovery_location_evidence.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000002_create_discovered_listings.php database/migrations/2026_11_11_000002_create_discovered_listings.php
 cp /opt/marketplace/laravel-overlay/app/Models/SavedListing.php app/Models/SavedListing.php
 cp /opt/marketplace/laravel-overlay/app/Models/WatchlistEntry.php app/Models/WatchlistEntry.php
@@ -51,6 +53,7 @@ cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php 
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceScanTest.php tests/Feature/MarketplaceScanTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCollectionsTest.php tests/Feature/MarketplaceCollectionsTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/DiscoveredListingTest.php tests/Feature/DiscoveredListingTest.php
+cp /opt/marketplace/laravel-overlay/tests/Feature/BoholLocationTest.php tests/Feature/BoholLocationTest.php
 if grep -Fq "return view('welcome');" routes/web.php || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php || grep -Fq "Route::view('/', 'marketplace.dashboard')" routes/web.php; then
   cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php
 else
