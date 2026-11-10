@@ -2,7 +2,7 @@
 
 A new, Docker-first Laravel rebuild of [FlipRadar / Marketplace_finder](https://github.com/irincovictor-cmd/Marketplace_finder).
 
-**Status:** Phase 4 SQLite collections milestone. The Blade dashboard now includes a PHP calculator, an opt-in Laravel Apify scan endpoint, and **SQLite-backed saved listings and watchlist entries** with create/list/update-by-key/delete operations. Legacy FlipRadar remains at `/flipradar/index.html`. Advanced normalization/classification, Bohol location-confidence filters, existing browser-data import, and first-seen tracking **have not yet been migrated**.
+**Status:** Phase 5 UX and discovery history milestone. The Blade interface is simplified into **Find deals / Saved items / Watchlist / Profit calculator**, with advanced paid-scan configuration collapsed by default. Approved scans now archive identifiable results into SQLite with first-seen and last-seen timestamps, and `/listings` supports keyword, category, max-price and sorting filters. Legacy FlipRadar remains at `/flipradar/index.html`. Advanced original classifier/geo logic, browser-data import, automatic watch matching, full UI integration and source-complete portability are still pending.
 
 ## Requirements
 - Docker Desktop with Linux containers and WSL integration (Windows), or Docker Engine with Compose (Linux/macOS)
@@ -32,11 +32,31 @@ docker compose exec -T app php artisan test --filter=MarketplaceCalculatorTest
 curl -I http://localhost:8000/
 ```
 
-The dashboard is a working Blade page with example listings and browser-side sample filtering. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. A **separate, disabled-by-default** live scan panel calls POST `/marketplace/scan` only after a checkbox and native browser confirmation. No paid Apify requests occur at page load, build, or test time.
+The dashboard is a working Blade page with SQLite-backed archived listings and browser-side controls calling server-side filters. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. A **separate, disabled-by-default** live scan panel calls POST `/marketplace/scan` only after a checkbox and native browser confirmation. No paid Apify requests occur at page load, build, or test time.
+
+## Phase 5: simpler discovery workflow
+
+Open http://localhost:8000 and use the four primary sections:
+
+1. **Find deals** — browse previously discovered, identifiable listings; filter by keyword, price and category; sort by price or recency; save real Facebook listing URLs.
+2. **Saved items** — open or remove manually saved listings.
+3. **Watchlist** — manage device keywords and target budgets; nothing runs automatically.
+4. **Profit calculator** — use the Laravel PHP endpoint to calculate your manual net profit.
+
+The old illustrative cards were removed from the main discovery screen to avoid confusion between sample and genuine provider results. A fresh installation shows a helpful empty state until a user authorizes a scan; the scanner remains disabled by default. A paid scan's normalized results are stored in `discovered_listings` with stable URL/provider-ID deduplication and first/last-seen timestamps. Unknown-identity records are intentionally not archived.
+
+`GET /listings?q=&category=&max_price=&sort=` provides a capped result set (100). Category assignment is preliminary keyword grouping only, not the full legacy classification engine. Provider location accuracy is unverified; the current scan center remains Tagbilaran and must be made configurable in a later milestone. No guarantee of resale profitability is implied.
+
+Test without any paid API request:
+
+```bash
+docker compose exec -T app php artisan test --filter=DiscoveredListingTest
+docker compose exec -T app php artisan test
+```
 
 ## Phase 4: saved listings and watchlists in SQLite
 
-The dashboard includes a watchlist form and a saved-listings form. Approved scan results with a valid Facebook Marketplace item link also show a **Save listing** button. The API uses `GET/POST /collections/saved`, `DELETE /collections/saved/{id}`, `GET/POST /collections/watchlist` and `DELETE /collections/watchlist/{id}`.
+The dashboard has separate Watchlist and Saved items views, each with a simple form. Approved scan results with a valid Facebook Marketplace item link also show a **Save listing** button. The API uses `GET/POST /collections/saved`, `DELETE /collections/saved/{id}`, `GET/POST /collections/watchlist` and `DELETE /collections/watchlist/{id}`.
 
 These use `laravel/database/database.sqlite`, which persists across ordinary Docker restarts and `docker compose down`. Data is local and single-user; **there is no authentication or account separation**, so keep port 8000 restricted to localhost. Only HTTPS Facebook Marketplace item links are accepted. Watchlist entries do **not** schedule automatic paid scanning.
 
