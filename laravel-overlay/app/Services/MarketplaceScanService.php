@@ -71,12 +71,22 @@ class MarketplaceScanService
             $candidateUrl = $item['listingUrl'] ?? $item['listing_url'] ?? $item['url'] ?? null;
             $url = $this->marketplaceUrl($candidateUrl);
             $location = $item['location'] ?? [];
-            $city = is_array($location) ? ($location['city'] ?? '') : '';
+            $geo = is_array($location) ? ($location['reverse_geocode'] ?? []) : [];
+            $geo = is_array($geo) ? $geo : [];
+            $city = $geo['city'] ?? (is_array($location) ? ($location['city'] ?? '') : '');
+            $province = $geo['state'] ?? (is_array($location) ? ($location['state'] ?? '') : '');
+            $lat = is_array($location) ? ($location['latitude'] ?? null) : null;
+            $lon = is_array($location) ? ($location['longitude'] ?? null) : null;
+            $locationText = data_get($item, 'location_text.text', '');
             $items[] = [
                 'id' => (string) ($item['id'] ?? $item['listing_id'] ?? ''),
                 'title' => mb_substr($title, 0, 250),
                 'price' => (float) $amount,
                 'city' => mb_substr((string) $city, 0, 100),
+                'province' => mb_substr((string) $province, 0, 100),
+                'location_text' => mb_substr((string) $locationText, 0, 200),
+                'latitude' => is_numeric($lat) ? (float) $lat : null,
+                'longitude' => is_numeric($lon) ? (float) $lon : null,
                 'url' => $url,
             ];
         }
