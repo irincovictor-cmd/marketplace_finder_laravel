@@ -9,8 +9,8 @@ class MarketplaceCalculatorTest extends TestCase
     public function test_dashboard_renders_a_laravel_blade_view(): void
     {
         $this->get('/')->assertOk()->assertSee('Find your next great deal')
-            ->assertSee('Search saved results')
-            ->assertSee('Get fresh results')
+            ->assertSee('id="historySearchButton"', false)
+            ->assertSee('Set up a fresh search')
             ->assertSee('Fresh Marketplace search');
     }
 
