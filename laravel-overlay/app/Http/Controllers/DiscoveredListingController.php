@@ -17,7 +17,7 @@ class DiscoveredListingController extends Controller
             'sort' => ['nullable', 'in:newest,price_low,price_high'],
         ]);
 
-        $query = DiscoveredListing::query();
+        $query = DiscoveredListing::query()->where('location_status', 'bohol');
         if (filled($params['q'] ?? null)) {
             $query->where('title', 'like', '%'.addcslashes($params['q'], '%_\\').'%');
         }
@@ -39,6 +39,8 @@ class DiscoveredListingController extends Controller
                 'title' => $item->title,
                 'price' => (float) $item->price,
                 'city' => $item->city,
+                'province' => $item->province,
+                'location_status' => $item->location_status,
                 'url' => $item->listing_url,
                 'category' => $item->category,
                 'first_seen_at' => $item->first_seen_at?->toIso8601String(),
