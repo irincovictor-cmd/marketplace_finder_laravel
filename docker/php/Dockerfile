@@ -12,6 +12,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 COPY docker/php/bootstrap.sh /opt/marketplace/bootstrap.sh
 COPY docker/php/routes-web.php /opt/marketplace/routes-web.php
 COPY legacy/ /opt/marketplace/legacy/
+COPY laravel-overlay/ /opt/marketplace/laravel-overlay/
 RUN chmod +x /opt/marketplace/bootstrap.sh
 
 EXPOSE 8000
