@@ -33,7 +33,12 @@ class DiscoveredListingController extends Controller
             default => $query->orderByDesc('last_seen_at'),
         };
 
+        // Excluded records stay in SQLite for diagnostics, never shown as Bohol deals.
+        $hiddenCount = DiscoveredListing::query()->where('location_status', '!=', 'bohol')->count();
+
         return response()->json([
+            'excluded_unverified' => $hiddenCount,
+            'location_policy' => 'bohol_only',
             'items' => $query->limit(100)->get()->map(fn ($item) => [
                 'id' => $item->id,
                 'title' => $item->title,
