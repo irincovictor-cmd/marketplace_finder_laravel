@@ -36,7 +36,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <form id="browseForm" class="searchrow">
 <label>What are you looking for?<input id="search" name="q" placeholder="Try iPhone 13, RTX 3050, gaming laptop…" autocomplete="off"></label>
 <label>Your budget<select id="budget" name="max_price"><option value="">Any price</option><option value="5000">Up to ₱5,000</option><option value="10000">Up to ₱10,000</option><option value="20000">Up to ₱20,000</option><option value="30000">Up to ₱30,000</option></select></label>
-<button class="btn" type="submit" id="historySearchButton">Search saved results</button>
+<button class="btn" type="submit" id="historySearchButton">Find deals</button>
 </form>
 <div class="quicklinks" role="group" aria-label="Filter categories">
 <button class="chip" data-category="" aria-pressed="true" type="button">All</button>
@@ -48,7 +48,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </div>
 <p class="muted" style="margin:10px 4px 0">This searches results already collected on this PC. To look for new Facebook Marketplace listings, choose “Get fresh results” below.</p>
 <div class="sectiontop"><h2>Previously discovered listings</h2><label>Sort<select id="sort"><option value="newest">Recently found</option><option value="price_low">Lowest price</option><option value="price_high">Highest price</option></select></label></div>
-<p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px"></p>
+<p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
 <div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
 <details class="settings" id="scanSettings">
@@ -133,19 +133,23 @@ async function request(path,method='GET',body){
 const label=(text,cls)=>{const e=document.createElement('span');e.className=cls||'';e.textContent=text;return e};
 const button=(title,callback)=>{const e=document.createElement('button');e.className='btn sm alt';e.type='button';e.textContent=title;e.addEventListener('click',callback);return e};
 async function loadListings(){
- const box=document.getElementById('listingResults');box.replaceChildren();
+ const box=document.getElementById('listingResults');
  const feedback=document.getElementById('searchFeedback');
- feedback.textContent='Searching previously discovered listings…';
+ const searchButton=document.getElementById('historySearchButton');
+ searchButton.disabled=true;
+ searchButton.textContent='Searching…';
+ feedback.textContent='Checking your stored listings…';
  const p=new URLSearchParams();const search=document.getElementById('search').value.trim();
  const budget=document.getElementById('budget').value;
  if(search)p.set('q',search);if(budget)p.set('max_price',budget);if(category)p.set('category',category);
  p.set('sort',document.getElementById('sort').value);
  try{
  const data=await request('/listings?'+p.toString());
+ box.replaceChildren();
  if(!data.items.length){
- feedback.textContent='No matching listings in your local discovery history.';
+ feedback.textContent='No stored matches for '+(search?'“'+search+'”':'these filters')+'. Choose a fresh search below.';
  box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent='No matching listings stored';const msg=document.createElement('p');msg.textContent='This search checked your local results only. It did not contact Facebook or charge your Apify account.';
- empty.append(heading,msg,button('Get fresh Marketplace results',showScanSettings),document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
+ empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
  box.className='cards';feedback.textContent=data.items.length+' matching listings found in local history (not a fresh Facebook search).';
  for(const item of data.items){
  const card=document.createElement('article');card.className='listing';
@@ -164,18 +168,26 @@ async function loadListings(){
  body.append(badge,h,price,city,actions);card.append(art,body);box.append(card);
  }
  }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message}
+ finally{searchButton.disabled=false;searchButton.textContent='Find deals'}
 }
 function showScanSettings(){
  const details=document.getElementById('scanSettings');
  const query=document.getElementById('search').value.trim();
  const scanKeyword=document.querySelector('#scanForm [name="keyword"]');
- if(query && !scanKeyword.value)scanKeyword.value=query;
+ if(query)scanKeyword.value=query;
  details.open=true;
  details.scrollIntoView({behavior:'smooth',block:'center'});
  scanKeyword.focus({preventScroll:true});
 }
 document.getElementById('openFreshScan').addEventListener('click',showScanSettings);
-document.getElementById('browseForm').addEventListener('submit',e=>{e.preventDefault();loadListings()});
+document.getElementById('browseForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ await loadListings();
+ if(document.getElementById('listingResults').querySelector('.empty')){
+   showScanSettings();
+   document.getElementById('searchFeedback').textContent='No matching listings stored. Fresh scan options are now open below. Nothing has been charged.';
+ }
+});
 document.getElementById('sort').addEventListener('change',loadListings);
 document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));loadListings()}));
 async function loadSaved(){
