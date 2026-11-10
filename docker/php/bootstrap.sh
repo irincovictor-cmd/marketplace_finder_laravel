@@ -33,11 +33,15 @@ cp -a /opt/marketplace/legacy/. public/flipradar/
 
 # Phase 2: install version-controlled PHP controller, Blade page, and tests.
 # Retain modified user routes, but upgrade our original transitional route.
-mkdir -p app/Http/Controllers resources/views/marketplace tests/Feature
+mkdir -p app/Http/Controllers app/Services config resources/views/marketplace tests/Feature
 cp /opt/marketplace/laravel-overlay/app/Http/Controllers/ProfitCalculatorController.php app/Http/Controllers/ProfitCalculatorController.php
+cp /opt/marketplace/laravel-overlay/app/Http/Controllers/MarketplaceScanController.php app/Http/Controllers/MarketplaceScanController.php
+cp /opt/marketplace/laravel-overlay/app/Services/MarketplaceScanService.php app/Services/MarketplaceScanService.php
+cp /opt/marketplace/laravel-overlay/config/marketplace.php config/marketplace.php
 cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.php resources/views/marketplace/dashboard.blade.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
-if grep -Fq "return view('welcome');" routes/web.php || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php; then
+cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceScanTest.php tests/Feature/MarketplaceScanTest.php
+if grep -Fq "return view('welcome');" routes/web.php || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php || grep -Fq "Route::view('/', 'marketplace.dashboard')" routes/web.php; then
   cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php
 else
   echo "[marketplace] Existing custom routes/web.php preserved; integrate the new routes manually."
