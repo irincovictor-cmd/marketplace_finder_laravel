@@ -31,7 +31,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </aside>
 <main>
 <section class="view" id="view-discover">
-<div class="intro"><div class="eyebrow">Discover / Bohol</div><h1>Find your next great deal.</h1><p>Search listings found in earlier scans, compare prices, and save the ones worth checking.</p><span class="status">● Your workspace is ready</span></div>
+<div class="intro"><div class="eyebrow">Discover / Bohol</div><h1>Find your next great deal.</h1><p>Browse Bohol listings found in earlier scans, compare prices, and save promising deals.</p><span class="status">● Your workspace is ready</span></div>
 <div class="searchbox">
 <form id="browseForm" class="searchrow">
 <label>What are you looking for?<input id="search" name="q" placeholder="Try iPhone 13, RTX 3050, gaming laptop…" autocomplete="off"></label>
@@ -47,7 +47,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </div>
 </div>
 <p class="muted" style="margin:10px 4px 0">This searches results already collected on this PC. To look for new Facebook Marketplace listings, choose “Get fresh results” below.</p>
-<div class="sectiontop"><h2>Previously discovered listings</h2><label>Sort<select id="sort"><option value="newest">Recently found</option><option value="price_low">Lowest price</option><option value="price_high">Highest price</option></select></label></div>
+<div class="sectiontop"><h2>Bohol listings</h2><label>Sort<select id="sort"><option value="newest">Recently found</option><option value="price_low">Lowest price</option><option value="price_high">Highest price</option></select></label></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
 <div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
@@ -147,14 +147,14 @@ async function loadListings(){
  const data=await request('/listings?'+p.toString());
  box.replaceChildren();
  if(!data.items.length){
- feedback.textContent='No stored matches for '+(search?'“'+search+'”':'these filters')+'. Choose a fresh search below.';
+ feedback.textContent='No Bohol-verified matches for '+(search?'“'+search+'”':'these filters')+'. '+(data.excluded_unverified||0)+' archived listings with missing/out-of-area location evidence are hidden.';
  box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent='No matching listings stored';const msg=document.createElement('p');msg.textContent='This search checked your local results only. It did not contact Facebook or charge your Apify account.';
  const external=document.createElement('a');
  external.href='https://www.facebook.com/marketplace/search/?query='+encodeURIComponent(search||'gadgets');
  external.target='_blank';external.rel='noopener noreferrer';
  external.className='btn sm alt';external.textContent='Search on Facebook ↗';
  empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),external,document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
- box.className='cards';feedback.textContent=data.items.length+' matching listings found in local history (not a fresh Facebook search).';
+ box.className='cards';feedback.textContent=data.items.length+' matching Bohol listings (not a fresh Facebook search). '+(data.excluded_unverified||0)+' unverified/outside listings hidden.';
  for(const item of data.items){
  const card=document.createElement('article');card.className='listing';
  const art=document.createElement('div');art.className='listing-art';art.textContent=({'Phones':'📱','Laptops':'💻','PC Parts':'🖥️','Consoles':'🎮'})[item.category]||'📦';
@@ -162,7 +162,7 @@ async function loadListings(){
  const badge=label(item.category+' · Saved in discovery history','pill');
  const h=document.createElement('h3');h.textContent=item.title;
  const price=label(money(item.price),'listing-price');
- const city=label(item.city||'Location not verified','muted');
+ const city=label((item.city||'Bohol province')+' · Bohol location inferred from listing data','muted');
  const actions=document.createElement('div');actions.className='listing-actions';
  if(item.url){
   const a=document.createElement('a');a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';a.className='btn sm alt';a.textContent='View listing';
