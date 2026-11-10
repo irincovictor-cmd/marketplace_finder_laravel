@@ -71,11 +71,15 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <p>Scanning uses a third-party Apify actor and may incur charges. It is disabled until you configure your private server token and explicitly enable it. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
 <form id="scanForm">
 <div class="grid3">
-<label>Search for<input name="keyword" placeholder="e.g. iphone 13" minlength="2" maxlength="80" required></label>
-<label>Search radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
-<label>Sort provider results<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="distance_ascend">Nearest</option></select></label>
+<label>Search keyword (optional)<input name="keyword" placeholder="Blank = broad browse" maxlength="80"></label>
+<label>Area radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
+<label>Order from provider<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="price_ascend">Lowest price</option><option value="price_descend">Highest price</option><option value="distance_ascend">Nearest</option></select></label>
+<label>Minimum price (₱)<input name="min_price" type="number" min="0" step="1" placeholder="Any minimum"></label>
+<label>Maximum price (₱)<input name="max_price" type="number" min="0" step="1" placeholder="Any maximum"></label>
+<label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
 </div>
-<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve one potentially billable scan. Results and location accuracy are not guaranteed.</span></label>
+<p class="muted">Category selection filters our archived results after collection; Apify's filter-based actor input does not provide the same category selection as Facebook. A broad scan may return unrelated items or miss some models. We keep the Bohol-only evidence check.</p>
+<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve one potentially billable scan. Results, location accuracy and category coverage are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run one approved scan</button>
 </form>
 <p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
@@ -241,7 +245,13 @@ function showScanSettings(){
  const details=document.getElementById('scanSettings');
  const query=document.getElementById('search').value.trim();
  const scanKeyword=document.querySelector('#scanForm [name="keyword"]');
- if(query)scanKeyword.value=query;
+ scanKeyword.value=query;
+ const scanForm=document.getElementById('scanForm');
+ scanForm.elements.namedItem('category').value=category;
+ scanForm.elements.namedItem('min_price').value=document.getElementById('minPrice').value;
+ scanForm.elements.namedItem('max_price').value=document.getElementById('budget').value;
+ const currentSort=document.getElementById('sort').value;
+ scanForm.elements.namedItem('sort_by').value=currentSort==='price_low'?'price_ascend':currentSort==='price_high'?'price_descend':'creation_time_descend';
  details.open=true;
  details.scrollIntoView({behavior:'smooth',block:'center'});
  scanKeyword.focus({preventScroll:true});
@@ -303,10 +313,18 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  if(!confirm('This can charge your Apify account. Start one scan?'))return;
  const btn=document.getElementById('scanButton'),status=document.getElementById('scanStatus');btn.disabled=true;status.textContent='Scanning…';
  try{
- const data=Object.fromEntries(new FormData(e.currentTarget));data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
+ const data=Object.fromEntries(new FormData(e.currentTarget));
+ if(!data.keyword)delete data.keyword;
+ if(!data.min_price)delete data.min_price;
+ else data.min_price=Number(data.min_price);
+ if(!data.max_price)delete data.max_price;
+ else data.max_price=Number(data.max_price);
+ if(!data.category)delete data.category;
+ data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
  const outcome=await request('/marketplace/scan','POST',data);
- status.textContent=outcome.archived_count+' identifiable listings archived. Location and asking prices are unverified.';
+ status.textContent=outcome.archived_count+' identifiable listings archived. Only records with Bohol location evidence display; category coverage is not guaranteed.';
  await loadListings();
+ if(data.category){category=data.category;document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)))}
  document.getElementById('scanSettings').open=false;
  }catch(error){status.textContent=error.message}
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
