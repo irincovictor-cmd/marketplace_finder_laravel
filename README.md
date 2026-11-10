@@ -34,6 +34,19 @@ curl -I http://localhost:8000/
 
 The dashboard is a working Blade page with SQLite-backed archived listings and browser-side controls calling server-side filters. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. A **separate, disabled-by-default** live scan panel calls POST `/marketplace/scan` only after a checkbox and native browser confirmation. No paid Apify requests occur at page load, build, or test time.
 
+## Bohol-only results (location parity fix)
+
+The app now stores Facebook's reverse-geocoded city/state, location text and coordinates (when returned), and classifies each discovery as `bohol`, `outside` or `verify`. The main `GET /listings` endpoint returns **only `bohol`**. Unknown/ambiguous records and Cebu records stay in SQLite for diagnostics but no longer appear as local recommendations.
+
+This deliberately copies the legacy app's approach of not accepting `PH-07` as evidence of Bohol, rejecting known Cebu municipalities and requiring independent province evidence for ambiguous town names such as Valencia and Carmen. The Bohol municipality reference comes from the original project's `bohol-geography.json`. Listing metadata can be inaccurate: an inferred Bohol match is **not independent verification** of the seller's actual location. The coordinate boundary check is coarse and cannot substitute for official GIS boundaries.
+
+An additive migration reclassifies previously archived records based on their stored town names. Entries without reliable location evidence are hidden, **not deleted**. Previously saved listings and watchlists are unchanged. An approved new scan can provide richer location evidence for further matches.
+
+```bash
+docker compose exec -T app php artisan test --filter=BoholLocationTest
+docker compose exec -T app php artisan test
+```
+
 ## Phase 5: simpler discovery workflow
 
 Open http://localhost:8000 and use the four primary sections:
