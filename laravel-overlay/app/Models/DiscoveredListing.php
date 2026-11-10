@@ -8,7 +8,7 @@ class DiscoveredListing extends Model
 {
     protected $fillable = [
         'source_key', 'title', 'price', 'city', 'listing_url', 'category',
-        'first_seen_at', 'last_seen_at',
+        'first_seen_at', 'last_seen_at', 'province', 'location_text', 'latitude', 'longitude', 'location_status',
     ];
 
     protected function casts(): array
