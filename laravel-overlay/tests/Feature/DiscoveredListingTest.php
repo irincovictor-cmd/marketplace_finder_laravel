@@ -62,4 +62,32 @@ class DiscoveredListingTest extends TestCase
         ]));
         $this->assertDatabaseCount('discovered_listings', 0);
     }
+    public function test_optional_keyword_electronics_category_price_range_and_sort(): void
+    {
+        $archive = app(ListingArchiveService::class);
+        $archive->store([
+            ['id' => 'camera-1', 'title' => 'Canon EOS camera', 'price' => 9500, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'phone-2', 'title' => 'iPhone 13 128GB', 'price' => 14000, 'city' => 'Panglao', 'url' => null],
+            ['id' => 'laptop-3', 'title' => 'ThinkPad laptop', 'price' => 18000, 'city' => 'Tagbilaran', 'url' => null],
+            ['id' => 'other-4', 'title' => 'Wooden table', 'price' => 12000, 'city' => 'Tagbilaran', 'url' => null],
+        ]);
+
+        // Empty search term browses every recognized electronic model.
+        $this->getJson('/listings?category=Electronics&min_price=9000&max_price=15000&sort=price_low')
+            ->assertOk()->assertJsonCount(2, 'items')
+            ->assertJsonPath('items.0.category', 'Cameras')
+            ->assertJsonPath('items.0.price', 9500)
+            ->assertJsonPath('items.1.category', 'Phones');
+
+        $this->getJson('/listings?category=Cameras')
+            ->assertOk()->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.title', 'Canon EOS camera');
+
+        $this->getJson('/listings?min_price=20000&max_price=10000')
+            ->assertStatus(422);
+
+        $this->getJson('/listings?category=Electronics&sort=price_high')
+            ->assertOk()->assertJsonPath('items.0.title', 'ThinkPad laptop');
+    }
+
 }
