@@ -149,7 +149,11 @@ async function loadListings(){
  if(!data.items.length){
  feedback.textContent='No stored matches for '+(search?'“'+search+'”':'these filters')+'. Choose a fresh search below.';
  box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent='No matching listings stored';const msg=document.createElement('p');msg.textContent='This search checked your local results only. It did not contact Facebook or charge your Apify account.';
- empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
+ const external=document.createElement('a');
+ external.href='https://www.facebook.com/marketplace/search/?query='+encodeURIComponent(search||'gadgets');
+ external.target='_blank';external.rel='noopener noreferrer';
+ external.className='btn sm alt';external.textContent='Search on Facebook ↗';
+ empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),external,document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
  box.className='cards';feedback.textContent=data.items.length+' matching listings found in local history (not a fresh Facebook search).';
  for(const item of data.items){
  const card=document.createElement('article');card.className='listing';
