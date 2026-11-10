@@ -16,6 +16,7 @@ main{max-width:1220px;width:100%;margin:0 auto;padding:34px 40px 80px}.eyebrow{c
 .hero{display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid #36425d;border-radius:20px;background:linear-gradient(115deg,#222d49,#28243a);padding:24px;margin:24px 0}.hero h2{margin:0;font-size:21px}.hero p{margin:6px 0 0}.btn{background:var(--accent);border:0;color:#23180b;font-weight:800;border-radius:11px;padding:12px 16px;text-decoration:none;display:inline-block}.btn:hover{filter:brightness(1.08)}.btn.secondary{background:#26334a;color:var(--text);border:1px solid #46536b}.filters{display:grid;grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr)) auto;gap:10px;background:var(--panel2);padding:16px;border:1px solid var(--line);border-radius:16px}input,select{width:100%;background:#1a253a;border:1px solid #39465d;color:var(--text);padding:11px 12px;border-radius:10px}input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:27px 0 13px}.header h2{font-size:21px;margin:0}.muted{font-size:12px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.picture{height:140px;background:radial-gradient(circle at 55% 110%,#475a7b,#1b2c43 65%);display:grid;place-items:center;font-size:53px}.content{padding:16px}.tag{color:var(--green);font-size:11px;font-weight:800;text-transform:uppercase}.content h3{font-size:16px;margin:8px 0 4px}.content p{font-size:12px;margin:0}.price{font-size:23px;letter-spacing:-.5px;font-weight:850;margin:12px 0}.cardfoot{border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:12px}.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}.box{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:20px}.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.fields label{color:var(--muted);font-size:12px}.fields input{margin-top:6px}.result{display:flex;gap:30px;align-items:center;flex-wrap:wrap;margin-top:14px}.metric strong{display:block;font-size:28px}.metric span{color:var(--muted);font-size:12px}.error{color:var(--red);font-size:13px;min-height:22px}.note{color:var(--muted);font-size:12px}.empty{border:1px dashed var(--line);padding:30px;border-radius:12px;color:var(--muted);grid-column:1/-1;text-align:center}
 .live-form{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.live-form label{font-size:12px;color:var(--muted)}.live-form label input,.live-form label select{margin-top:6px}.live-check{display:flex;align-items:flex-start;gap:10px;margin:14px 0;font-size:13px;color:var(--muted)}.live-check input{width:18px;height:18px;flex:none;margin:3px 0}.live-results{display:grid;gap:10px;margin-top:16px}.live-row{background:var(--panel);border:1px solid var(--line);padding:12px;border-radius:12px}.live-row strong{display:block}.live-row a{color:var(--accent);font-size:12px}.live-row small{color:var(--muted)}@media(max-width:650px){.live-form{grid-template-columns:1fr}}
+.storage-form{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storage-form label{color:var(--muted);font-size:12px}.storage-form label input{margin-top:6px}.storage-list{display:grid;gap:10px;margin-top:15px}.storage-item{padding:13px;border:1px solid var(--line);background:var(--panel);border-radius:11px;display:flex;justify-content:space-between;gap:15px;align-items:center}.storage-item a{color:var(--accent);overflow-wrap:anywhere}.storage-item button{background:#2c3549;color:var(--text);border:1px solid var(--line);padding:7px 12px;border-radius:8px}.storage-item small{display:block;color:var(--muted)}@media(max-width:650px){.storage-form{grid-template-columns:1fr}.storage-item{align-items:start;flex-direction:column}}
 @media(max-width:1050px){.shell{display:block}.sidebar{border-right:0;border-bottom:1px solid var(--line);padding:13px 22px;display:block}.sub,.bottom{display:none}.nav{display:flex;overflow:auto;margin-top:10px}.nav a{white-space:nowrap;padding:8px 12px}main{padding:24px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.intro,.hero{display:block}.flag{display:inline-block;margin-top:10px}.hero .btn{margin-top:15px}.filters{grid-template-columns:1fr 1fr}.filters input,.filters button{grid-column:1/-1}.grid,.split{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.header{align-items:start;flex-direction:column;gap:6px}.picture{height:120px}}
 </style>
@@ -27,8 +28,9 @@ main{max-width:1220px;width:100%;margin:0 auto;padding:34px 40px 80px}.eyebrow{c
 <nav class="nav" aria-label="Main navigation">
 <a class="active" href="#discover">⌕ &nbsp; Discover</a>
 <a href="#calculator">▤ &nbsp; Profit calculator</a>
-<a href="/flipradar/index.html">☆ &nbsp; Legacy watchlist</a>
-<a href="/flipradar/index.html">♡ &nbsp; Legacy saved items</a>
+<a href="#watchlist">☆ &nbsp; Watchlist</a>
+<a href="#saved">♡ &nbsp; Saved items</a>
+<a href="/flipradar/index.html">↗ &nbsp; Original FlipRadar</a>
 </nav>
 <div class="bottom">Laravel migration · Phase 2<br>Demo listings, no paid scanning</div>
 </aside>
@@ -54,6 +56,27 @@ main{max-width:1220px;width:100%;margin:0 auto;padding:34px 40px 80px}.eyebrow{c
 <p id="scanMessage" class="note" aria-live="polite">Disabled by default. Configure the server's APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED before live use.</p>
 <div id="liveResults" class="live-results" aria-live="polite"></div>
 </div>
+<div class="header" id="watchlist"><h2>Watchlist</h2><span class="muted">Stored in Laravel SQLite</span></div>
+<div class="box">
+<form id="watchForm" class="storage-form">
+<label>Device or search keyword<input name="keyword" placeholder="e.g. iphone 13" minlength="2" maxlength="80" required></label>
+<label>Maximum buying price (₱)<input name="max_price" type="number" min="0" step=".01" placeholder="Optional"></label>
+<button type="submit" class="btn">Add watch</button>
+</form>
+<p class="note" id="watchStatus" role="status">Watchlist entries are stored but do not automatically trigger paid scans.</p>
+<div class="storage-list" id="watchItems" aria-live="polite"></div>
+</div>
+<div class="header" id="saved"><h2>Saved listings</h2><span class="muted">Stored in Laravel SQLite</span></div>
+<div class="box">
+<p class="note">Save an actual listing using its Facebook Marketplace link. Results from approved live scans can also be saved with one click.</p>
+<form id="savedForm" class="storage-form">
+<label>Listing title<input name="title" placeholder="e.g. Used iPhone 13" required maxlength="250"></label>
+<label>Facebook Marketplace listing URL<input name="listing_url" type="url" placeholder="https://www.facebook.com/marketplace/item/…" required></label>
+<button type="submit" class="btn">Save listing</button>
+</form>
+<p class="note" id="savedStatus" role="status">Saved listings remain on this machine's SQLite database across Docker restarts.</p>
+<div class="storage-list" id="savedItems" aria-live="polite"></div>
+</div>
 <div class="header" id="calculator"><h2>Profit calculator</h2><span class="muted">Calculated by Laravel PHP · no API charges</span></div>
 <div class="split">
 <div class="box"><form id="calculatorForm">
@@ -65,7 +88,7 @@ main{max-width:1220px;width:100%;margin:0 auto;padding:34px 40px 80px}.eyebrow{c
 </form></div>
 <div class="box" aria-live="polite"><div class="muted">Estimated profit</div><div class="result"><div class="metric"><strong id="profit">—</strong><span>Net return</span></div><div class="metric"><strong id="roi">—</strong><span>Return on investment</span></div></div><p class="note">Based only on your entered numbers. Not a verified resale price.</p></div>
 </div>
-<p class="note" style="margin-top:22px">Migration notice: Sample listing cards are illustrative only. Saved items, watchlist, live Apify scanning, and location filtering still run in the original FlipRadar interface. Their Laravel conversion is in progress.</p>
+<p class="note" style="margin-top:22px">Migration notice: Example listing cards are illustrative only. Saved items and watchlists now use SQLite, but existing FlipRadar browser data is not yet imported. Advanced scoring, location filtering, and first-seen tracking still require migration.</p>
 </main></div>
 <script>
 const demos=[
@@ -137,11 +160,68 @@ document.getElementById('liveScanForm').addEventListener('submit',async e=>{
       const title=document.createElement('strong');title.textContent=item.title||'Untitled';
       const desc=document.createElement('small');desc.textContent=money(Number(item.price))+' · '+(item.city||'Location unknown')+' · Not verified';
       row.append(title,desc);
-      if(item.url){const link=document.createElement('a');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open Facebook listing ↗';row.append(document.createElement('br'),link)}
+      if(item.url){const link=document.createElement('a');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open Facebook listing ↗';row.append(document.createElement('br'),link);const save=document.createElement('button');save.className='btn secondary';save.style.marginLeft='12px';save.textContent='Save listing';save.addEventListener('click',async()=>{try{await collectionRequest('/collections/saved','POST',{title:item.title,listing_url:item.url,price:item.price,city:item.city||null});document.getElementById('savedStatus').textContent='Listing saved to SQLite.';await loadSaved()}catch(err){document.getElementById('savedStatus').textContent=err.message}});row.append(save)}
       results.append(row);
     }
   }catch(error){status.textContent=error.message||'Unable to scan';}
   finally{button.disabled=false;document.getElementById('paidApproval').checked=false;}
 });
+
+async function collectionRequest(url,method='GET',data=null){
+ const opts={method,headers:{'Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}};
+ if(data!==null){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(data)}
+ const response=await fetch(url,opts);
+ const payload=await response.json().catch(()=>({}));
+ if(!response.ok){
+   const errors=payload.errors?Object.values(payload.errors).flat().join(' '):'';
+   throw Error(errors||payload.message||'Request failed (HTTP '+response.status+')');
+ }
+ return payload;
+}
+async function loadSaved(){
+ const target=document.getElementById('savedItems');target.replaceChildren();
+ try{
+  const payload=await collectionRequest('/collections/saved');
+  if(!payload.items.length){target.textContent='No saved listings yet.';return;}
+  for(const item of payload.items){
+   const row=document.createElement('div');row.className='storage-item';
+   const content=document.createElement('div');
+   const link=document.createElement('a');link.href=item.listing_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=item.title;
+   const meta=document.createElement('small');meta.textContent=(item.price!==null?money(Number(item.price)):'Price unknown')+(item.city?' · '+item.city:'');
+   content.append(link,meta);
+   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove';
+   remove.addEventListener('click',async()=>{try{await collectionRequest('/collections/saved/'+item.id,'DELETE');await loadSaved()}catch(err){document.getElementById('savedStatus').textContent=err.message}});
+   row.append(content,remove);target.append(row);
+  }
+ }catch(err){target.textContent='Unable to load saved listings: '+err.message}
+}
+async function loadWatchlist(){
+ const target=document.getElementById('watchItems');target.replaceChildren();
+ try{
+  const payload=await collectionRequest('/collections/watchlist');
+  if(!payload.items.length){target.textContent='No watchlist keywords yet.';return;}
+  for(const item of payload.items){
+   const row=document.createElement('div');row.className='storage-item';
+   const content=document.createElement('div');const name=document.createElement('strong');name.textContent=item.keyword;
+   const meta=document.createElement('small');meta.textContent=(item.max_price!==null?'Maximum '+money(Number(item.max_price)):'No maximum price')+' · '+(item.enabled?'Enabled':'Paused');
+   content.append(name,meta);
+   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove';
+   remove.addEventListener('click',async()=>{try{await collectionRequest('/collections/watchlist/'+item.id,'DELETE');await loadWatchlist()}catch(err){document.getElementById('watchStatus').textContent=err.message}});
+   row.append(content,remove);target.append(row);
+  }
+ }catch(err){target.textContent='Unable to load watchlist: '+err.message}
+}
+document.getElementById('savedForm').addEventListener('submit',async event=>{
+ event.preventDefault();const form=event.currentTarget;
+ try{await collectionRequest('/collections/saved','POST',Object.fromEntries(new FormData(form)));form.reset();document.getElementById('savedStatus').textContent='Listing saved to SQLite.';await loadSaved()}
+ catch(err){document.getElementById('savedStatus').textContent=err.message}
+});
+document.getElementById('watchForm').addEventListener('submit',async event=>{
+ event.preventDefault();const form=event.currentTarget;const data=Object.fromEntries(new FormData(form));
+ data.enabled=true;if(data.max_price==='')data.max_price=null;
+ try{await collectionRequest('/collections/watchlist','POST',data);form.reset();document.getElementById('watchStatus').textContent='Watchlist saved to SQLite.';await loadWatchlist()}
+ catch(err){document.getElementById('watchStatus').textContent=err.message}
+});
+loadSaved();loadWatchlist();
 </script>
 </body></html>
