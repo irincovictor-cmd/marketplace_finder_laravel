@@ -47,6 +47,14 @@ docker compose exec -T app php artisan test --filter=BoholLocationTest
 docker compose exec -T app php artisan test
 ```
 
+## Marketplace listing photos
+
+Laravel now retains `primary_listing_photo_url` from the approved Apify Marketplace result and stores its HTTPS image URL in the additive `discovered_listings.image_url` SQLite column. Product cards display the **actual Marketplace thumbnail** instead of only category emoji when the actor provides a permitted `fbcdn.net` or `fbsbx.com` URL. The image is loaded lazily in the browser with no referrer; unreadable, missing or expired photos fall back to a category icon. URLs are not fetched on the Laravel server.
+
+This feature does not fetch extra photo details, trigger scans or add API charges by itself. Previously archived listings cannot automatically gain photos if the old scan discarded the image; they'll need to appear in a later explicitly approved scan. Image URLs are external and can expire or become inaccessible.
+
+Tests: `docker compose exec -T app php artisan test --filter=MarketplaceScanTest`, then `docker compose exec -T app php artisan test`.
+
 ## Facebook-style browsing filters (November 11, 2026)
 
 The **Find deals** page now supports category-first browsing with an **optional keyword**, Electronics (the umbrella for recognized Phones, Laptops, Cameras, PC Parts and Consoles), minimum/maximum price, sort by most recently found/first discovered/lowest/highest price, and first-discovered date filters.
