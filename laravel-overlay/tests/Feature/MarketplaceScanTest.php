@@ -1,0 +1,101 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Support\Facades\Http;
+use Tests\TestCase;
+
+class MarketplaceScanTest extends TestCase
+{
+    private function payload(array $overrides = []): array
+    {
+        return array_replace([
+            'keyword' => 'iphone',
+            'latitude' => 9.6477,
+            'longitude' => 123.8547,
+            'radius_km' => 40,
+            'sort_by' => 'creation_time_descend',
+            'confirm_paid_scan' => true,
+        ], $overrides);
+    }
+
+    public function test_scanning_is_disabled_by_default_and_does_not_call_provider(): void
+    {
+        config(['marketplace.scan_enabled' => false, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake();
+        $this->postJson('/marketplace/scan', $this->payload())->assertStatus(503);
+        Http::assertNothingSent();
+    }
+
+    public function test_request_must_have_explicit_paid_scan_confirmation(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::fake();
+        $this->postJson('/marketplace/scan', $this->payload(['confirm_paid_scan' => false]))
+            ->assertUnprocessable()->assertJsonValidationErrors('confirm_paid_scan');
+        Http::assertNothingSent();
+    }
+
+    public function test_missing_token_disables_scan_without_request(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => '']);
+        Http::fake();
+        $this->postJson('/marketplace/scan', $this->payload())->assertStatus(503);
+        Http::assertNothingSent();
+    }
+
+    public function test_approved_scan_uses_authorization_header_and_returns_normalized_items(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['api.apify.com/*' => Http::response([
+            [
+                'id' => 'abc123',
+                'marketplace_listing_title' => 'iPhone 13',
+                'listing_price' => ['amount' => 12500],
+                'location' => ['city' => 'Tagbilaran'],
+                'listingUrl' => 'https://www.facebook.com/marketplace/item/123',
+            ],
+            [
+                'id' => 'bad',
+                'marketplace_listing_title' => 'Accessory',
+                'listing_price' => ['amount' => 500],
+                'listingUrl' => 'https://malicious.example/link',
+            ],
+        ], 200)]);
+        $this->postJson('/marketplace/scan', $this->payload())
+            ->assertOk()
+            ->assertJsonPath('returned', 2)
+            ->assertJsonPath('listings.0.price', 12500)
+            ->assertJsonPath('listings.0.url', 'https://www.facebook.com/marketplace/item/123')
+            ->assertJsonPath('listings.1.url', null);
+
+        Http::assertSent(function ($request) {
+            return str_starts_with($request->url(), 'https://api.apify.com/')
+                && ! str_contains($request->url(), 'fake-test-token')
+                && $request->hasHeader('Authorization', 'Bearer fake-test-token')
+                && $request['searchKeyword'] === 'iphone'
+                && $request['daysSinceListed'] === '7'
+                && $request['maxPagesPerUrl'] === 1
+                && $request['latitude'] === 9.6477;
+        });
+    }
+
+    public function test_provider_failure_does_not_expose_secret(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::fake(['api.apify.com/*' => Http::response(['message' => 'fake-test-token'], 500)]);
+        $this->postJson('/marketplace/scan', $this->payload())
+            ->assertStatus(502)->assertDontSee('fake-test-token');
+    }
+
+    public function test_invalid_coordinates_are_rejected_before_provider_call(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::fake();
+        $this->postJson('/marketplace/scan', $this->payload(['latitude' => 999]))
+            ->assertUnprocessable()->assertJsonValidationErrors('latitude');
+        Http::assertNothingSent();
+    }
+}
