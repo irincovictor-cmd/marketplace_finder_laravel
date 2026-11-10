@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MarketplaceScanTest extends TestCase
 {
+    use RefreshDatabase;
+
     private function payload(array $overrides = []): array
     {
         return array_replace([
