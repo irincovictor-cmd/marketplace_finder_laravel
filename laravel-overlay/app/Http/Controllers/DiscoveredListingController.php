@@ -23,7 +23,9 @@ class DiscoveredListingController extends Controller
         if (filled($params['q'] ?? null)) {
             $query->where('title', 'like', '%'.addcslashes($params['q'], '%_\\').'%');
         }
-        if (filled($params['category'] ?? null) && $params['category'] !== 'Electronics') {
+        if (($params['category'] ?? null) === 'Electronics') {
+            $query->whereIn('category', ['Phones', 'Laptops', 'Cameras', 'PC Parts', 'Consoles', 'Electronics']);
+        } elseif (filled($params['category'] ?? null)) {
             $query->where('category', $params['category']);
         }
         if (isset($params['found_within_days'])) {
