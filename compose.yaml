@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    working_dir: /var/www/html
+    volumes:
+      - ./laravel:/var/www/html
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: sqlite
+      COMPOSER_ALLOW_SUPERUSER: "1"
+    command: ["bash", "/opt/marketplace/bootstrap.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 180s
+    restart: unless-stopped
+
+  frontend:
+    image: node:24-bookworm-slim
+    working_dir: /var/www/html
+    volumes:
+      - ./laravel:/var/www/html
+      - ./docker/node-bootstrap.sh:/opt/marketplace/node-bootstrap.sh:ro
+    ports:
+      - "5173:5173"
+    command: ["sh", "/opt/marketplace/node-bootstrap.sh"]
+    # Avoid implicit paid API calls or background scans.
+    depends_on:
+      - app
+    restart: unless-stopped
