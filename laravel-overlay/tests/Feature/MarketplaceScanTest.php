@@ -49,7 +49,7 @@ class MarketplaceScanTest extends TestCase
     {
         config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
         Http::preventStrayRequests();
-        Http::fake(['api.apify.com/*' => Http::response([
+        Http::fake(['https://api.apify.com/*' => Http::response([
             [
                 'id' => 'abc123',
                 'marketplace_listing_title' => 'iPhone 13',
@@ -85,7 +85,7 @@ class MarketplaceScanTest extends TestCase
     public function test_provider_failure_does_not_expose_secret(): void
     {
         config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
-        Http::fake(['api.apify.com/*' => Http::response(['message' => 'fake-test-token'], 500)]);
+        Http::fake(['https://api.apify.com/*' => Http::response(['message' => 'fake-test-token'], 500)]);
         $this->postJson('/marketplace/scan', $this->payload())
             ->assertStatus(502)->assertDontSee('fake-test-token');
     }
