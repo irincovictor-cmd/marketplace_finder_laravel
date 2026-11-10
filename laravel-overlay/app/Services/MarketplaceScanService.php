@@ -22,7 +22,6 @@ class MarketplaceScanService
         }
 
         $payload = [
-            'searchKeyword' => $input['keyword'],
             'latitude' => (float) $input['latitude'],
             'longitude' => (float) $input['longitude'],
             'radiusKm' => (int) $input['radius_km'],
@@ -35,6 +34,19 @@ class MarketplaceScanService
             'proxy' => ['useApifyProxy' => true, 'apifyProxyCountry' => 'PH'],
         ];
 
+        if (filled($input['keyword'] ?? null)) {
+            $payload['searchKeyword'] = $input['keyword'];
+        }
+        if (isset($input['min_price'])) {
+            $payload['minPrice'] = (int) $input['min_price'];
+        }
+        if (isset($input['max_price'])) {
+            $payload['maxPrice'] = (int) $input['max_price'];
+        }
+
+        // The actor's filters-based search has no documented Facebook category ID input.
+        // We classify archived listings locally and must not claim provider-level
+        // Electronics/category coverage or Facebook-equivalent ranking.
         $query = http_build_query([
             'clean' => 'true',
             'limit' => 60,
