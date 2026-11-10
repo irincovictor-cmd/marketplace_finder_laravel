@@ -50,6 +50,7 @@ cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceScanTest.php tests/Feature/MarketplaceScanTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCollectionsTest.php tests/Feature/MarketplaceCollectionsTest.php
+cp /opt/marketplace/laravel-overlay/tests/Feature/DiscoveredListingTest.php tests/Feature/DiscoveredListingTest.php
 if grep -Fq "return view('welcome');" routes/web.php || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php || grep -Fq "Route::view('/', 'marketplace.dashboard')" routes/web.php; then
   cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php
 else
