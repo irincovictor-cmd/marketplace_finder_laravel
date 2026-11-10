@@ -17,14 +17,21 @@ class MarketplaceScanController extends Controller
         }
 
         $data = $request->validate([
-            'keyword' => ['required', 'string', 'min:2', 'max:80', 'regex:/^[a-zA-Z0-9 +._-]+$/'],
+            'keyword' => ['nullable', 'string', 'min:2', 'max:80', 'regex:/^[a-zA-Z0-9 +._-]+$/'],
+            'category' => ['nullable', 'in:Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+            'min_price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
+            'max_price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'radius_km' => ['required', 'integer', 'between:1,100'],
-            'sort_by' => ['required', 'in:creation_time_descend,distance_ascend'],
+            'sort_by' => ['required', 'in:creation_time_descend,distance_ascend,price_ascend,price_descend'],
             'strict_filtering' => ['sometimes', 'boolean'],
             'confirm_paid_scan' => ['required', 'accepted'],
         ]);
+
+        if (isset($data['min_price'], $data['max_price']) && $data['min_price'] > $data['max_price']) {
+            return response()->json(['message' => 'Minimum price cannot exceed maximum price.'], 422);
+        }
 
         if ((string) config('marketplace.apify_token') === '') {
             return response()->json(['message' => 'Configure APIFY_TOKEN on the server first.'], 503);
@@ -42,7 +49,8 @@ class MarketplaceScanController extends Controller
         return response()->json([
             ...$result,
             'archived_count' => $stored,
-            'keyword' => $data['keyword'],
+            'keyword' => $data['keyword'] ?? '',
+            'category' => $data['category'] ?? null,
             'notice' => 'Results and geography are unverified; charges depend on Apify billing.',
         ]);
     }
