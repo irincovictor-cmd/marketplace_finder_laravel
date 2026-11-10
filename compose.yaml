@@ -7,7 +7,7 @@ services:
     volumes:
       - ./laravel:/var/www/html
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       # Do not override APP_ENV: PHPUnit must be able to set APP_ENV=testing.
       DB_CONNECTION: sqlite
@@ -28,7 +28,7 @@ services:
       - ./laravel:/var/www/html
       - ./docker/node-bootstrap.sh:/opt/marketplace/node-bootstrap.sh:ro
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"
     command: ["sh", "/opt/marketplace/node-bootstrap.sh"]
     # Avoid implicit paid API calls or background scans.
     depends_on:
