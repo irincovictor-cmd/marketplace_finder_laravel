@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 
 class ListingArchiveService
 {
+    public function __construct(private readonly BoholLocationService $location) {}
+
     public function store(array $items): int
     {
         $count = 0;
@@ -26,10 +28,22 @@ class ListingArchiveService
             if (! $record->exists) {
                 $record->first_seen_at = now();
             }
+            $status = $this->location->assess(
+                $item['city'] ?? null,
+                $item['province'] ?? null,
+                $item['location_text'] ?? null,
+                isset($item['latitude']) && is_numeric($item['latitude']) ? (float) $item['latitude'] : null,
+                isset($item['longitude']) && is_numeric($item['longitude']) ? (float) $item['longitude'] : null
+            );
             $record->fill([
                 'title' => $title,
                 'price' => (float) $item['price'],
                 'city' => $item['city'] ?: null,
+                'province' => $item['province'] ?? null,
+                'location_text' => $item['location_text'] ?? null,
+                'latitude' => $item['latitude'] ?? null,
+                'longitude' => $item['longitude'] ?? null,
+                'location_status' => $status['status'],
                 'listing_url' => $item['url'] ?: null,
                 'category' => $this->category($title),
                 'last_seen_at' => now(),
