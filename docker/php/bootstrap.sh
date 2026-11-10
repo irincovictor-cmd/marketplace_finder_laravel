@@ -37,6 +37,10 @@ mkdir -p app/Http/Controllers app/Services app/Models config database/migrations
 cp /opt/marketplace/laravel-overlay/app/Http/Controllers/ProfitCalculatorController.php app/Http/Controllers/ProfitCalculatorController.php
 cp /opt/marketplace/laravel-overlay/app/Http/Controllers/MarketplaceScanController.php app/Http/Controllers/MarketplaceScanController.php
 cp /opt/marketplace/laravel-overlay/app/Http/Controllers/MarketplaceCollectionsController.php app/Http/Controllers/MarketplaceCollectionsController.php
+cp /opt/marketplace/laravel-overlay/app/Http/Controllers/DiscoveredListingController.php app/Http/Controllers/DiscoveredListingController.php
+cp /opt/marketplace/laravel-overlay/app/Models/DiscoveredListing.php app/Models/DiscoveredListing.php
+cp /opt/marketplace/laravel-overlay/app/Services/ListingArchiveService.php app/Services/ListingArchiveService.php
+cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000002_create_discovered_listings.php database/migrations/2026_11_11_000002_create_discovered_listings.php
 cp /opt/marketplace/laravel-overlay/app/Models/SavedListing.php app/Models/SavedListing.php
 cp /opt/marketplace/laravel-overlay/app/Models/WatchlistEntry.php app/Models/WatchlistEntry.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000001_create_marketplace_collections.php database/migrations/2026_11_11_000001_create_marketplace_collections.php
