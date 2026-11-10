@@ -4,224 +4,204 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>Marketplace Finder | Discover smarter</title>
+<title>Marketplace Finder — Find better deals</title>
 <style>
-:root{color-scheme:dark;--bg:#0a0e1b;--panel:#151e30;--panel2:#101829;--line:#2c3850;--text:#f3f6ff;--muted:#9aa8c0;--accent:#ffae42;--green:#67d8a8;--red:#ff929b;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text)}a{color:inherit}button,input,select{font:inherit}button{cursor:pointer}
-.shell{min-height:100vh;display:grid;grid-template-columns:220px minmax(0,1fr)}
-.sidebar{background:#0e1422;border-right:1px solid var(--line);padding:28px 17px;display:flex;flex-direction:column}
-.brand{font-size:20px;letter-spacing:-.7px;font-weight:850}.brand b{color:var(--accent)}.sub{color:var(--muted);font-size:12px;margin:2px 0 35px}
-.nav{display:grid;gap:7px}.nav a{padding:12px 13px;text-decoration:none;border-radius:12px;color:var(--muted)}.nav a.active,.nav a:hover{background:#282537;color:var(--accent)}.bottom{margin-top:auto;padding:20px 7px;color:var(--muted);font-size:12px}
-main{max-width:1220px;width:100%;margin:0 auto;padding:34px 40px 80px}.eyebrow{color:var(--accent);text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:1.6px}h1{font-size:clamp(30px,4vw,47px);letter-spacing:-1.5px;line-height:1.12;margin:8px 0 8px}p{color:var(--muted)}.intro{display:flex;justify-content:space-between;gap:20px;align-items:start}.flag{border:1px solid #365b50;border-radius:50px;background:#16312b;color:var(--green);padding:9px 12px;font-size:12px;white-space:nowrap}
-.hero{display:flex;align-items:center;justify-content:space-between;gap:20px;border:1px solid #36425d;border-radius:20px;background:linear-gradient(115deg,#222d49,#28243a);padding:24px;margin:24px 0}.hero h2{margin:0;font-size:21px}.hero p{margin:6px 0 0}.btn{background:var(--accent);border:0;color:#23180b;font-weight:800;border-radius:11px;padding:12px 16px;text-decoration:none;display:inline-block}.btn:hover{filter:brightness(1.08)}.btn.secondary{background:#26334a;color:var(--text);border:1px solid #46536b}.filters{display:grid;grid-template-columns:minmax(0,2fr) repeat(2,minmax(0,1fr)) auto;gap:10px;background:var(--panel2);padding:16px;border:1px solid var(--line);border-radius:16px}input,select{width:100%;background:#1a253a;border:1px solid #39465d;color:var(--text);padding:11px 12px;border-radius:10px}input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:27px 0 13px}.header h2{font-size:21px;margin:0}.muted{font-size:12px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.picture{height:140px;background:radial-gradient(circle at 55% 110%,#475a7b,#1b2c43 65%);display:grid;place-items:center;font-size:53px}.content{padding:16px}.tag{color:var(--green);font-size:11px;font-weight:800;text-transform:uppercase}.content h3{font-size:16px;margin:8px 0 4px}.content p{font-size:12px;margin:0}.price{font-size:23px;letter-spacing:-.5px;font-weight:850;margin:12px 0}.cardfoot{border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:12px}.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}.box{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:20px}.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.fields label{color:var(--muted);font-size:12px}.fields input{margin-top:6px}.result{display:flex;gap:30px;align-items:center;flex-wrap:wrap;margin-top:14px}.metric strong{display:block;font-size:28px}.metric span{color:var(--muted);font-size:12px}.error{color:var(--red);font-size:13px;min-height:22px}.note{color:var(--muted);font-size:12px}.empty{border:1px dashed var(--line);padding:30px;border-radius:12px;color:var(--muted);grid-column:1/-1;text-align:center}
-.live-form{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.live-form label{font-size:12px;color:var(--muted)}.live-form label input,.live-form label select{margin-top:6px}.live-check{display:flex;align-items:flex-start;gap:10px;margin:14px 0;font-size:13px;color:var(--muted)}.live-check input{width:18px;height:18px;flex:none;margin:3px 0}.live-results{display:grid;gap:10px;margin-top:16px}.live-row{background:var(--panel);border:1px solid var(--line);padding:12px;border-radius:12px}.live-row strong{display:block}.live-row a{color:var(--accent);font-size:12px}.live-row small{color:var(--muted)}@media(max-width:650px){.live-form{grid-template-columns:1fr}}
-.storage-form{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storage-form label{color:var(--muted);font-size:12px}.storage-form label input{margin-top:6px}.storage-list{display:grid;gap:10px;margin-top:15px}.storage-item{padding:13px;border:1px solid var(--line);background:var(--panel);border-radius:11px;display:flex;justify-content:space-between;gap:15px;align-items:center}.storage-item a{color:var(--accent);overflow-wrap:anywhere}.storage-item button{background:#2c3549;color:var(--text);border:1px solid var(--line);padding:7px 12px;border-radius:8px}.storage-item small{display:block;color:var(--muted)}@media(max-width:650px){.storage-form{grid-template-columns:1fr}.storage-item{align-items:start;flex-direction:column}}
-@media(max-width:1050px){.shell{display:block}.sidebar{border-right:0;border-bottom:1px solid var(--line);padding:13px 22px;display:block}.sub,.bottom{display:none}.nav{display:flex;overflow:auto;margin-top:10px}.nav a{white-space:nowrap;padding:8px 12px}main{padding:24px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:650px){.intro,.hero{display:block}.flag{display:inline-block;margin-top:10px}.hero .btn{margin-top:15px}.filters{grid-template-columns:1fr 1fr}.filters input,.filters button{grid-column:1/-1}.grid,.split{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.header{align-items:start;flex-direction:column;gap:6px}.picture{height:120px}}
+:root{font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color-scheme:dark;--bg:#090f1c;--side:#0d1627;--panel:#121e31;--panel2:#19263a;--line:#2b3b52;--text:#f5f7fd;--muted:#a5b2c5;--orange:#ffb54d;--mint:#88e5c1;--red:#ff96a2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text)}button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}button:disabled{opacity:.6;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}.aside{background:var(--side);padding:26px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:28px}.logo{font-size:20px;font-weight:850;letter-spacing:-.8px;padding:0 10px}.logo b{color:var(--orange)}.tagline{padding:0 10px;color:var(--muted);font-size:12px}.menu{display:grid;gap:6px}.menu button{width:100%;border:0;text-align:left;background:transparent;color:var(--muted);padding:12px 15px;border-radius:12px}.menu button[aria-current=page],.menu button:hover{background:#283044;color:var(--orange)}.asidefoot{margin-top:auto;color:var(--muted);font-size:12px;padding:10px}.asidefoot a{color:var(--orange)}
+main{width:100%;max-width:1190px;margin:0 auto;padding:37px 40px 75px}.view[hidden]{display:none!important}.eyebrow{text-transform:uppercase;letter-spacing:1.5px;font-weight:800;font-size:12px;color:var(--orange)}h1{font-size:clamp(30px,4vw,43px);line-height:1.15;letter-spacing:-1.2px;margin:10px 0}h2{font-size:22px;margin:0}h3{font-size:17px;margin:0 0 7px}p{color:var(--muted);margin:8px 0 18px}.intro{margin-bottom:26px}.intro p{font-size:15px}.status{font-size:12px;color:var(--mint);background:#15332f;border:1px solid #285e51;border-radius:50px;padding:7px 12px;display:inline-block}.headrow{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.btn{border:0;border-radius:12px;background:var(--orange);color:#201508;padding:11px 18px;font-weight:800;white-space:nowrap}.btn.alt{background:#283951;color:var(--text);border:1px solid #40516b}.btn.subtle{background:transparent;color:var(--muted);border:1px solid var(--line)}.btn.sm{font-size:12px;padding:8px 12px}.btn:hover:not(:disabled){filter:brightness(1.07)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:22px}.searchbox{padding:19px;background:linear-gradient(120deg,#1b2c46,#172238);border:1px solid #384963;border-radius:19px}.searchrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(140px,1fr) auto;gap:11px;align-items:end}label{display:block;color:var(--muted);font-size:12px;font-weight:600}input,select{display:block;width:100%;min-width:0;border-radius:11px;border:1px solid #42526b;background:#101c2e;color:var(--text);padding:11px 12px;margin-top:6px}input::placeholder{color:#8190a9}.quicklinks{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 0}.chip{border:1px solid #40516a;border-radius:50px;padding:8px 13px;background:#1e2b42;color:#d0d9e9;font-size:12px}.chip[aria-pressed=true]{background:#3b3228;color:var(--orange);border-color:#b77d35}.muted{color:var(--muted);font-size:12px}.sectiontop{margin:27px 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.stack{display:grid;gap:13px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.listing{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.listing-art{height:99px;display:grid;place-items:center;background:linear-gradient(130deg,#263b57,#1b263c);font-size:32px}.listing-info{padding:15px;display:flex;flex-direction:column;flex:1}.listing h3{font-size:16px;margin:7px 0}.listing-price{font-size:24px;font-weight:850;letter-spacing:-.5px;margin:8px 0}.listing-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px}.pill{font-size:11px;color:var(--mint);font-weight:700}.empty{padding:30px 24px;border:1px dashed #44536b;border-radius:16px;text-align:center;background:var(--panel)}.empty strong{font-size:17px}.empty p{max-width:470px;margin:7px auto 16px}.hint{margin-top:14px;padding:13px 15px;border-radius:12px;background:#1e2a3f;border:1px solid #3b4c63;color:#c1cede;font-size:13px}
+details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--side)}summary{cursor:pointer;color:#f4dfbd;font-weight:700}details.settings p{font-size:13px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.formrow{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storageitem{display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:12px;background:#17263b;border:1px solid var(--line);padding:13px;margin-top:10px}.storageitem a{color:var(--orange);overflow-wrap:anywhere}.storageitem small{display:block;color:var(--muted);font-size:12px}.error{color:var(--red)}.success{color:var(--mint)}.out{font-size:29px;font-weight:850}.checkboxrow{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin:17px 0}.checkboxrow input{width:18px;height:18px;margin:1px 0}.summarygrid{display:flex;gap:45px;flex-wrap:wrap}.notice{border-top:1px solid var(--line);padding-top:18px;margin-top:24px;color:var(--muted);font-size:12px}
+@media(max-width:950px){.app{display:block}.aside{padding:12px 16px;gap:8px;border-right:0;border-bottom:1px solid var(--line)}.menu{display:flex;overflow:auto;gap:6px}.menu button{width:auto;white-space:nowrap}.asidefoot{display:none}main{padding:25px 19px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.searchrow,.grid2,.grid3,.formrow,.cards{grid-template-columns:1fr}.panel{padding:16px}.listing-art{height:80px}.headrow{align-items:flex-start}.storageitem{align-items:flex-start;flex-direction:column}.btn{width:100%}.listing-actions .btn{width:auto}.menu button{padding:10px 12px}}
 </style>
 </head>
 <body>
-<div class="shell">
-<aside class="sidebar">
-<div class="brand">marketplace<b>finder.</b></div><div class="sub">Find deals. Flip smarter.</div>
-<nav class="nav" aria-label="Main navigation">
-<a class="active" href="#discover">⌕ &nbsp; Discover</a>
-<a href="#calculator">▤ &nbsp; Profit calculator</a>
-<a href="#watchlist">☆ &nbsp; Watchlist</a>
-<a href="#saved">♡ &nbsp; Saved items</a>
-<a href="/flipradar/index.html">↗ &nbsp; Original FlipRadar</a>
+<div class="app">
+<aside class="aside">
+<div><div class="logo">marketplace<b>finder.</b></div><div class="tagline">Find deals. Buy smarter.</div></div>
+<nav class="menu" aria-label="Main menu">
+<button type="button" data-view="discover" aria-current="page">⌕ &nbsp; Find deals</button>
+<button type="button" data-view="saved">♡ &nbsp; Saved items</button>
+<button type="button" data-view="watchlist">☆ &nbsp; Watchlist</button>
+<button type="button" data-view="profit">₱ &nbsp; Profit calculator</button>
 </nav>
-<div class="bottom">Laravel migration · Phase 2<br>Demo listings, no paid scanning</div>
+<div class="asidefoot">Need the original tools?<br><a href="/flipradar/index.html">Open classic FlipRadar ↗</a></div>
 </aside>
 <main>
-<header class="intro"><div><div class="eyebrow">A smarter way to find value</div><h1>Discover your next<br>great deal.</h1><p>Explore gadgets, compare budgets, and estimate resale profit.</p></div><span class="flag">● Laravel + PHP is live</span></header>
-<section class="hero"><div><h2>Same FlipRadar mission. Better workspace.</h2><p>This is the new Laravel dashboard. The existing full scanner remains available during migration.</p></div><a class="btn" href="/flipradar/index.html">Open original scanner ↗</a></section>
-<section id="discover" aria-labelledby="discover-heading">
-<form id="filterForm" class="filters"><input id="query" aria-label="Search demo listings" placeholder="Search phones, laptops, consoles…"><select id="category" aria-label="Category"><option value="">All categories</option><option>Phones</option><option>Laptops</option><option>Consoles</option></select><select id="budget" aria-label="Maximum budget"><option value="100000000">Any budget</option><option value="5000">Below ₱5,000</option><option value="10000">Below ₱10,000</option><option value="20000">Below ₱20,000</option></select><button class="btn" type="submit">Filter</button></form>
-<div class="header"><h2 id="discover-heading">Explore examples</h2><span class="muted" id="count">Demo data · not live marketplace results</span></div><div class="grid" id="listingGrid" aria-live="polite"></div>
+<section class="view" id="view-discover">
+<div class="intro"><div class="eyebrow">Discover / Bohol</div><h1>Find your next great deal.</h1><p>Search your discovered Marketplace listings, compare prices, and save the ones worth checking.</p><span class="status">● Your workspace is ready</span></div>
+<div class="searchbox">
+<form id="browseForm" class="searchrow">
+<label>What are you looking for?<input id="search" name="q" placeholder="Try iPhone 13, RTX 3050, gaming laptop…" autocomplete="off"></label>
+<label>Your budget<select id="budget" name="max_price"><option value="">Any price</option><option value="5000">Up to ₱5,000</option><option value="10000">Up to ₱10,000</option><option value="20000">Up to ₱20,000</option><option value="30000">Up to ₱30,000</option></select></label>
+<button class="btn" type="submit">Find deals</button>
+</form>
+<div class="quicklinks" role="group" aria-label="Filter categories">
+<button class="chip" data-category="" aria-pressed="true" type="button">All</button>
+<button class="chip" data-category="Phones" aria-pressed="false" type="button">Phones</button>
+<button class="chip" data-category="Laptops" aria-pressed="false" type="button">Laptops</button>
+<button class="chip" data-category="PC Parts" aria-pressed="false" type="button">PC Parts</button>
+<button class="chip" data-category="Consoles" aria-pressed="false" type="button">Consoles</button>
+</div>
+</div>
+<div class="sectiontop"><h2>Discovered listings</h2><label>Sort<select id="sort"><option value="newest">Recently found</option><option value="price_low">Lowest price</option><option value="price_high">Highest price</option></select></label></div>
+<div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
+<div class="hint">Only listings returned by an approved scan appear here. These are unverified asking prices, not guaranteed bargains. No background scanning is performed.</div>
+<details class="settings" id="scanSettings">
+<summary>Need fresh results? Set up a scan (advanced)</summary>
+<p>Scanning uses a third-party Apify actor and may incur charges. It is disabled until you configure your private server token and explicitly enable it. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
+<form id="scanForm">
+<div class="grid3">
+<label>Search for<input name="keyword" placeholder="e.g. iphone 13" minlength="2" maxlength="80" required></label>
+<label>Search radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
+<label>Sort provider results<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="distance_ascend">Nearest</option></select></label>
+</div>
+<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve one potentially billable scan. Results and location accuracy are not guaranteed.</span></label>
+<button class="btn" id="scanButton" type="submit">Run one approved scan</button>
+</form>
+<p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
+</details>
 </section>
-<div class="header" id="live"><h2>Live Marketplace scan</h2><span class="muted">Laravel backend · manual paid request only</span></div>
-<div class="box">
-<p class="note">This is an early provider-integration test. It makes one paid Apify actor request when enabled; results are not yet passed through FlipRadar's full cleaning, location-confidence or deal-scoring engine. A configured search radius does not guarantee results inside that area.</p>
-<form id="liveScanForm">
-<div class="live-form">
-<label>Search keyword<input name="keyword" value="iphone" minlength="2" maxlength="80" required></label>
-<label>Radius from Tagbilaran<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
-<label>Order<select name="sort_by"><option value="creation_time_descend">Newest listing</option><option value="distance_ascend">Nearest reported</option></select></label>
-</div>
-<label class="live-check"><input id="paidApproval" type="checkbox" required><span>I approve one potentially billable Apify scan. The $0.10 actor parameter is <strong>not a guaranteed billing ceiling.</strong></span></label>
-<button class="btn" id="liveScanButton" type="submit">Run one approved scan</button>
+<section class="view" id="view-saved" hidden>
+<div class="intro"><div class="eyebrow">Your collection</div><h1>Saved items</h1><p>Keep interesting Marketplace links in one place, ready to compare later.</p></div>
+<div class="panel">
+<h3>Save a listing</h3>
+<form id="saveForm" class="formrow">
+<label>Listing name<input name="title" placeholder="e.g. Realme C55" required maxlength="250"></label>
+<label>Facebook item link<input name="listing_url" type="url" placeholder="https://www.facebook.com/marketplace/item/…" required></label>
+<button class="btn" type="submit">Save item</button>
 </form>
-<p id="scanMessage" class="note" aria-live="polite">Disabled by default. Configure the server's APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED before live use.</p>
-<div id="liveResults" class="live-results" aria-live="polite"></div>
+<p class="muted" id="saveStatus" role="status"></p>
+<div id="savedItems" aria-live="polite"></div>
 </div>
-<div class="header" id="watchlist"><h2>Watchlist</h2><span class="muted">Stored in Laravel SQLite</span></div>
-<div class="box">
-<form id="watchForm" class="storage-form">
-<label>Device or search keyword<input name="keyword" placeholder="e.g. iphone 13" minlength="2" maxlength="80" required></label>
-<label>Maximum buying price (₱)<input name="max_price" type="number" min="0" step=".01" placeholder="Optional"></label>
-<button type="submit" class="btn">Add watch</button>
+</section>
+<section class="view" id="view-watchlist" hidden>
+<div class="intro"><div class="eyebrow">Keep an eye on prices</div><h1>Your watchlist</h1><p>List devices and your ideal buying prices. Nothing scans automatically or spends credits.</p></div>
+<div class="panel"><h3>Add a device to watch</h3>
+<form id="watchForm" class="formrow">
+<label>Device name<input name="keyword" placeholder="e.g. iPhone 13" minlength="2" maxlength="80" required></label>
+<label>Maximum budget (₱)<input name="max_price" type="number" step=".01" min="0" placeholder="Optional"></label>
+<button class="btn" type="submit">Add device</button>
 </form>
-<p class="note" id="watchStatus" role="status">Watchlist entries are stored but do not automatically trigger paid scans.</p>
-<div class="storage-list" id="watchItems" aria-live="polite"></div>
+<p class="muted" id="watchStatus" role="status"></p>
+<div id="watchItems" aria-live="polite"></div>
 </div>
-<div class="header" id="saved"><h2>Saved listings</h2><span class="muted">Stored in Laravel SQLite</span></div>
-<div class="box">
-<p class="note">Save an actual listing using its Facebook Marketplace link. Results from approved live scans can also be saved with one click.</p>
-<form id="savedForm" class="storage-form">
-<label>Listing title<input name="title" placeholder="e.g. Used iPhone 13" required maxlength="250"></label>
-<label>Facebook Marketplace listing URL<input name="listing_url" type="url" placeholder="https://www.facebook.com/marketplace/item/…" required></label>
-<button type="submit" class="btn">Save listing</button>
-</form>
-<p class="note" id="savedStatus" role="status">Saved listings remain on this machine's SQLite database across Docker restarts.</p>
-<div class="storage-list" id="savedItems" aria-live="polite"></div>
+</section>
+<section class="view" id="view-profit" hidden>
+<div class="intro"><div class="eyebrow">Know your numbers</div><h1>Profit calculator</h1><p>Estimate how much you could make after buying and selling a device.</p></div>
+<div class="grid2">
+<div class="panel"><h3>Enter your prices</h3><form id="calcForm">
+<div class="grid3">
+<label>Buying price (₱)<input name="buying_price" type="number" min=".01" step=".01" value="8000" required></label>
+<label>Selling price (₱)<input name="selling_price" type="number" min="0" step=".01" value="10000" required></label>
+<label>Extra expenses (₱)<input name="extra_costs" type="number" min="0" step=".01" value="500" required></label>
+</div><p class="muted">Include delivery, repairs and other expenses.</p><button class="btn" type="submit">Calculate profit</button></form><p id="calcStatus" role="alert" class="error"></p></div>
+<div class="panel"><h3>Estimated result</h3><div class="summarygrid"><div><div class="muted">Net profit</div><div id="calcProfit" class="out">—</div></div><div><div class="muted">ROI</div><div id="calcRoi" class="out">—</div></div></div><p class="muted">A manual estimate, not a verified market resale price.</p></div>
 </div>
-<div class="header" id="calculator"><h2>Profit calculator</h2><span class="muted">Calculated by Laravel PHP · no API charges</span></div>
-<div class="split">
-<div class="box"><form id="calculatorForm">
-<div class="fields">
-<label>Buying price (₱)<input name="buying_price" type="number" inputmode="decimal" min=".01" step=".01" value="8000" required></label>
-<label>Selling price (₱)<input name="selling_price" type="number" inputmode="decimal" min="0" step=".01" value="10000" required></label>
-<label>Extra costs (₱)<input name="extra_costs" type="number" inputmode="decimal" min="0" step=".01" value="500" required></label>
-</div><button class="btn" type="submit">Calculate using PHP</button><p id="calcError" role="alert" class="error"></p>
-</form></div>
-<div class="box" aria-live="polite"><div class="muted">Estimated profit</div><div class="result"><div class="metric"><strong id="profit">—</strong><span>Net return</span></div><div class="metric"><strong id="roi">—</strong><span>Return on investment</span></div></div><p class="note">Based only on your entered numbers. Not a verified resale price.</p></div>
-</div>
-<p class="note" style="margin-top:22px">Migration notice: Example listing cards are illustrative only. Saved items and watchlists now use SQLite, but existing FlipRadar browser data is not yet imported. Advanced scoring, location filtering, and first-seen tracking still require migration.</p>
+</section>
+<div class="notice">Marketplace Finder · Laravel + SQLite · Single-user local development. Original FlipRadar data is kept separate until imported. <a href="/flipradar/index.html">Classic app</a></div>
 </main></div>
 <script>
-const demos=[
- {title:'iPhone 13 128GB',category:'Phones',price:12500,city:'Tagbilaran',icon:'📱'},
- {title:'POCO F7 256GB',category:'Phones',price:14800,city:'Dauis',icon:'📱'},
- {title:'Lenovo ThinkPad T480',category:'Laptops',price:11500,city:'Panglao',icon:'💻'},
- {title:'PlayStation 4 Slim',category:'Consoles',price:8500,city:'Tubigon',icon:'🎮'},
- {title:'Samsung Galaxy A54',category:'Phones',price:7200,city:'Tagbilaran',icon:'📱'},
- {title:'Acer Aspire 5',category:'Laptops',price:19500,city:'Talibon',icon:'💻'}
-];
-const money=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(n);
-function renderListings(){
- const q=document.getElementById('query').value.toLowerCase().trim();
- const cat=document.getElementById('category').value, budget=Number(document.getElementById('budget').value);
- const items=demos.filter(i=>(!q||i.title.toLowerCase().includes(q)||i.city.toLowerCase().includes(q))&&(!cat||cat===i.category)&&i.price<=budget);
- const grid=document.getElementById('listingGrid');grid.replaceChildren();
- document.getElementById('count').textContent=items.length+' illustrative results · not live';
- if(!items.length){const empty=document.createElement('div');empty.className='empty';empty.textContent='No example listings match these filters.';grid.append(empty);return;}
- for(const item of items){
-  const card=document.createElement('article');card.className='card';
-  const picture=document.createElement('div');picture.className='picture';picture.textContent=item.icon;
-  const content=document.createElement('div');content.className='content';
-  const tag=document.createElement('div');tag.className='tag';tag.textContent='Sample · '+item.category;
-  const name=document.createElement('h3');name.textContent=item.title;
-  const location=document.createElement('p');location.textContent=item.city+', Bohol · example only';
-  const price=document.createElement('div');price.className='price';price.textContent=money(item.price);
-  const footer=document.createElement('div');footer.className='cardfoot';footer.textContent='No verified seller, link or market value';
-  content.append(tag,name,location,price,footer);card.append(picture,content);grid.append(card);
- }
+'use strict';
+const csrf=document.querySelector('meta[name="csrf-token"]').content;
+const money=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(n||0));
+let category='';
+const views=['discover','saved','watchlist','profit'];
+function navigate(view){
+ if(!views.includes(view))return;
+ views.forEach(v=>{document.getElementById('view-'+v).hidden=v!==view});
+ document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-current',b.dataset.view===view?'page':'false'));
+ history.replaceState(null,'','#'+view);
+ if(view==='saved')loadSaved();
+ if(view==='watchlist')loadWatch();
+ window.scrollTo({top:0,behavior:'instant'});
 }
-document.getElementById('filterForm').addEventListener('submit',e=>{e.preventDefault();renderListings()});
-document.getElementById('query').addEventListener('input',renderListings);
-document.getElementById('category').addEventListener('change',renderListings);
-document.getElementById('budget').addEventListener('change',renderListings);
-document.getElementById('calculatorForm').addEventListener('submit',async e=>{
- e.preventDefault();const form=e.currentTarget, error=document.getElementById('calcError');error.textContent='';
- const data=Object.fromEntries(new FormData(form));
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.view)));
+if(views.includes(location.hash.slice(1)))navigate(location.hash.slice(1));
+async function request(path,method='GET',body){
+ const options={method,headers:{Accept:'application/json','X-CSRF-TOKEN':csrf}};
+ if(body!==undefined){options.headers['Content-Type']='application/json';options.body=JSON.stringify(body)}
+ const response=await fetch(path,options);
+ const value=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error(value.errors?Object.values(value.errors).flat().join(' '):value.message||'Request failed');
+ return value;
+}
+const label=(text,cls)=>{const e=document.createElement('span');e.className=cls||'';e.textContent=text;return e};
+const button=(title,callback)=>{const e=document.createElement('button');e.className='btn sm alt';e.type='button';e.textContent=title;e.addEventListener('click',callback);return e};
+async function loadListings(){
+ const box=document.getElementById('listingResults');box.replaceChildren();
+ const p=new URLSearchParams();const search=document.getElementById('search').value.trim();
+ const budget=document.getElementById('budget').value;
+ if(search)p.set('q',search);if(budget)p.set('max_price',budget);if(category)p.set('category',category);
+ p.set('sort',document.getElementById('sort').value);
  try{
- const response=await fetch('{{ route('marketplace.calculator') }}',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify(data)});
- if(!response.ok){const detail=await response.json().catch(()=>({}));throw Error(detail.message||'Calculation could not be completed');}
- const result=await response.json();
- document.getElementById('profit').textContent=money(result.profit);
- document.getElementById('roi').textContent=result.roi_percent.toFixed(2)+'%';
- }catch(err){error.textContent=err.message||'Request failed';document.getElementById('profit').textContent='—';document.getElementById('roi').textContent='—';}
-});
-renderListings();
-
-document.getElementById('liveScanForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const form=e.currentTarget,button=document.getElementById('liveScanButton'),status=document.getElementById('scanMessage');
-  const results=document.getElementById('liveResults');
-  if(!document.getElementById('paidApproval').checked)return;
-  if(!window.confirm('This launches one paid Apify search. Continue?'))return;
-  button.disabled=true;status.textContent='Requesting Marketplace results…';results.replaceChildren();
-  const data=Object.fromEntries(new FormData(form));
-  data.latitude=9.6477;data.longitude=123.8547;
-  data.radius_km=Number(data.radius_km);data.confirm_paid_scan=true;
-  try{
-    const response=await fetch('{{ route('marketplace.scan') }}',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},
-      body:JSON.stringify(data)
-    });
-    const payload=await response.json().catch(()=>({}));
-    if(!response.ok)throw Error(payload.message||('Scan failed (HTTP '+response.status+')'));
-    status.textContent='Received '+payload.raw_count+' raw items, '+payload.returned+' basic items shown. Location, device type and pricing are unverified.';
-    for(const item of payload.listings||[]){
-      const row=document.createElement('article');row.className='live-row';
-      const title=document.createElement('strong');title.textContent=item.title||'Untitled';
-      const desc=document.createElement('small');desc.textContent=money(Number(item.price))+' · '+(item.city||'Location unknown')+' · Not verified';
-      row.append(title,desc);
-      if(item.url){const link=document.createElement('a');link.href=item.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open Facebook listing ↗';row.append(document.createElement('br'),link);const save=document.createElement('button');save.className='btn secondary';save.style.marginLeft='12px';save.textContent='Save listing';save.addEventListener('click',async()=>{try{await collectionRequest('/collections/saved','POST',{title:item.title,listing_url:item.url,price:item.price,city:item.city||null});document.getElementById('savedStatus').textContent='Listing saved to SQLite.';await loadSaved()}catch(err){document.getElementById('savedStatus').textContent=err.message}});row.append(save)}
-      results.append(row);
-    }
-  }catch(error){status.textContent=error.message||'Unable to scan';}
-  finally{button.disabled=false;document.getElementById('paidApproval').checked=false;}
-});
-
-async function collectionRequest(url,method='GET',data=null){
- const opts={method,headers:{'Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content}};
- if(data!==null){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(data)}
- const response=await fetch(url,opts);
- const payload=await response.json().catch(()=>({}));
- if(!response.ok){
-   const errors=payload.errors?Object.values(payload.errors).flat().join(' '):'';
-   throw Error(errors||payload.message||'Request failed (HTTP '+response.status+')');
+ const data=await request('/listings?'+p.toString());
+ if(!data.items.length){box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent='No listings found yet';const msg=document.createElement('p');msg.textContent='Run an approved scan in Advanced settings, or adjust your filters. We never show invented listings as real deals.';empty.append(heading,msg,button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
+ box.className='cards';
+ for(const item of data.items){
+ const card=document.createElement('article');card.className='listing';
+ const art=document.createElement('div');art.className='listing-art';art.textContent=({'Phones':'📱','Laptops':'💻','PC Parts':'🖥️','Consoles':'🎮'})[item.category]||'📦';
+ const body=document.createElement('div');body.className='listing-info';
+ const badge=label(item.category+' · Saved in discovery history','pill');
+ const h=document.createElement('h3');h.textContent=item.title;
+ const price=label(money(item.price),'listing-price');
+ const city=label(item.city||'Location not verified','muted');
+ const actions=document.createElement('div');actions.className='listing-actions';
+ if(item.url){
+  const a=document.createElement('a');a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';a.className='btn sm alt';a.textContent='View listing';
+  actions.append(a);
+  actions.append(button('♡ Save',async()=>{try{await request('/collections/saved','POST',{title:item.title,listing_url:item.url,price:item.price,city:item.city});alert('Saved to your collection')}catch(e){alert(e.message)}}));
+ }else{actions.append(label('Listing link unavailable','muted'))}
+ body.append(badge,h,price,city,actions);card.append(art,body);box.append(card);
  }
- return payload;
+ }catch(e){box.textContent='Could not load listings: '+e.message}
 }
+document.getElementById('browseForm').addEventListener('submit',e=>{e.preventDefault();loadListings()});
+document.getElementById('sort').addEventListener('change',loadListings);
+document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));loadListings()}));
 async function loadSaved(){
- const target=document.getElementById('savedItems');target.replaceChildren();
+ const box=document.getElementById('savedItems');box.replaceChildren();
  try{
-  const payload=await collectionRequest('/collections/saved');
-  if(!payload.items.length){target.textContent='No saved listings yet.';return;}
-  for(const item of payload.items){
-   const row=document.createElement('div');row.className='storage-item';
-   const content=document.createElement('div');
-   const link=document.createElement('a');link.href=item.listing_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=item.title;
-   const meta=document.createElement('small');meta.textContent=(item.price!==null?money(Number(item.price)):'Price unknown')+(item.city?' · '+item.city:'');
-   content.append(link,meta);
-   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove';
-   remove.addEventListener('click',async()=>{try{await collectionRequest('/collections/saved/'+item.id,'DELETE');await loadSaved()}catch(err){document.getElementById('savedStatus').textContent=err.message}});
-   row.append(content,remove);target.append(row);
-  }
- }catch(err){target.textContent='Unable to load saved listings: '+err.message}
+ const data=await request('/collections/saved');
+ if(!data.items.length){box.append(label('No saved items yet. Save one from Find deals or paste a Facebook listing link.','muted'));return}
+ for(const item of data.items){
+  const row=document.createElement('div');row.className='storageitem';const info=document.createElement('div');
+  const a=document.createElement('a');a.href=item.listing_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=item.title;
+  info.append(a,document.createElement('br'),label(item.price!==null?money(item.price):'Price not recorded','muted'));
+  row.append(info,button('Remove',async()=>{try{await request('/collections/saved/'+item.id,'DELETE');loadSaved()}catch(e){document.getElementById('saveStatus').textContent=e.message}}));box.append(row);
+ }
+ }catch(e){box.textContent='Unable to load saved items: '+e.message}
 }
-async function loadWatchlist(){
- const target=document.getElementById('watchItems');target.replaceChildren();
+async function loadWatch(){
+ const box=document.getElementById('watchItems');box.replaceChildren();
  try{
-  const payload=await collectionRequest('/collections/watchlist');
-  if(!payload.items.length){target.textContent='No watchlist keywords yet.';return;}
-  for(const item of payload.items){
-   const row=document.createElement('div');row.className='storage-item';
-   const content=document.createElement('div');const name=document.createElement('strong');name.textContent=item.keyword;
-   const meta=document.createElement('small');meta.textContent=(item.max_price!==null?'Maximum '+money(Number(item.max_price)):'No maximum price')+' · '+(item.enabled?'Enabled':'Paused');
-   content.append(name,meta);
-   const remove=document.createElement('button');remove.type='button';remove.textContent='Remove';
-   remove.addEventListener('click',async()=>{try{await collectionRequest('/collections/watchlist/'+item.id,'DELETE');await loadWatchlist()}catch(err){document.getElementById('watchStatus').textContent=err.message}});
-   row.append(content,remove);target.append(row);
-  }
- }catch(err){target.textContent='Unable to load watchlist: '+err.message}
+ const data=await request('/collections/watchlist');
+ if(!data.items.length){box.append(label('Your watchlist is empty. Add a device you want to find.','muted'));return}
+ for(const item of data.items){
+  const row=document.createElement('div');row.className='storageitem';const info=document.createElement('div');
+  info.append(label(item.keyword,'pill'),document.createElement('br'),label((item.max_price!==null?'Up to '+money(item.max_price):'Any price')+' · '+(item.enabled?'Enabled':'Paused'),'muted'));
+  row.append(info,button('Remove',async()=>{try{await request('/collections/watchlist/'+item.id,'DELETE');loadWatch()}catch(e){document.getElementById('watchStatus').textContent=e.message}}));box.append(row);
+ }
+ }catch(e){box.textContent='Unable to load watchlist: '+e.message}
 }
-document.getElementById('savedForm').addEventListener('submit',async event=>{
- event.preventDefault();const form=event.currentTarget;
- try{await collectionRequest('/collections/saved','POST',Object.fromEntries(new FormData(form)));form.reset();document.getElementById('savedStatus').textContent='Listing saved to SQLite.';await loadSaved()}
- catch(err){document.getElementById('savedStatus').textContent=err.message}
+document.getElementById('saveForm').addEventListener('submit',async e=>{e.preventDefault();try{await request('/collections/saved','POST',Object.fromEntries(new FormData(e.currentTarget)));e.currentTarget.reset();document.getElementById('saveStatus').textContent='Item saved.';loadSaved()}catch(error){document.getElementById('saveStatus').textContent=error.message}});
+document.getElementById('watchForm').addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));data.enabled=true;if(!data.max_price)data.max_price=null;try{await request('/collections/watchlist','POST',data);e.currentTarget.reset();document.getElementById('watchStatus').textContent='Device added.';loadWatch()}catch(error){document.getElementById('watchStatus').textContent=error.message}});
+document.getElementById('calcForm').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('calcStatus');status.textContent='';try{const data=await request('/calculator/estimate','POST',Object.fromEntries(new FormData(e.currentTarget)));document.getElementById('calcProfit').textContent=money(data.profit);document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%'}catch(error){status.textContent=error.message}});
+document.getElementById('scanForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!document.getElementById('paidScan').checked)return;
+ if(!confirm('This can charge your Apify account. Start one scan?'))return;
+ const btn=document.getElementById('scanButton'),status=document.getElementById('scanStatus');btn.disabled=true;status.textContent='Scanning…';
+ try{
+ const data=Object.fromEntries(new FormData(e.currentTarget));data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
+ const outcome=await request('/marketplace/scan','POST',data);
+ status.textContent=outcome.archived_count+' identifiable listings archived. Location and asking prices are unverified.';
+ await loadListings();
+ document.getElementById('scanSettings').open=false;
+ }catch(error){status.textContent=error.message}
+ finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
 });
-document.getElementById('watchForm').addEventListener('submit',async event=>{
- event.preventDefault();const form=event.currentTarget;const data=Object.fromEntries(new FormData(form));
- data.enabled=true;if(data.max_price==='')data.max_price=null;
- try{await collectionRequest('/collections/watchlist','POST',data);form.reset();document.getElementById('watchStatus').textContent='Watchlist saved to SQLite.';await loadWatchlist()}
- catch(err){document.getElementById('watchStatus').textContent=err.message}
-});
-loadSaved();loadWatchlist();
+loadListings();
 </script>
 </body></html>
