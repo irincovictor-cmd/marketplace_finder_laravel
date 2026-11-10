@@ -60,6 +60,7 @@ class ListingArchiveService
     public function category(string $title): string
     {
         $s = mb_strtolower($title);
+        if (preg_match('/\\b(camera|cameras|dslr|mirrorless|canon|nikon|fujifilm|instax|gopro|lumix|sony zv|sony a[0-9]{4}|lens)\\b/u', $s)) return 'Cameras';
         if (preg_match('/\b(iphone|samsung|galaxy|redmi|poco|iqoo|realme|oneplus|pixel|phone|oppo|vivo)\b/u', $s)) return 'Phones';
         if (preg_match('/\b(laptop|notebook|thinkpad|macbook|ideapad|aspire)\b/u', $s)) return 'Laptops';
         if (preg_match('/\b(ps[345]|playstation|xbox|nintendo|switch)\b/u', $s)) return 'Consoles';
