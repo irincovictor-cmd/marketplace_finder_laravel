@@ -100,10 +100,33 @@ class MarketplaceScanService
                 'latitude' => is_numeric($lat) ? (float) $lat : null,
                 'longitude' => is_numeric($lon) ? (float) $lon : null,
                 'url' => $url,
+                'image_url' => $this->safeImageUrl($item['primary_listing_photo_url'] ?? null),
             ];
         }
 
         return ['listings' => $items, 'returned' => count($items), 'raw_count' => count($response->json())];
+    }
+
+    /**
+     * Only display public HTTPS Marketplace CDN images. Never fetch URLs on
+     * the server (untrusted actor data could otherwise trigger SSRF).
+     */
+    private function safeImageUrl(mixed $candidate): ?string
+    {
+        if (! is_string($candidate) || strlen($candidate) > 4096) {
+            return null;
+        }
+        $url = parse_url($candidate);
+        if (! is_array($url) || strtolower($url['scheme'] ?? '') !== 'https'
+            || isset($url['user']) || isset($url['pass'])) {
+            return null;
+        }
+        $host = strtolower($url['host'] ?? '');
+        if ($host !== 'fbcdn.net' && ! str_ends_with($host, '.fbcdn.net')
+            && $host !== 'fbsbx.com' && ! str_ends_with($host, '.fbsbx.com')) {
+            return null;
+        }
+        return $candidate;
     }
 
     private function marketplaceUrl(mixed $candidate): ?string
