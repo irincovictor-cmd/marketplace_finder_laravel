@@ -3,10 +3,13 @@
 use App\Http\Controllers\ProfitCalculatorController;
 use App\Http\Controllers\MarketplaceScanController;
 use App\Http\Controllers\MarketplaceCollectionsController;
+use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
 
 // Laravel-native dashboard (first migration slice).
 Route::view('/', 'marketplace.dashboard')->name('marketplace.dashboard');
+
+Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
 
 // Stateful browser clients receive Laravel's CSRF token in the Blade template.
 Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calculate'])
