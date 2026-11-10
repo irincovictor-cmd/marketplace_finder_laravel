@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class DiscoveredListing extends Model
 {
     protected $fillable = [
-        'source_key', 'title', 'price', 'city', 'listing_url', 'category',
+        'source_key', 'title', 'price', 'city', 'listing_url', 'image_url', 'category',
         'first_seen_at', 'last_seen_at', 'province', 'location_text', 'latitude', 'longitude', 'location_status',
     ];
 
