@@ -31,9 +31,16 @@ if ! grep -q '^DB_CONNECTION=' .env; then printf '\nDB_CONNECTION=sqlite\n' >> .
 mkdir -p public/flipradar
 cp -a /opt/marketplace/legacy/. public/flipradar/
 
-# Only replace the untouched Laravel welcome route; never overwrite user routes.
-if grep -Fq "return view('welcome');" routes/web.php; then
-  cp /opt/marketplace/routes-web.php routes/web.php
+# Phase 2: install version-controlled PHP controller, Blade page, and tests.
+# Retain modified user routes, but upgrade our original transitional route.
+mkdir -p app/Http/Controllers resources/views/marketplace tests/Feature
+cp /opt/marketplace/laravel-overlay/app/Http/Controllers/ProfitCalculatorController.php app/Http/Controllers/ProfitCalculatorController.php
+cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.php resources/views/marketplace/dashboard.blade.php
+cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
+if grep -Fq "return view('welcome');" routes/web.php || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php; then
+  cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php
+else
+  echo "[marketplace] Existing custom routes/web.php preserved; integrate the new routes manually."
 fi
 
 composer install --no-interaction --prefer-dist
