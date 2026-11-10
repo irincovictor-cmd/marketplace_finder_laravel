@@ -2,7 +2,7 @@
 
 A new, Docker-first Laravel rebuild of [FlipRadar / Marketplace_finder](https://github.com/irincovictor-cmd/Marketplace_finder).
 
-**Status:** Phase 3 initial API milestone. The redesigned Blade dashboard, PHP profit calculator, and **opt-in, single-keyword Laravel Apify scan endpoint** are tracked under `laravel-overlay/`. Legacy FlipRadar remains at `/flipradar/index.html`. Advanced normalization/classification, Bohol location-confidence filters, saved items, watchlist, and historical first-seen tracking **have not yet been migrated**.
+**Status:** Phase 4 SQLite collections milestone. The Blade dashboard now includes a PHP calculator, an opt-in Laravel Apify scan endpoint, and **SQLite-backed saved listings and watchlist entries** with create/list/update-by-key/delete operations. Legacy FlipRadar remains at `/flipradar/index.html`. Advanced normalization/classification, Bohol location-confidence filters, existing browser-data import, and first-seen tracking **have not yet been migrated**.
 
 ## Requirements
 - Docker Desktop with Linux containers and WSL integration (Windows), or Docker Engine with Compose (Linux/macOS)
@@ -33,6 +33,19 @@ curl -I http://localhost:8000/
 ```
 
 The dashboard is a working Blade page with example listings and browser-side sample filtering. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. A **separate, disabled-by-default** live scan panel calls POST `/marketplace/scan` only after a checkbox and native browser confirmation. No paid Apify requests occur at page load, build, or test time.
+
+## Phase 4: saved listings and watchlists in SQLite
+
+The dashboard includes a watchlist form and a saved-listings form. Approved scan results with a valid Facebook Marketplace item link also show a **Save listing** button. The API uses `GET/POST /collections/saved`, `DELETE /collections/saved/{id}`, `GET/POST /collections/watchlist` and `DELETE /collections/watchlist/{id}`.
+
+These use `laravel/database/database.sqlite`, which persists across ordinary Docker restarts and `docker compose down`. Data is local and single-user; **there is no authentication or account separation**, so keep port 8000 restricted to localhost. Only HTTPS Facebook Marketplace item links are accepted. Watchlist entries do **not** schedule automatic paid scanning.
+
+The original FlipRadar localStorage is **not synchronized** with SQLite. Do not delete the original browser data or the SQLite file when updating. Test without paid requests:
+
+```bash
+docker compose exec -T app php artisan test --filter=MarketplaceCollectionsTest
+docker compose exec -T app php artisan test
+```
 
 ## Phase 3 live scanning (optional, paid)
 The Apify Marketplace actor may incur charges and may not provide reliable Bohol-only data. Never assume its `maxTotalChargeUsd=0.10` parameter guarantees a real billing cap.
