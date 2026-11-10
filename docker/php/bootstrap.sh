@@ -25,6 +25,17 @@ touch database/database.sqlite
 sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
 if ! grep -q '^DB_CONNECTION=' .env; then printf '\nDB_CONNECTION=sqlite\n' >> .env; fi
 
+# Install the verified original static frontend from version-controlled source.
+# This is transitional: it is served by Laravel's public directory while
+# API and persistence features are migrated into Laravel.
+mkdir -p public/flipradar
+cp -a /opt/marketplace/legacy/. public/flipradar/
+
+# Only replace the untouched Laravel welcome route; never overwrite user routes.
+if grep -Fq "return view('welcome');" routes/web.php; then
+  cp /opt/marketplace/routes-web.php routes/web.php
+fi
+
 composer install --no-interaction --prefer-dist
 if ! grep -Eq '^APP_KEY=base64:.+' .env; then
   php artisan key:generate --force
