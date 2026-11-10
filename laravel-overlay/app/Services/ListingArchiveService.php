@@ -45,6 +45,8 @@ class ListingArchiveService
                 'longitude' => $item['longitude'] ?? null,
                 'location_status' => $status['status'],
                 'listing_url' => $item['url'] ?: null,
+                // Keep an earlier photo if a later scan omits the image.
+                'image_url' => $item['image_url'] ?? $record->image_url,
                 'category' => $this->category($title),
                 'last_seen_at' => now(),
             ]);
