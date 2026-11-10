@@ -55,7 +55,7 @@ class ListingArchiveService
     }
 
     // Provisional UI grouping; NOT equivalent to FlipRadar's detailed classifier.
-    private function category(string $title): string
+    public function category(string $title): string
     {
         $s = mb_strtolower($title);
         if (preg_match('/\b(iphone|samsung|galaxy|redmi|poco|iqoo|realme|oneplus|pixel|phone|oppo|vivo)\b/u', $s)) return 'Phones';
