@@ -11,10 +11,10 @@
 .app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}.aside{background:var(--side);padding:26px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:28px}.logo{font-size:20px;font-weight:850;letter-spacing:-.8px;padding:0 10px}.logo b{color:var(--orange)}.tagline{padding:0 10px;color:var(--muted);font-size:12px}.menu{display:grid;gap:6px}.menu button{width:100%;border:0;text-align:left;background:transparent;color:var(--muted);padding:12px 15px;border-radius:12px}.menu button[aria-current=page],.menu button:hover{background:#283044;color:var(--orange)}.asidefoot{margin-top:auto;color:var(--muted);font-size:12px;padding:10px}.asidefoot a{color:var(--orange)}
 main{width:100%;max-width:1190px;margin:0 auto;padding:37px 40px 75px}.view[hidden]{display:none!important}.eyebrow{text-transform:uppercase;letter-spacing:1.5px;font-weight:800;font-size:12px;color:var(--orange)}h1{font-size:clamp(30px,4vw,43px);line-height:1.15;letter-spacing:-1.2px;margin:10px 0}h2{font-size:22px;margin:0}h3{font-size:17px;margin:0 0 7px}p{color:var(--muted);margin:8px 0 18px}.intro{margin-bottom:26px}.intro p{font-size:15px}.status{font-size:12px;color:var(--mint);background:#15332f;border:1px solid #285e51;border-radius:50px;padding:7px 12px;display:inline-block}.headrow{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
 .btn{border:0;border-radius:12px;background:var(--orange);color:#201508;padding:11px 18px;font-weight:800;white-space:nowrap}.btn.alt{background:#283951;color:var(--text);border:1px solid #40516b}.btn.subtle{background:transparent;color:var(--muted);border:1px solid var(--line)}.btn.sm{font-size:12px;padding:8px 12px}.btn:hover:not(:disabled){filter:brightness(1.07)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:22px}.searchbox{padding:19px;background:linear-gradient(120deg,#1b2c46,#172238);border:1px solid #384963;border-radius:19px}.searchrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(140px,1fr) auto;gap:11px;align-items:end}label{display:block;color:var(--muted);font-size:12px;font-weight:600}input,select{display:block;width:100%;min-width:0;border-radius:11px;border:1px solid #42526b;background:#101c2e;color:var(--text);padding:11px 12px;margin-top:6px}input::placeholder{color:#8190a9}.quicklinks{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 0}.chip{border:1px solid #40516a;border-radius:50px;padding:8px 13px;background:#1e2b42;color:#d0d9e9;font-size:12px}.chip[aria-pressed=true]{background:#3b3228;color:var(--orange);border-color:#b77d35}.muted{color:var(--muted);font-size:12px}.sectiontop{margin:27px 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.stack{display:grid;gap:13px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.listing{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.listing-art{height:99px;display:grid;place-items:center;background:linear-gradient(130deg,#263b57,#1b263c);font-size:32px}.listing-info{padding:15px;display:flex;flex-direction:column;flex:1}.listing h3{font-size:16px;margin:7px 0}.listing-price{font-size:24px;font-weight:850;letter-spacing:-.5px;margin:8px 0}.listing-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px}.pill{font-size:11px;color:var(--mint);font-weight:700}.empty{padding:30px 24px;border:1px dashed #44536b;border-radius:16px;text-align:center;background:var(--panel)}.empty strong{font-size:17px}.empty p{max-width:470px;margin:7px auto 16px}.hint{margin-top:14px;padding:13px 15px;border-radius:12px;background:#1e2a3f;border:1px solid #3b4c63;color:#c1cede;font-size:13px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:22px}.searchbox{padding:19px;background:linear-gradient(120deg,#1b2c46,#172238);border:1px solid #384963;border-radius:19px}.searchrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(130px,1fr) minmax(145px,1fr) auto;gap:11px;align-items:end}.filterrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:13px}.filterrow label{min-width:0}.filter-summary{padding:10px 1px 0;color:var(--muted);font-size:12px}.filter-toggle{border:0;background:transparent;padding:9px 3px;color:var(--orange);font-weight:700;font-size:13px}.extra-filters[hidden]{display:none}.searchbox .chip{margin-bottom:2px}label{display:block;color:var(--muted);font-size:12px;font-weight:600}input,select{display:block;width:100%;min-width:0;border-radius:11px;border:1px solid #42526b;background:#101c2e;color:var(--text);padding:11px 12px;margin-top:6px}input::placeholder{color:#8190a9}.quicklinks{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 0}.chip{border:1px solid #40516a;border-radius:50px;padding:8px 13px;background:#1e2b42;color:#d0d9e9;font-size:12px}.chip[aria-pressed=true]{background:#3b3228;color:var(--orange);border-color:#b77d35}.muted{color:var(--muted);font-size:12px}.sectiontop{margin:27px 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.stack{display:grid;gap:13px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.listing{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.listing-art{height:99px;display:grid;place-items:center;background:linear-gradient(130deg,#263b57,#1b263c);font-size:32px}.listing-info{padding:15px;display:flex;flex-direction:column;flex:1}.listing h3{font-size:16px;margin:7px 0}.listing-price{font-size:24px;font-weight:850;letter-spacing:-.5px;margin:8px 0}.listing-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px}.pill{font-size:11px;color:var(--mint);font-weight:700}.empty{padding:30px 24px;border:1px dashed #44536b;border-radius:16px;text-align:center;background:var(--panel)}.empty strong{font-size:17px}.empty p{max-width:470px;margin:7px auto 16px}.hint{margin-top:14px;padding:13px 15px;border-radius:12px;background:#1e2a3f;border:1px solid #3b4c63;color:#c1cede;font-size:13px}
 details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--side)}summary{cursor:pointer;color:#f4dfbd;font-weight:700}details.settings p{font-size:13px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.formrow{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storageitem{display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:12px;background:#17263b;border:1px solid var(--line);padding:13px;margin-top:10px}.storageitem a{color:var(--orange);overflow-wrap:anywhere}.storageitem small{display:block;color:var(--muted);font-size:12px}.error{color:var(--red)}.success{color:var(--mint)}.out{font-size:29px;font-weight:850}.checkboxrow{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin:17px 0}.checkboxrow input{width:18px;height:18px;margin:1px 0}.summarygrid{display:flex;gap:45px;flex-wrap:wrap}.notice{border-top:1px solid var(--line);padding-top:18px;margin-top:24px;color:var(--muted);font-size:12px}
 @media(max-width:950px){.app{display:block}.aside{padding:12px 16px;gap:8px;border-right:0;border-bottom:1px solid var(--line)}.menu{display:flex;overflow:auto;gap:6px}.menu button{width:auto;white-space:nowrap}.asidefoot{display:none}main{padding:25px 19px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.searchrow,.grid2,.grid3,.formrow,.cards{grid-template-columns:1fr}.panel{padding:16px}.listing-art{height:80px}.headrow{align-items:flex-start}.storageitem{align-items:flex-start;flex-direction:column}.btn{width:100%}.listing-actions .btn{width:auto}.menu button{padding:10px 12px}}
+@media(max-width:640px){.searchrow,.filterrow,.grid2,.grid3,.formrow,.cards{grid-template-columns:1fr}.panel{padding:16px}.listing-art{height:80px}.headrow{align-items:flex-start}.storageitem{align-items:flex-start;flex-direction:column}.btn{width:100%}.listing-actions .btn{width:auto}.menu button{padding:10px 12px}}
 </style>
 </head>
 <body>
@@ -33,21 +33,36 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <section class="view" id="view-discover">
 <div class="intro"><div class="eyebrow">Discover / Bohol</div><h1>Find your next great deal.</h1><p>Browse Bohol listings found in earlier scans, compare prices, and save promising deals.</p><span class="status">● Your workspace is ready</span></div>
 <div class="searchbox">
-<form id="browseForm" class="searchrow">
-<label>What are you looking for?<input id="search" name="q" placeholder="Try iPhone 13, RTX 3050, gaming laptop…" autocomplete="off"></label>
-<label>Your budget<select id="budget" name="max_price"><option value="">Any price</option><option value="5000">Up to ₱5,000</option><option value="10000">Up to ₱10,000</option><option value="20000">Up to ₱20,000</option><option value="30000">Up to ₱30,000</option></select></label>
-<button class="btn" type="submit" id="historySearchButton">Find deals</button>
-</form>
-<div class="quicklinks" role="group" aria-label="Filter categories">
+<form id="browseForm">
+<div class="searchrow">
+<label>Search term (optional)<input id="search" name="q" placeholder="Leave blank to browse all models" autocomplete="off"></label>
+<label>Maximum price (₱)<input id="budget" name="max_price" type="number" step="1" min="0" placeholder="Any price"></label>
+<label>Sort by<select id="sort" name="sort"><option value="newest">Recently found</option><option value="price_low">Price: lowest first</option><option value="price_high">Price: highest first</option><option value="first_seen">First discovered</option></select></label>
+<button class="btn" type="submit" id="historySearchButton">Apply filters</button>
+</div>
+<div class="quicklinks" role="group" aria-label="Browse categories">
 <button class="chip" data-category="" aria-pressed="true" type="button">All</button>
+<button class="chip" data-category="Electronics" aria-pressed="false" type="button">Electronics</button>
 <button class="chip" data-category="Phones" aria-pressed="false" type="button">Phones</button>
 <button class="chip" data-category="Laptops" aria-pressed="false" type="button">Laptops</button>
+<button class="chip" data-category="Cameras" aria-pressed="false" type="button">Cameras</button>
 <button class="chip" data-category="PC Parts" aria-pressed="false" type="button">PC Parts</button>
 <button class="chip" data-category="Consoles" aria-pressed="false" type="button">Consoles</button>
 </div>
+<button id="extraFiltersToggle" type="button" class="filter-toggle" aria-expanded="false" aria-controls="extraFilters">More filters ▾</button>
+<div id="extraFilters" class="extra-filters" hidden>
+<div class="filterrow">
+<label>Minimum price (₱)<input id="minPrice" type="number" min="0" step="1" placeholder="No minimum"></label>
+<label>First discovered<select id="foundWithinDays"><option value="">Any time</option><option value="1">Within 24 hours</option><option value="7">Within 7 days</option><option value="30">Within 30 days</option></select></label>
+<label>Search area<input disabled value="Bohol only (location verified by metadata)" aria-label="Search area"></label>
+</div>
+</div>
+</form>
+<div class="filter-summary" id="filterSummary" role="status">Default: All categories · any price · recently found · Bohol only.</div>
+<button class="filter-toggle" id="resetFilters" type="button">Reset to defaults</button>
 </div>
 <p class="muted" style="margin:10px 4px 0">This searches results already collected on this PC. To look for new Facebook Marketplace listings, choose “Get fresh results” below.</p>
-<div class="sectiontop"><h2>Bohol listings</h2><label>Sort<select id="sort"><option value="newest">Recently found</option><option value="price_low">Lowest price</option><option value="price_high">Highest price</option></select></label></div>
+<div class="sectiontop"><h2>Bohol listings</h2><span class="muted">Results from earlier scans, not live Facebook ranking</span></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
 <div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
@@ -109,7 +124,46 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 'use strict';
 const csrf=document.querySelector('meta[name="csrf-token"]').content;
 const money=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(n||0));
+const filterKey='marketplace_finder_filters_v1';
+const defaults={q:'',category:'',min_price:'',max_price:'',sort:'newest',found_within_days:''};
+const categories=['','Electronics','Phones','Laptops','Cameras','PC Parts','Consoles'];
 let category='';
+function readFilters(){
+ try{const saved=JSON.parse(localStorage.getItem(filterKey)||'{}');return {...defaults,...saved}}catch(e){return {...defaults}}
+}
+function rememberFilters(){
+ const state={q:document.getElementById('search').value.trim(),category,
+  min_price:document.getElementById('minPrice').value,
+  max_price:document.getElementById('budget').value,
+  sort:document.getElementById('sort').value,
+  found_within_days:document.getElementById('foundWithinDays').value};
+ try{localStorage.setItem(filterKey,JSON.stringify(state))}catch(e){}
+ const cat=category||'All';
+ document.getElementById('filterSummary').textContent=cat+' · '+(state.q||'all models')+' · '+
+ (state.min_price?'from ₱'+Number(state.min_price).toLocaleString('en-PH'):'no minimum')+
+ ' · '+(state.max_price?'to ₱'+Number(state.max_price).toLocaleString('en-PH'):'any maximum')+
+ ' · '+document.getElementById('sort').selectedOptions[0].text+' · Bohol only';
+}
+function restoreFilters(){
+ const saved=readFilters();
+ category=categories.includes(saved.category)?saved.category:'';
+ for(const [id,key] of [['search','q'],['minPrice','min_price'],['budget','max_price'],['sort','sort'],['foundWithinDays','found_within_days']]){
+  const input=document.getElementById(id);
+  const val=String(saved[key]??'');
+  if(input.tagName==='SELECT'&&!Array.from(input.options).some(o=>o.value===val))continue;
+  input.value=val;
+ }
+ document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));
+ if(saved.min_price||saved.found_within_days)toggleExtraFilters(true);
+ rememberFilters();
+}
+function toggleExtraFilters(open){
+ const extra=document.getElementById('extraFilters');
+ extra.hidden=!open;
+ document.getElementById('extraFiltersToggle').setAttribute('aria-expanded',String(open));
+ document.getElementById('extraFiltersToggle').textContent=open?'Fewer filters ▴':'More filters ▾';
+}
+
 const views=['discover','saved','watchlist','profit'];
 function navigate(view){
  if(!views.includes(view))return;
@@ -141,7 +195,16 @@ async function loadListings(){
  feedback.textContent='Checking your stored listings…';
  const p=new URLSearchParams();const search=document.getElementById('search').value.trim();
  const budget=document.getElementById('budget').value;
- if(search)p.set('q',search);if(budget)p.set('max_price',budget);if(category)p.set('category',category);
+ const minimum=document.getElementById('minPrice').value;
+ const date=document.getElementById('foundWithinDays').value;
+ if(minimum!==''&&budget!==''&&Number(minimum)>Number(budget)){
+  feedback.textContent='Minimum price cannot exceed maximum price.';
+  searchButton.disabled=false;searchButton.textContent='Apply filters';return;
+ }
+ rememberFilters();
+ if(search)p.set('q',search);if(budget)p.set('max_price',budget);
+ if(minimum)p.set('min_price',minimum);if(date)p.set('found_within_days',date);
+ if(category)p.set('category',category);
  p.set('sort',document.getElementById('sort').value);
  try{
  const data=await request('/listings?'+p.toString());
@@ -153,11 +216,11 @@ async function loadListings(){
  external.href='https://www.facebook.com/marketplace/search/?query='+encodeURIComponent(search||'gadgets');
  external.target='_blank';external.rel='noopener noreferrer';
  external.className='btn sm alt';external.textContent='Search on Facebook ↗';
- empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),external,document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';document.getElementById('budget').value='';category='';document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));loadListings()}));box.append(empty);return}
+ empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),external,document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';clearFilters();loadListings()}));box.append(empty);return}
  box.className='cards';feedback.textContent=data.items.length+' matching Bohol listings (not a fresh Facebook search). '+(data.excluded_unverified||0)+' unverified/outside listings hidden.';
  for(const item of data.items){
  const card=document.createElement('article');card.className='listing';
- const art=document.createElement('div');art.className='listing-art';art.textContent=({'Phones':'📱','Laptops':'💻','PC Parts':'🖥️','Consoles':'🎮'})[item.category]||'📦';
+ const art=document.createElement('div');art.className='listing-art';art.textContent=({'Phones':'📱','Laptops':'💻','Cameras':'📷','PC Parts':'🖥️','Consoles':'🎮'})[item.category]||'📦';
  const body=document.createElement('div');body.className='listing-info';
  const badge=label(item.category+' · Saved in discovery history','pill');
  const h=document.createElement('h3');h.textContent=item.title;
@@ -172,7 +235,7 @@ async function loadListings(){
  body.append(badge,h,price,city,actions);card.append(art,body);box.append(card);
  }
  }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message}
- finally{searchButton.disabled=false;searchButton.textContent='Find deals'}
+ finally{searchButton.disabled=false;searchButton.textContent='Apply filters'}
 }
 function showScanSettings(){
  const details=document.getElementById('scanSettings');
@@ -193,7 +256,20 @@ document.getElementById('browseForm').addEventListener('submit',async e=>{
  }
 });
 document.getElementById('sort').addEventListener('change',loadListings);
-document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));loadListings()}));
+document.getElementById('foundWithinDays').addEventListener('change',loadListings);
+document.getElementById('extraFiltersToggle').addEventListener('click',()=>toggleExtraFilters(document.getElementById('extraFilters').hidden));
+function clearFilters(){
+ category='';
+ for(const [id,value] of [['search',''],['budget',''],['minPrice',''],['foundWithinDays',''],['sort','newest']])document.getElementById(id).value=value;
+ document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));
+ toggleExtraFilters(false);rememberFilters();
+}
+document.getElementById('resetFilters').addEventListener('click',()=>{clearFilters();loadListings()});
+document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
+ category=b.dataset.category;
+ document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+ loadListings();
+}));
 async function loadSaved(){
  const box=document.getElementById('savedItems');box.replaceChildren();
  try{
@@ -235,6 +311,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  }catch(error){status.textContent=error.message}
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
 });
+restoreFilters();
 loadListings();
 </script>
 </body></html>
