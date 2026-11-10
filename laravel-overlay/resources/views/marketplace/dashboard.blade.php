@@ -231,7 +231,7 @@ async function loadListings(){
    img.src=item.image_url;
    img.alt='Photo of '+item.title;
    img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
-   img.addEventListener('error',()=>{img.remove();art.append(fallback);});
+   img.addEventListener('error',()=>{img.remove();art.prepend(fallback);photoLabel.textContent='Photo unavailable';});
    art.append(img);
  }else{art.append(fallback)}
  const photoLabel=document.createElement('span');photoLabel.className='photo-label';
