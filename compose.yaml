@@ -9,7 +9,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      APP_ENV: local
+      # Do not override APP_ENV: PHPUnit must be able to set APP_ENV=testing.
       DB_CONNECTION: sqlite
       COMPOSER_ALLOW_SUPERUSER: "1"
     command: ["bash", "/opt/marketplace/bootstrap.sh"]
