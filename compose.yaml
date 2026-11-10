@@ -27,8 +27,8 @@ services:
     volumes:
       - ./laravel:/var/www/html
       - ./docker/node-bootstrap.sh:/opt/marketplace/node-bootstrap.sh:ro
-    ports:
-      - "127.0.0.1:5173:5173"
+    # Vite stays on the internal Docker network; no Windows port forwarding needed.
+    # The dashboard currently uses inline CSS/JS and does not need browser HMR.
     command: ["sh", "/opt/marketplace/node-bootstrap.sh"]
     # Avoid implicit paid API calls or background scans.
     depends_on:
