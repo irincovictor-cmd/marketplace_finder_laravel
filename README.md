@@ -2,7 +2,7 @@
 
 A new, Docker-first Laravel rebuild of [FlipRadar / Marketplace_finder](https://github.com/irincovictor-cmd/Marketplace_finder).
 
-**Status:** Phase 1 compatibility milestone. The original FlipRadar frontend and its JavaScript helpers are checked into `legacy/` and copied into Laravel's public directory on startup. This preserves the UI and browser-side behaviors as a baseline, but **Laravel API, server-side Apify integration, SQLite persistence of browser state, and redesigned Blade pages have not yet been implemented**.
+**Status:** Phase 2 Laravel-native milestone. A redesigned Blade dashboard and a functional PHP calculator endpoint are now stored in `laravel-overlay/`, and installed into the Laravel container on startup. The original FlipRadar remains accessible at `/flipradar/index.html` for functional comparison. The scanner, watchlist, saved data and geographic filters are **not yet ported to Laravel**.
 
 ## Requirements
 - Docker Desktop with Linux containers and WSL integration (Windows), or Docker Engine with Compose (Linux/macOS)
@@ -18,11 +18,21 @@ docker compose up -d --build
 docker compose logs -f app
 ```
 
-Open http://localhost:8000 after the application reports it is ready. The default Laravel welcome page is redirected to the retained FlipRadar frontend at `/flipradar/index.html` on an untouched scaffold. If you previously edited `routes/web.php`, go to http://localhost:8000/flipradar/index.html directly.
+Open http://localhost:8000 for the new Blade dashboard and PHP-backed calculator. The original FlipRadar still works at http://localhost:8000/flipradar/index.html. If you modified `routes/web.php` yourself, the bootstrap script preserves it instead of replacing it.
 
-The first boot provisions a Laravel 13 skeleton into `laravel/`, creates a local SQLite database, installs Composer dependencies, and runs migrations. On every boot, it also syncs the tracked static compatibility frontend from `legacy/` to `laravel/public/flipradar/`. The node service installs frontend dependencies and starts Vite; visit http://localhost:5173 only for Vite assets (the app is on port 8000).
+The first boot provisions a Laravel 13 skeleton into `laravel/`, creates a local SQLite database, installs Composer dependencies, and runs migrations. On every boot, it also syncs the tracked static compatibility frontend from `legacy/` to `laravel/public/flipradar/`, plus the new PHP/Blade overlay from `laravel-overlay/`. The node service installs frontend dependencies and starts Vite; visit http://localhost:5173 only for Vite assets (the app is on port 8000).
 
-**Developer note:** `laravel/` is excluded from this initial bootstrap commit because it is generated at first launch. Before feature implementation, the generated Laravel application should be reviewed and committed as the real application source. This is a temporary scaffold, not yet a finished source-complete release.
+**Developer note:** `laravel/` is still excluded because it is generated at first launch; the new PHP and Blade application changes are now tracked explicitly in `laravel-overlay/`. This remains a temporary scaffold requiring a full-source commit and clean-clone verification before release.
+
+## Verify Laravel phase 2
+```bash
+# From the project root after docker compose up -d --build:
+docker compose exec -T app php artisan route:list
+docker compose exec -T app php artisan test --filter=MarketplaceCalculatorTest
+curl -I http://localhost:8000/
+```
+
+The dashboard is a working Blade page with example listings and browser-side sample filtering. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. No paid Apify requests occur from the new dashboard.
 
 ## Operational commands
 ```bash
