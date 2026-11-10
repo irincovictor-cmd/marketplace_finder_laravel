@@ -8,7 +8,7 @@ class MarketplaceCalculatorTest extends TestCase
 {
     public function test_dashboard_renders_a_laravel_blade_view(): void
     {
-        $this->get('/')->assertOk()->assertSee('Discover your next');
+        $this->get('/')->assertOk()->assertSee('Find your next great deal');
     }
 
     public function test_profit_and_roi_are_computed_on_server(): void
