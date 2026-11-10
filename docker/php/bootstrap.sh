@@ -43,6 +43,7 @@ cp /opt/marketplace/laravel-overlay/app/Services/ListingArchiveService.php app/S
 cp /opt/marketplace/laravel-overlay/app/Services/BoholLocationService.php app/Services/BoholLocationService.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000003_add_discovery_location_evidence.php database/migrations/2026_11_11_000003_add_discovery_location_evidence.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000004_reclassify_discovered_electronics.php database/migrations/2026_11_11_000004_reclassify_discovered_electronics.php
+cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000005_add_discovered_listing_images.php database/migrations/2026_11_11_000005_add_discovered_listing_images.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000002_create_discovered_listings.php database/migrations/2026_11_11_000002_create_discovered_listings.php
 cp /opt/marketplace/laravel-overlay/app/Models/SavedListing.php app/Models/SavedListing.php
 cp /opt/marketplace/laravel-overlay/app/Models/WatchlistEntry.php app/Models/WatchlistEntry.php
