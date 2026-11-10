@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd /var/www/html
+
+# Initial scaffolding is intentionally separate from application migrations.
+# Do not overwrite existing application sources.
+if [ ! -f artisan ]; then
+  echo "[marketplace] First-run Laravel 13 initialization..."
+  if [ -n "$(ls -A . 2>/dev/null)" ]; then
+    echo "Error: laravel/ contains files but no artisan. Refusing to overwrite." >&2
+    exit 1
+  fi
+  composer create-project laravel/laravel:^13.0 /tmp/marketplace-laravel --no-interaction --prefer-dist
+  cp -a /tmp/marketplace-laravel/. /var/www/html/
+  rm -rf /tmp/marketplace-laravel
+fi
+
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
+
+# Keep generated secrets and data in the mounted local project, never in Git.
+mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+touch database/database.sqlite
+sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+if ! grep -q '^DB_CONNECTION=' .env; then printf '\nDB_CONNECTION=sqlite\n' >> .env; fi
+
+composer install --no-interaction --prefer-dist
+if ! grep -Eq '^APP_KEY=base64:.+' .env; then
+  php artisan key:generate --force
+fi
+php artisan migrate --force
+
+echo "[marketplace] Laravel ready at http://localhost:8000"
+exec php artisan serve --host=0.0.0.0 --port=8000
