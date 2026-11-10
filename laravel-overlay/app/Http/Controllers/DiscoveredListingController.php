@@ -12,17 +12,21 @@ class DiscoveredListingController extends Controller
     {
         $params = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', 'in:Phones,Laptops,Consoles,PC Parts,Other'],
+            'category' => ['nullable', 'in:Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+            'min_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'max_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
-            'sort' => ['nullable', 'in:newest,price_low,price_high'],
+            'sort' => ['nullable', 'in:newest,price_low,price_high,first_seen'],
         ]);
 
         $query = DiscoveredListing::query()->where('location_status', 'bohol');
         if (filled($params['q'] ?? null)) {
             $query->where('title', 'like', '%'.addcslashes($params['q'], '%_\\').'%');
         }
-        if (filled($params['category'] ?? null)) {
+        if (filled($params['category'] ?? null) && $params['category'] !== 'Electronics') {
             $query->where('category', $params['category']);
+        }
+        if (isset($params['min_price'])) {
+            $query->where('price', '>=', $params['min_price']);
         }
         if (isset($params['max_price'])) {
             $query->where('price', '<=', $params['max_price']);
@@ -30,6 +34,7 @@ class DiscoveredListingController extends Controller
         match ($params['sort'] ?? 'newest') {
             'price_low' => $query->orderBy('price')->orderByDesc('last_seen_at'),
             'price_high' => $query->orderByDesc('price')->orderByDesc('last_seen_at'),
+            'first_seen' => $query->orderByDesc('first_seen_at'),
             default => $query->orderByDesc('last_seen_at'),
         };
 
