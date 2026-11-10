@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Services\MarketplaceScanService;
+use App\Services\ListingArchiveService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
 
 class MarketplaceScanController extends Controller
 {
-    public function scan(Request $request, MarketplaceScanService $service): JsonResponse
+    public function scan(Request $request, MarketplaceScanService $service, ListingArchiveService $archive): JsonResponse
     {
         if (! app()->environment('local', 'testing') || ! config('marketplace.scan_enabled')) {
             return response()->json(['message' => 'Live scanning is disabled.'], 503);
@@ -36,8 +37,11 @@ class MarketplaceScanController extends Controller
             return response()->json(['message' => 'Marketplace scan failed. Check server configuration or provider status.'], 502);
         }
 
+        $stored = $archive->store($result['listings']);
+
         return response()->json([
             ...$result,
+            'archived_count' => $stored,
             'keyword' => $data['keyword'],
             'notice' => 'Results and geography are unverified; charges depend on Apify billing.',
         ]);
