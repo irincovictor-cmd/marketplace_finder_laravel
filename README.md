@@ -47,6 +47,26 @@ docker compose exec -T app php artisan test --filter=BoholLocationTest
 docker compose exec -T app php artisan test
 ```
 
+## Facebook-style browsing filters (November 11, 2026)
+
+The **Find deals** page now supports category-first browsing with an **optional keyword**, Electronics (the umbrella for recognized Phones, Laptops, Cameras, PC Parts and Consoles), minimum/maximum price, sort by most recently found/first discovered/lowest/highest price, and first-discovered date filters.
+
+The browser remembers the last selected settings in localStorage using `marketplace_finder_filters_v1`, and restores them when reopening the page. Blank keyword means **all models** within the selected category; blank minimum/maximum means no bound. Users can choose **Reset to defaults** for All / no price restriction / recently found / Bohol. This is local-browser preference storage, not a multi-user account setting.
+
+Local archived results come from SQLite, and are filtered only after applying the conservative Bohol location gate. The `Electronics` category excludes unclassified `Other` listings; the camera classifier is preliminary and does not guarantee perfect model identification. An additive database migration reclassifies historical records, preserving saved items and existing first/last-seen data.
+
+A fresh Apify scan remains **separate and opt-in**. Its actor supports filter-based searches without a keyword, as well as `minPrice`, `maxPrice` and `sortBy`. However, the actor does **not expose Facebook's exact category-selection algorithm** via those filters. An approved blank-keyword scan may collect mixed categories; the selected category is applied to archived results afterwards, with no guarantee of complete category coverage. Scanning may incur costs and requires explicit approval. No saved filter can launch a scan automatically.
+
+No claim is made to reproduce Facebook's private relevance-ranking algorithm. We reproduce the useful, predictable filter controls for our own archived listings.
+
+Verify:
+
+```bash
+docker compose exec -T app php artisan test --filter=DiscoveredListingTest
+docker compose exec -T app php artisan test --filter=MarketplaceScanTest
+docker compose exec -T app php artisan test
+```
+
 ## Phase 5: simpler discovery workflow
 
 Open http://localhost:8000 and use the four primary sections:
