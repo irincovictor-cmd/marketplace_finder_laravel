@@ -136,4 +136,35 @@ class MarketplaceScanTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_marketplace_photo_is_returned_and_unsafe_urls_are_ignored(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([
+            [
+                'id' => 'photo-1',
+                'marketplace_listing_title' => 'Canon EOS Camera',
+                'listing_price' => ['amount' => 15000],
+                'location' => ['reverse_geocode' => ['city' => 'Tagbilaran City', 'state' => 'Bohol']],
+                'primary_listing_photo_url' => 'https://scontent.xx.fbcdn.net/example-product.jpg',
+            ],
+            [
+                'id' => 'photo-2',
+                'marketplace_listing_title' => 'Laptop',
+                'listing_price' => ['amount' => 23000],
+                'location' => ['reverse_geocode' => ['city' => 'Dauis', 'state' => 'Bohol']],
+                'primary_listing_photo_url' => 'https://malicious.example/collect.jpg',
+            ],
+        ], 200)]);
+
+        $this->postJson('/marketplace/scan', $this->payload())
+            ->assertOk()
+            ->assertJsonPath('listings.0.image_url', 'https://scontent.xx.fbcdn.net/example-product.jpg')
+            ->assertJsonPath('listings.1.image_url', null);
+
+        $this->getJson('/listings?category=Cameras')->assertOk()
+            ->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.image_url', 'https://scontent.xx.fbcdn.net/example-product.jpg');
+    }
+
 }
