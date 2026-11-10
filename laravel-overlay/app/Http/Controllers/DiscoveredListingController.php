@@ -16,6 +16,7 @@ class DiscoveredListingController extends Controller
             'min_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'max_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'sort' => ['nullable', 'in:newest,price_low,price_high,first_seen'],
+            'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
         ]);
 
         $query = DiscoveredListing::query()->where('location_status', 'bohol');
@@ -25,11 +26,17 @@ class DiscoveredListingController extends Controller
         if (filled($params['category'] ?? null) && $params['category'] !== 'Electronics') {
             $query->where('category', $params['category']);
         }
+        if (isset($params['found_within_days'])) {
+            $query->where('first_seen_at', '>=', now()->subDays((int) $params['found_within_days']));
+        }
         if (isset($params['min_price'])) {
             $query->where('price', '>=', $params['min_price']);
         }
         if (isset($params['max_price'])) {
             $query->where('price', '<=', $params['max_price']);
+        }
+        if (isset($params['min_price'], $params['max_price']) && (float) $params['min_price'] > (float) $params['max_price']) {
+            return response()->json(['message' => 'Minimum price cannot exceed maximum price.'], 422);
         }
         match ($params['sort'] ?? 'newest') {
             'price_low' => $query->orderBy('price')->orderByDesc('last_seen_at'),
