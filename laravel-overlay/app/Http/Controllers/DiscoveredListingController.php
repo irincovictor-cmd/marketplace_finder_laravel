@@ -61,6 +61,7 @@ class DiscoveredListingController extends Controller
                 'province' => $item->province,
                 'location_status' => $item->location_status,
                 'url' => $item->listing_url,
+                'image_url' => $item->image_url,
                 'category' => $item->category,
                 'first_seen_at' => $item->first_seen_at?->toIso8601String(),
                 'last_seen_at' => $item->last_seen_at?->toIso8601String(),
