@@ -101,4 +101,39 @@ class MarketplaceScanTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('latitude');
         Http::assertNothingSent();
     }
+    public function test_keyword_free_broad_scan_passes_optional_price_and_sort_to_actor(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([], 200)]);
+
+        $params = $this->payload([
+            'keyword' => '',
+            'category' => 'Electronics',
+            'min_price' => 2000,
+            'max_price' => 20000,
+            'sort_by' => 'price_ascend',
+        ]);
+        $this->postJson('/marketplace/scan', $params)
+            ->assertOk()->assertJsonPath('archived_count', 0)
+            ->assertJsonPath('category', 'Electronics');
+
+        Http::assertSent(function ($request) {
+            return ! array_key_exists('searchKeyword', $request->data())
+                && $request['minPrice'] === 2000
+                && $request['maxPrice'] === 20000
+                && $request['sortBy'] === 'price_ascend';
+        });
+    }
+
+    public function test_scan_rejects_inverted_price_range_before_any_billable_request(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::fake();
+        $this->postJson('/marketplace/scan', $this->payload([
+            'min_price' => 22000, 'max_price' => 10000,
+        ]))->assertStatus(422);
+        Http::assertNothingSent();
+    }
+
 }
