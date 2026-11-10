@@ -323,8 +323,8 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
  const outcome=await request('/marketplace/scan','POST',data);
  status.textContent=outcome.archived_count+' identifiable listings archived. Only records with Bohol location evidence display; category coverage is not guaranteed.';
- await loadListings();
  if(data.category){category=data.category;document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)))}
+ await loadListings();
  document.getElementById('scanSettings').open=false;
  }catch(error){status.textContent=error.message}
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
