@@ -1,0 +1,33 @@
+name: Laravel Docker checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and launch
+        run: docker compose up -d --build
+      - name: Wait for Laravel
+        run: |
+          for i in $(seq 1 90); do
+            if docker compose exec -T app php artisan --version >/dev/null 2>&1 && curl -fsS http://127.0.0.1:8000/ >/dev/null 2>&1; then exit 0; fi
+            sleep 3
+          done
+          docker compose logs --tail=120 app
+          exit 1
+      - name: Verify routes
+        run: docker compose exec -T app php artisan route:list
+      - name: Run Laravel tests (all HTTP fake, no provider calls)
+        run: docker compose exec -T app php artisan test
+      - name: Print failure diagnostics
+        if: failure()
+        run: docker compose logs --tail=120
+      - name: Stop containers
+        if: always()
+        run: docker compose down
