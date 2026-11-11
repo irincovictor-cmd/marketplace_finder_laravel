@@ -526,7 +526,11 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
   }else{
    logActivity('scan_failed',{message:String(error.message||'Unknown error').slice(0,180)});
   }
-  openActivityLogs();
+  // Keep the user on Find deals; logs remain available from the sidebar.
+  // Revealing the failure next to the scan form avoids an unexpected page switch.
+  document.getElementById('scanSettings').open=true;
+  status.setAttribute('role','alert');
+  status.scrollIntoView({behavior:'smooth',block:'nearest'});
  }
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
 });
