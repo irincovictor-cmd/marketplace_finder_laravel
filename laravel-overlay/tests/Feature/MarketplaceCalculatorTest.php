@@ -84,6 +84,17 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee('Availability history');
     }
 
+    public function test_secure_apify_key_form_renders_without_embedding_a_secret(): void
+    {
+        config(['marketplace.apify_token' => 'private-server-key-not-for-html']);
+        $this->get('/')->assertOk()
+            ->assertSee('id="apiKeySettings"', false)
+            ->assertSee('id="apiKeyInput"', false)
+            ->assertSee('type="password"', false)
+            ->assertSee('Save / replace key')
+            ->assertDontSee('private-server-key-not-for-html');
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
