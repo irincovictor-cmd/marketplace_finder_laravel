@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'marketplace.dashboard')->name('marketplace.dashboard');
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
+Route::post('/listings/restore-images', [DiscoveredListingController::class, 'restoreImages'])
+    ->middleware('throttle:10,1')
+    ->name('marketplace.listings.restore-images');
 
 // Stateful browser clients receive Laravel's CSRF token in the Blade template.
 Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calculate'])
