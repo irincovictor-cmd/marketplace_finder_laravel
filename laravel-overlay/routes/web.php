@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfitCalculatorController;
 use App\Http\Controllers\MarketplaceScanController;
+use App\Http\Controllers\ApifySettingsController;
 use App\Http\Controllers\MarketplaceCollectionsController;
 use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,11 @@ Route::post('/listings/restore-images', [DiscoveredListingController::class, 're
 Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calculate'])
     ->middleware('throttle:60,1')
     ->name('marketplace.calculator');
+
+// Local-only credential management. Never exposes API key in GET or logs.
+Route::get('/marketplace/api-key', [ApifySettingsController::class, 'status'])->name('marketplace.api-key.status');
+Route::post('/marketplace/api-key', [ApifySettingsController::class, 'save'])->middleware('throttle:10,1')->name('marketplace.api-key.save');
+Route::delete('/marketplace/api-key', [ApifySettingsController::class, 'remove'])->middleware('throttle:10,1')->name('marketplace.api-key.remove');
 
 // Runs a paid provider request only after an explicit opt-in and approval.
 // Its Docker port is bound to localhost; do not expose this unauthenticated route publicly.
