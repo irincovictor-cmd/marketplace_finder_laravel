@@ -19,6 +19,7 @@ class ListingFilterAuditService
         'above_max_price' => 'Above maximum price',
         'category' => 'Wrong category',
         'first_seen' => 'Outside date filter',
+        'manual_inactive' => 'Manually marked pending, sold or unavailable',
     ];
 
     public function __construct(
@@ -39,6 +40,9 @@ class ListingFilterAuditService
             // Existing DB column preserves the decision made when archived.
             $intent = (string) $listing->listing_intent;
             $reasons[] = array_key_exists($intent, self::REASONS) ? $intent : 'other_intent';
+        }
+        if (in_array($listing->manual_status, ['pending', 'sold', 'unavailable'], true)) {
+            $reasons[] = 'manual_inactive';
         }
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '' && mb_stripos($listing->title, $q) === false) {
@@ -91,6 +95,7 @@ class ListingFilterAuditService
             'location_status' => $listing->location_status,
             'location_reason' => $place['reason'],
             'listing_intent' => $listing->listing_intent,
+            'manual_status' => $listing->manual_status,
             'intent_reason' => $intent['reason'],
             'reasons' => $reasons,
             'reason_labels' => array_map(fn ($key) => self::REASONS[$key] ?? $key, $reasons),
