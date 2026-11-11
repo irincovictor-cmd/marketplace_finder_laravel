@@ -22,7 +22,8 @@ class DiscoveredListingController extends Controller
 
         $totalArchived = DiscoveredListing::query()->count();
         $boholArchived = DiscoveredListing::query()->where('location_status', 'bohol')->count();
-        $query = DiscoveredListing::query()->where('location_status', 'bohol');
+        $query = DiscoveredListing::query()->where('location_status', 'bohol')
+            ->where('listing_intent', 'reviewable');
         if (filled($params['batch'] ?? null)) {
             $query->where('last_scan_batch', $params['batch']);
         }
@@ -64,6 +65,7 @@ class DiscoveredListingController extends Controller
                 'bohol_total' => $boholArchived,
                 'matching_filters' => $matchingCount,
                 'hidden_outside_or_unknown' => $hiddenCount,
+                'hidden_non_sale' => DiscoveredListing::query()->where('location_status', 'bohol')->where('listing_intent', '!=', 'reviewable')->count(),
                 'keyword_supplied' => filled($params['q'] ?? null),
                 'source' => 'local_sqlite',
             ],
@@ -79,6 +81,7 @@ class DiscoveredListingController extends Controller
                 'url' => $item->listing_url,
                 'image_url' => $item->image_url,
                 'category' => $item->category,
+                'listing_intent' => $item->listing_intent,
                 'first_seen_at' => $item->first_seen_at?->toIso8601String(),
                 'last_seen_at' => $item->last_seen_at?->toIso8601String(),
             ]),
