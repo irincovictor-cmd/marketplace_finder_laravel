@@ -55,6 +55,14 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('if(scanInFlight)return;', $blade);
     }
 
+    public function test_invalid_budget_clears_previous_cards_and_scan_breakdown_is_visible(): void
+    {
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString('No search performed: minimum price exceeds maximum price.', $blade);
+        $this->assertStringContainsString('unique normalized listings', $blade);
+        $this->assertStringContainsString('hidden_non_sale', $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
