@@ -62,6 +62,7 @@ cp /opt/marketplace/laravel-overlay/config/marketplace.php config/marketplace.ph
 cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.php resources/views/marketplace/dashboard.blade.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceScanTest.php tests/Feature/MarketplaceScanTest.php
+cp /opt/marketplace/laravel-overlay/tests/Feature/ApifySettingsTest.php tests/Feature/ApifySettingsTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCollectionsTest.php tests/Feature/MarketplaceCollectionsTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/DiscoveredListingTest.php tests/Feature/DiscoveredListingTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/BoholLocationTest.php tests/Feature/BoholLocationTest.php
