@@ -28,6 +28,14 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringNotContainsString('new FormData(e.currentTarget)', $blade);
     }
 
+    public function test_dashboard_explains_scan_rate_limit_without_auto_retry(): void
+    {
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString('response.status===429', $blade);
+        $this->assertStringContainsString('scan_rate_limited', $blade);
+        $this->assertStringContainsString('Wait about ', $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
