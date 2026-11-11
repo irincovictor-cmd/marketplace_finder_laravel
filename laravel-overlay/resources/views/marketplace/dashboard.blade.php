@@ -105,6 +105,13 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </div>
 <p id="logFeedback" class="muted" role="status"></p>
 <div id="logEntries" aria-live="polite"></div>
+<div class="panel" style="margin-top:18px">
+<h3>Rejected listings / Location filter inspector</h3>
+<p class="muted">Inspect the records hidden by the current Bohol filter. This is a read-only audit; it does not make uncertain listings appear as verified Bohol results. Up to 100 of the most recently seen excluded records are shown.</p>
+<button id="inspectExcluded" type="button" class="btn sm alt">Inspect excluded listings</button>
+<p id="locationAuditStatus" class="muted" role="status"></p>
+<div id="locationAuditEntries"></div>
+</div>
 </div>
 </section>
 <section class="view" id="view-saved" hidden>
@@ -204,6 +211,25 @@ document.getElementById('logExport').addEventListener('click',downloadActivityLo
 document.getElementById('logCopy').addEventListener('click',async()=>{
  try{await navigator.clipboard.writeText(diagnosticsExport());document.getElementById('logFeedback').textContent='Activity log copied.'}
  catch(e){document.getElementById('logFeedback').textContent='Clipboard unavailable. Use Export JSON instead.'}
+});
+document.getElementById('inspectExcluded').addEventListener('click',async()=>{
+ const status=document.getElementById('locationAuditStatus');
+ const host=document.getElementById('locationAuditEntries');
+ status.textContent='Checking stored location evidence…';
+ host.replaceChildren();
+ try{
+  const data=await request('/listings/location-audit');
+  const counts=data.counts||{};
+  status.textContent=(counts.bohol||0)+' accepted Bohol · '+(counts.verify||0)+' need verification · '+(counts.outside||0)+' marked outside. Showing '+data.sample.length+' of '+data.total_rejected+' excluded listings.';
+  logActivity('location_audit_completed',{counts:counts,shown:data.sample.length,totalRejected:data.total_rejected});
+  for(const item of data.sample){
+   const row=document.createElement('div');row.className='log-entry';
+   const head=document.createElement('strong');head.textContent=item.title+' · '+money(item.price);
+   const meta=document.createElement('small');meta.textContent='City: '+(item.city||'missing')+' · Province: '+(item.province||'missing')+' · Category: '+(item.category||'Other');
+   const reason=document.createElement('p');reason.textContent='Decision: '+item.location_status+' — '+item.reason+(item.has_coordinates?' (coordinates supplied)':' (no coordinates)');
+   row.append(head,meta,reason);host.append(row);
+  }
+ }catch(error){status.textContent='Location audit could not load: '+error.message}
 });
 document.getElementById('logClear').addEventListener('click',()=>{
  if(!confirm('Clear all locally stored Marketplace Finder logs?'))return;
