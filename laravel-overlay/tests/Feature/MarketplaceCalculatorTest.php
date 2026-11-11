@@ -36,6 +36,14 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('Wait about ', $blade);
     }
 
+    public function test_scan_failure_stays_on_discovery_screen(): void
+    {
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString("document.getElementById('scanSettings').open=true;", $blade);
+        $this->assertStringNotContainsString('  openActivityLogs();', $blade);
+        $this->assertStringContainsString("status.setAttribute('role','alert');", $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
