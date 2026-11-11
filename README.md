@@ -47,6 +47,14 @@ docker compose exec -T app php artisan test --filter=BoholLocationTest
 docker compose exec -T app php artisan test
 ```
 
+## Activity log and empty search diagnostics
+
+The Blade dashboard now includes the legacy-inspired **Activity log & scan diagnostics** under Find deals. It keeps the most recent 100 events in this browser's localStorage, including local filter/search starts and result counts, failures, explicitly approved scan attempts, aggregate scan counts (raw, normalized, archived, Bohol, outside, unverified), plus manual filter audits. Users can export JSON, copy logs or clear the history. No token, provider raw payload, listing links or authorization header is intentionally recorded. Logs may contain user-entered keywords and prices; review before sharing. Clearing browser storage clears this history.
+
+**Apply filters** searches only archived SQLite listings. Blank search text is fully supported (all models in the chosen category), but does **not** initiate a fresh paid scan. A blank result now explains whether there are no archived listings, no Bohol-eligible listings, or selected filters excluded the Bohol records. Users can open **Get fresh results** separately and explicitly approve any potentially billable Apify request. The local API returns a `diagnostics` object with total stored, Bohol-eligible, matching, and excluded record counts. This does not expose the raw provider response.
+
+To troubleshoot, open the Activity log after clicking Apply filters and check `local_search_completed`; to capture live scanning, explicitly approve the scan and review `scan_completed` or `scan_failed`. Run the PHPUnit suite after rebuilding; automated tests do not call Apify.
+
 ## Marketplace listing photos
 
 Laravel now retains `primary_listing_photo_url` from the approved Apify Marketplace result and stores its HTTPS image URL in the additive `discovered_listings.image_url` SQLite column. Product cards display the **actual Marketplace thumbnail** instead of only category emoji when the actor provides a permitted `fbcdn.net` or `fbsbx.com` URL. The image is loaded lazily in the browser with no referrer; unreadable, missing or expired photos fall back to a category icon. URLs are not fetched on the Laravel server.
