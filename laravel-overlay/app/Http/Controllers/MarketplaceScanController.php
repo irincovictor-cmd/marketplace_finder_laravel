@@ -46,9 +46,35 @@ class MarketplaceScanController extends Controller
 
         $stored = $archive->store($result['listings']);
 
+        // Aggregate diagnostics only. Do not log tokens, raw provider records,
+        // seller details or listing URLs.
+        $bohol = 0;
+        $outside = 0;
+        $verify = 0;
+        foreach ($result['listings'] as $item) {
+            $status = app(\\App\\Services\\BoholLocationService::class)->assess(
+                $item['city'] ?? null,
+                $item['province'] ?? null,
+                $item['location_text'] ?? null,
+                $item['latitude'] ?? null,
+                $item['longitude'] ?? null
+            )['status'];
+            if ($status === 'bohol') $bohol++;
+            elseif ($status === 'outside') $outside++;
+            else $verify++;
+        }
+
         return response()->json([
             ...$result,
             'archived_count' => $stored,
+            'diagnostics' => [
+                'raw_count' => $result['raw_count'],
+                'normalized_count' => $result['returned'],
+                'archived_count' => $stored,
+                'bohol_count' => $bohol,
+                'outside_count' => $outside,
+                'unverified_count' => $verify,
+            ],
             'keyword' => $data['keyword'] ?? '',
             'category' => $data['category'] ?? null,
             'notice' => 'Results and geography are unverified; charges depend on Apify billing.',
