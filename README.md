@@ -1,3 +1,11 @@
+## Rejected listings inspector (full archive)
+
+Use **Rejected listings** in the Laravel sidebar (`/#rejected`) to inspect **every stored item excluded from Find deals**. Unlike the original location-only audit (capped at 100 records), the new read-only `GET /listings/rejected` endpoint evaluates every archived record in the selected scope, returns counts by rejection reason, and paginates the full matching set (20, 40, or 100 per page). An item can be rejected for multiple reasons, so counts by reason can exceed the number of rejected items.
+
+Choose **Current Find deals filters** to audit the search term, category, budget, first-discovered window, and last scan batch that the Find deals page currently uses; **Entire archive** to see Bohol/location and sale-intent exclusions across all history; or **Latest scan** (when its batch ID remains in this page session). Reasons include outside Bohol, unverified location, accessory, repair, buying request, keyword mismatch, price below/above range, wrong category, and date mismatch. For each item, the inspector presents the original seller listing link when available, picture when available, city/state, raw location text, coordinate evidence, and the reason given by the current Laravel location and intent rules.
+
+The endpoint uses **no Apify calls, does not mutate records, and does not override unknown locations**. Its decisions are an audit of **current Laravel rules**, not proof of geographic accuracy or complete parity with the legacy classifier. We must still compare the outcomes to legacy `index.html` and `classify.js` using offline fixtures.
+
 ## Blank-keyword searches are not exhaustive
 
 A blank keyword in **Apply filters** means no title restriction on **already archived** local data. A blank keyword in **Run approved searches** does **not** scrape all electronics on Facebook: it runs a cost-bounded plan (two terms for the default All/Electronics category, presently `phone` and `laptop`). Legacy FlipRadar's scan planner is configurable and has more keyword terms, but it is not an exhaustive Facebook category crawler either. Broader scans need a separately approved plan because each term can incur Apify charges. The *category* selection on the scan form is local post-scan classification, not a Facebook category feed selector.
