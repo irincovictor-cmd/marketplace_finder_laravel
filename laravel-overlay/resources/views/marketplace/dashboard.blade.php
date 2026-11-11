@@ -65,6 +65,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div class="sectiontop"><h2>Bohol listings</h2><span class="muted">Results from earlier scans, not live Facebook ranking</span></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
+<div class="hint">Missing product photos from earlier scans? <button class="btn sm alt" type="button" id="restoreLegacyImages">Restore photos from classic FlipRadar</button> <span id="photoRestoreStatus" role="status" class="muted">Uses existing browser data only. No paid scan.</span></div>
 <div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
 <details class="settings" id="scanSettings">
 <summary>Fresh Marketplace search — setup and cost approval</summary>
@@ -370,6 +371,41 @@ document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('clic
  document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
  loadListings();
 }));
+function restoreLegacyImagesFromBrowser(){
+ const status=document.getElementById('photoRestoreStatus');
+ let records;
+ try{records=JSON.parse(localStorage.getItem('fr_live')||'[]')}catch(e){records=[]}
+ if(!Array.isArray(records)||!records.length){
+  status.textContent='No classic FlipRadar listing cache found in this browser and site origin.';
+  logActivity('photo_restore_skipped',{reason:'legacy_cache_empty'});
+  return;
+ }
+ const seen=new Set(),images=[];
+ for(const entry of records){
+  if(!entry||typeof entry!=='object'||typeof entry.u!=='string'||typeof entry.i!=='string')continue;
+  if(!/^https:\/\/(?:[a-z0-9-]+\.)?facebook\.com\/marketplace\/item\/[0-9]+\/?(?:\?.*)?$/i.test(entry.u))continue;
+  if(!/^https:\/\/[a-z0-9.-]+\.(?:fbcdn\.net|fbsbx\.com)\//i.test(entry.i))continue;
+  const id=entry.u.match(/\/marketplace\/item\/([0-9]+)/)?.[1];
+  if(!id||seen.has(id))continue;
+  seen.add(id);images.push({listing_url:entry.u,image_url:entry.i});
+  if(images.length>=100)break;
+ }
+ if(!images.length){
+  status.textContent='The classic cache has no matching Marketplace item photos.';
+  logActivity('photo_restore_skipped',{reason:'no_usable_photo_links'});
+  return;
+ }
+ status.textContent='Checking '+images.length+' cached photo links…';
+ request('/listings/restore-images','POST',{images}).then(async(result)=>{
+  status.textContent=result.updated+' existing listing photo(s) restored from the classic cache. Missing photos need a new approved scan.';
+  logActivity('photo_restore_completed',{submitted:images.length,restored:result.updated});
+  await loadListings();
+ }).catch(err=>{
+  status.textContent='Photo restore failed: '+err.message;
+  logActivity('photo_restore_failed',{message:String(err.message).slice(0,160)});
+ });
+}
+document.getElementById('restoreLegacyImages').addEventListener('click',restoreLegacyImagesFromBrowser);
 async function loadSaved(){
  const box=document.getElementById('savedItems');box.replaceChildren();
  try{
