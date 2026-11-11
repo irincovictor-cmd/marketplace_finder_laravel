@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'marketplace.dashboard')->name('marketplace.dashboard');
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
+Route::get('/listings/location-audit', [DiscoveredListingController::class, 'locationAudit'])
+    ->middleware('throttle:30,1')
+    ->name('marketplace.listings.location-audit');
 Route::post('/listings/restore-images', [DiscoveredListingController::class, 'restoreImages'])
     ->middleware('throttle:10,1')
     ->name('marketplace.listings.restore-images');
