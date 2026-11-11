@@ -63,7 +63,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button class="filter-toggle" id="resetFilters" type="button">Reset to defaults</button>
 </div>
 <p class="muted" style="margin:10px 4px 0">This searches results already collected on this PC. To look for new Facebook Marketplace listings, choose “Get fresh results” below.</p>
-<div class="sectiontop"><h2>Bohol listings</h2><span class="muted">Results from earlier scans, not live Facebook ranking</span></div>
+<div class="sectiontop"><h2 id="listingHeading">Bohol listings</h2><button type="button" id="showArchive" class="btn sm alt" hidden>Show all stored listings</button><span class="muted">Only Bohol-eligible listings</span></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
 <div class="hint">Missing product photos from earlier scans? <button class="btn sm alt" type="button" id="restoreLegacyImages">Restore photos from classic FlipRadar</button> <span id="photoRestoreStatus" role="status" class="muted">Uses existing browser data only. No paid scan.</span></div>
@@ -80,9 +80,9 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <label>Maximum price (₱)<input name="max_price" type="number" min="0" step="1" placeholder="Any maximum"></label>
 <label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
 </div>
-<p class="muted">Category selection filters our archived results after collection; Apify's filter-based actor input does not provide the same category selection as Facebook. A broad scan may return unrelated items or miss some models. We keep the Bohol-only evidence check.</p>
-<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve one potentially billable scan. Results, location accuracy and category coverage are not guaranteed.</span></label>
-<button class="btn" id="scanButton" type="submit">Run one approved scan</button>
+<p class="muted">Blank keyword uses a small category-based keyword plan like classic FlipRadar. This is not a complete Facebook category feed.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
+<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
+<button class="btn" id="scanButton" type="submit">Run approved searches</button>
 </form>
 <p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
 </details>
@@ -149,6 +149,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <script>
 'use strict';
 const csrf=document.querySelector('meta[name="csrf-token"]').content;
+let lastScanBatch=null;
 const money=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(n||0));
 const logKey='marketplace_finder_activity_log_v1';
 function redactLog(value){
@@ -282,6 +283,9 @@ async function loadListings(){
  searchButton.textContent='Searching…';
  feedback.textContent='Checking your stored listings…';
  const p=new URLSearchParams();const search=document.getElementById('search').value.trim();
+ if(lastScanBatch)p.set('batch',lastScanBatch);
+ document.getElementById('listingHeading').textContent=lastScanBatch?'Latest scan — Bohol listings':'Bohol listings';
+ document.getElementById('showArchive').hidden=!lastScanBatch;
  const budget=document.getElementById('budget').value;
  const minimum=document.getElementById('minPrice').value;
  const date=document.getElementById('foundWithinDays').value;
@@ -295,7 +299,7 @@ async function loadListings(){
  if(minimum)p.set('min_price',minimum);if(date)p.set('found_within_days',date);
  if(category)p.set('category',category);
  p.set('sort',document.getElementById('sort').value);
- const safeFilters={search:search||'(blank - all models)',category:category||'All',minPrice:minimum||null,maxPrice:budget||null,sort:document.getElementById('sort').value,date:date||null,source:'local_sqlite'};
+ const safeFilters={search:search||'(blank - all models)',batch:lastScanBatch||'all_archive',category:category||'All',minPrice:minimum||null,maxPrice:budget||null,sort:document.getElementById('sort').value,date:date||null,source:'local_sqlite'};
  logActivity('local_search_started',safeFilters);
  try{
  const data=await request('/listings?'+p.toString());
@@ -362,6 +366,7 @@ function showScanSettings(){
 document.getElementById('openFreshScan').addEventListener('click',showScanSettings);
 document.getElementById('browseForm').addEventListener('submit',async e=>{
  e.preventDefault();
+ lastScanBatch=null;
  await loadListings();
  // Never confuse a local archive filter with a paid provider scan.
  // The user may open Fresh Marketplace search manually if desired.
@@ -375,7 +380,8 @@ function clearFilters(){
  document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));
  toggleExtraFilters(false);rememberFilters();
 }
-document.getElementById('resetFilters').addEventListener('click',()=>{clearFilters();loadListings()});
+document.getElementById('resetFilters').addEventListener('click',()=>{clearFilters();lastScanBatch=null;loadListings()});
+document.getElementById('showArchive').addEventListener('click',()=>{lastScanBatch=null;loadListings()});
 document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
  category=b.dataset.category;
  document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
