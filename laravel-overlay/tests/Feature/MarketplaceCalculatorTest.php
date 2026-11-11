@@ -26,6 +26,9 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('const scanForm=e.currentTarget;', $blade);
         $this->assertStringContainsString('const approvedData=Object.fromEntries(new FormData(scanForm));', $blade);
         $this->assertStringNotContainsString('new FormData(e.currentTarget)', $blade);
+        $this->assertStringNotContainsString('e.currentTarget.reset()', $blade);
+        $this->assertStringContainsString('const form=e.currentTarget;', $blade);
+        $this->assertStringContainsString('form.reset();', $blade);
     }
 
     public function test_dashboard_explains_scan_rate_limit_without_auto_retry(): void
