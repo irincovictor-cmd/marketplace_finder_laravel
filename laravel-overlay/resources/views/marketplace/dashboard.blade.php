@@ -276,6 +276,7 @@ async function loadListings(){
  const date=document.getElementById('foundWithinDays').value;
  if(minimum!==''&&budget!==''&&Number(minimum)>Number(budget)){
   feedback.textContent='Minimum price cannot exceed maximum price.';
+  logActivity('local_search_invalid_filters',{reason:'minimum_exceeds_maximum',category:category||'All',minimum,maximum:budget});
   searchButton.disabled=false;searchButton.textContent='Apply filters';return;
  }
  rememberFilters();
@@ -283,18 +284,25 @@ async function loadListings(){
  if(minimum)p.set('min_price',minimum);if(date)p.set('found_within_days',date);
  if(category)p.set('category',category);
  p.set('sort',document.getElementById('sort').value);
+ const safeFilters={search:search||'(blank - all models)',category:category||'All',minPrice:minimum||null,maxPrice:budget||null,sort:document.getElementById('sort').value,date:date||null,source:'local_sqlite'};
+ logActivity('local_search_started',safeFilters);
  try{
  const data=await request('/listings?'+p.toString());
  box.replaceChildren();
+ const d=data.diagnostics||{};
+ logActivity('local_search_completed',{...safeFilters,shown:data.items.length,totalArchived:d.stored_total||0,boholArchived:d.bohol_total||0,matchingFilters:d.matching_filters||0,excluded:d.hidden_outside_or_unknown||0});
  if(!data.items.length){
- feedback.textContent='No Bohol-verified matches for '+(search?'“'+search+'”':'these filters')+'. '+(data.excluded_unverified||0)+' archived listings with missing/out-of-area location evidence are hidden.';
- box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent='No matching listings stored';const msg=document.createElement('p');msg.textContent='This search checked your local results only. It did not contact Facebook or charge your Apify account.';
+ const zeroStored=(d.stored_total||0)===0;
+ const noBohol=(d.bohol_total||0)===0;
+ const reason=zeroStored?'No scans have archived any listings yet.':noBohol?'Archived listings exist, but none currently have enough Bohol location evidence.':'There are Bohol listings in the archive, but your selected filters excluded all of them.';
+ feedback.textContent=reason+' '+(d.hidden_outside_or_unknown||0)+' out-of-area/unverified records hidden.';
+ box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent=zeroStored?'No scanned listings yet':noBohol?'No Bohol listings confirmed from metadata':'No matches with the current filters';const msg=document.createElement('p');msg.textContent=reason+' A blank search term means all models in the selected category; it does not trigger a paid scan.';
  const external=document.createElement('a');
  external.href='https://www.facebook.com/marketplace/search/?query='+encodeURIComponent(search||'gadgets');
  external.target='_blank';external.rel='noopener noreferrer';
  external.className='btn sm alt';external.textContent='Search on Facebook ↗';
  empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),external,document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';clearFilters();loadListings()}));box.append(empty);return}
- box.className='cards';feedback.textContent=data.items.length+' matching Bohol listings (not a fresh Facebook search). '+(data.excluded_unverified||0)+' unverified/outside listings hidden.';
+ box.className='cards';feedback.textContent=data.items.length+' matching Bohol listings from '+(d.bohol_total||0)+' archived local listings (not a fresh Facebook search). '+(data.excluded_unverified||0)+' unverified/outside listings hidden.';
  for(const item of data.items){
  const card=document.createElement('article');card.className='listing';
  const art=document.createElement('div');art.className='listing-art';
@@ -322,7 +330,7 @@ async function loadListings(){
  }else{actions.append(label('Listing link unavailable','muted'))}
  body.append(badge,h,price,city,actions);card.append(art,body);box.append(card);
  }
- }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message}
+ }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message;logActivity('local_search_failed',{...safeFilters,error:String(e.message||'Request failed').slice(0,180)})}
  finally{searchButton.disabled=false;searchButton.textContent='Apply filters'}
 }
 function showScanSettings(){
@@ -344,10 +352,8 @@ document.getElementById('openFreshScan').addEventListener('click',showScanSettin
 document.getElementById('browseForm').addEventListener('submit',async e=>{
  e.preventDefault();
  await loadListings();
- if(document.getElementById('listingResults').querySelector('.empty')){
-   showScanSettings();
-   document.getElementById('searchFeedback').textContent='No matching listings stored. Fresh scan options are now open below. Nothing has been charged.';
- }
+ // Never confuse a local archive filter with a paid provider scan.
+ // The user may open Fresh Marketplace search manually if desired.
 });
 document.getElementById('sort').addEventListener('change',loadListings);
 document.getElementById('foundWithinDays').addEventListener('change',loadListings);
@@ -393,8 +399,9 @@ document.getElementById('saveForm').addEventListener('submit',async e=>{e.preven
 document.getElementById('watchForm').addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));data.enabled=true;if(!data.max_price)data.max_price=null;try{await request('/collections/watchlist','POST',data);e.currentTarget.reset();document.getElementById('watchStatus').textContent='Device added.';loadWatch()}catch(error){document.getElementById('watchStatus').textContent=error.message}});
 document.getElementById('calcForm').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('calcStatus');status.textContent='';try{const data=await request('/calculator/estimate','POST',Object.fromEntries(new FormData(e.currentTarget)));document.getElementById('calcProfit').textContent=money(data.profit);document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%'}catch(error){status.textContent=error.message}});
 document.getElementById('scanForm').addEventListener('submit',async e=>{
- e.preventDefault();if(!document.getElementById('paidScan').checked)return;
- if(!confirm('This can charge your Apify account. Start one scan?'))return;
+ e.preventDefault();
+ if(!document.getElementById('paidScan').checked){logActivity('scan_not_started',{reason:'approval_checkbox_unchecked'});return}
+ if(!confirm('This can charge your Apify account. Start one scan?')){logActivity('scan_cancelled',{reason:'user_cancelled_confirmation'});return}
  const btn=document.getElementById('scanButton'),status=document.getElementById('scanStatus');btn.disabled=true;status.textContent='Scanning…';
  try{
  const data=Object.fromEntries(new FormData(e.currentTarget));
@@ -405,12 +412,18 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  else data.max_price=Number(data.max_price);
  if(!data.category)delete data.category;
  data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
+ logActivity('scan_requested',{keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
  const outcome=await request('/marketplace/scan','POST',data);
+ logActivity('scan_completed',{keyword:data.keyword||'(blank)',rawCount:outcome.diagnostics?.raw_count??outcome.raw_count,
+  normalized:outcome.diagnostics?.normalized_count??outcome.returned,
+  archived:outcome.diagnostics?.archived_count??outcome.archived_count,
+  bohol:outcome.diagnostics?.bohol_count??null,
+  outside:outcome.diagnostics?.outside_count??null,unverified:outcome.diagnostics?.unverified_count??null});
  status.textContent=outcome.archived_count+' identifiable listings archived. Only records with Bohol location evidence display; category coverage is not guaranteed.';
  if(data.category){category=data.category;document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)))}
  await loadListings();
  document.getElementById('scanSettings').open=false;
- }catch(error){status.textContent=error.message}
+ }catch(error){status.textContent=error.message;logActivity('scan_failed',{message:String(error.message||'Unknown error').slice(0,180)});openActivityLogs()}
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
 });
 restoreFilters();
