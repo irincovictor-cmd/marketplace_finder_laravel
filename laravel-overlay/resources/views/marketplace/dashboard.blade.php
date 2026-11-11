@@ -27,6 +27,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button type="button" data-view="watchlist">☆ &nbsp; Watchlist</button>
 <button type="button" data-view="profit">₱ &nbsp; Profit calculator</button>
 <button type="button" data-view="activity">▤ &nbsp; Activity logs</button>
+<button type="button" data-view="rejected">⊘ &nbsp; Rejected listings</button>
 </nav>
 <div class="asidefoot">Need the original tools?<br><a href="/flipradar/index.html">Open classic FlipRadar ↗</a></div>
 </aside>
@@ -105,13 +106,37 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </div>
 <p id="logFeedback" class="muted" role="status"></p>
 <div id="logEntries" aria-live="polite"></div>
-<div class="panel" style="margin-top:18px">
-<h3>Rejected listings / Location filter inspector</h3>
-<p class="muted">Inspect the records hidden by the current Bohol filter. This is a read-only audit; it does not make uncertain listings appear as verified Bohol results. Up to 100 of the most recently seen excluded records are shown.</p>
-<button id="inspectExcluded" type="button" class="btn sm alt">Inspect excluded listings</button>
-<p id="locationAuditStatus" class="muted" role="status"></p>
-<div id="locationAuditEntries"></div>
+<div class="hint">Want to inspect everything the filters excluded? <button class="btn sm alt" type="button" id="openRejectedFromLogs">Open rejected listings</button></div>
 </div>
+</section>
+<section class="view" id="view-rejected" hidden>
+<div class="intro"><div class="eyebrow">Diagnostics / Filter inspector</div>
+<h1>Rejected listings</h1>
+<p>Review every archived listing excluded by the current Find deals rules. A listing can have multiple rejection reasons. Read-only, with no Apify requests.</p></div>
+<div class="panel">
+<div class="headrow"><h2>Filter decisions</h2><button type="button" class="btn sm alt" id="rejectedRefresh">Refresh</button></div>
+<div class="filterrow">
+<label>Which listings?
+<select id="rejectedScope">
+<option value="current">Current Find deals filters</option>
+<option value="archive">Entire archive (Bohol and sale rules)</option>
+<option value="batch">Latest scan (if available)</option>
+</select></label>
+<label>Reason
+<select id="rejectedReason"><option value="">All reasons</option></select></label>
+<label>Listings per page
+<select id="rejectedPageSize"><option value="20">20</option><option value="40" selected>40</option><option value="100">100</option></select></label>
+</div>
+<p id="rejectedFilterSummary" class="muted"></p>
+<p id="rejectedStatus" role="status" class="muted">Open this view to inspect archived exclusions.</p>
+<div id="rejectedReasonStats" class="quicklinks"></div>
+<div id="rejectedResults" class="stack" aria-live="polite"></div>
+<div class="log-actions">
+<button type="button" class="btn sm alt" id="rejectedPrev">Previous page</button>
+<span id="rejectedPageInfo" class="muted" style="align-self:center"></span>
+<button type="button" class="btn sm alt" id="rejectedNext">Next page</button>
+</div>
+<p class="muted">A location marked “unverified” means the archived metadata is insufficient—not proof the seller is outside Bohol. The inspector does not change or delete listings.</p>
 </div>
 </section>
 <section class="view" id="view-saved" hidden>
@@ -212,25 +237,128 @@ document.getElementById('logCopy').addEventListener('click',async()=>{
  try{await navigator.clipboard.writeText(diagnosticsExport());document.getElementById('logFeedback').textContent='Activity log copied.'}
  catch(e){document.getElementById('logFeedback').textContent='Clipboard unavailable. Use Export JSON instead.'}
 });
-document.getElementById('inspectExcluded').addEventListener('click',async()=>{
- const status=document.getElementById('locationAuditStatus');
- const host=document.getElementById('locationAuditEntries');
- status.textContent='Checking stored location evidence…';
- host.replaceChildren();
+document.getElementById('openRejectedFromLogs').addEventListener('click',()=>navigate('rejected'));
+let rejectedPage=1;
+let rejectedLastPage=1;
+let rejectedBusy=false;
+function rejectedSearchParams(){
+ const mode=document.getElementById('rejectedScope').value;
+ const p=new URLSearchParams();
+ if(mode==='current'){
+  const q=document.getElementById('search').value.trim();
+  if(q)p.set('q',q);
+  if(category)p.set('category',category);
+  const min=document.getElementById('minPrice').value;
+  const max=document.getElementById('budget').value;
+  const days=document.getElementById('foundWithinDays').value;
+  if(min!=='')p.set('min_price',min);
+  if(max!=='')p.set('max_price',max);
+  if(days)p.set('found_within_days',days);
+  if(lastScanBatch)p.set('batch',lastScanBatch);
+ }else if(mode==='batch'&&lastScanBatch){
+  p.set('batch',lastScanBatch);
+ }
+ p.set('page',String(rejectedPage));
+ p.set('per_page',document.getElementById('rejectedPageSize').value);
+ const reason=document.getElementById('rejectedReason').value;
+ if(reason)p.set('reason',reason);
+ document.getElementById('rejectedFilterSummary').textContent=
+  mode==='current'?'Using Find deals filters: '+(p.get('q')||'all keywords')+' · '+(p.get('category')||'all categories')+
+   ' · '+(p.get('min_price')||'0')+' to '+(p.get('max_price')||'unlimited')+' PHP'+
+   (p.get('batch')?' · most recent scan':' · all archived scans')
+  :mode==='batch'?(lastScanBatch?'Latest scan only; Bohol and sale rules':'No latest scan ID in this page session; showing archived records')
+   :'All archived listings; Bohol location and sale-intent rules only';
+ return p;
+}
+function safeMarketplaceLink(raw){
+ try{const u=new URL(raw);return u.protocol==='https:'&&(u.hostname==='facebook.com'||u.hostname.endsWith('.facebook.com'))?u.href:null}catch(e){return null}
+}
+function safeMarketplacePhoto(raw){
+ try{const u=new URL(raw);return u.protocol==='https:'&&(u.hostname==='fbcdn.net'||u.hostname.endsWith('.fbcdn.net')||u.hostname==='fbsbx.com'||u.hostname.endsWith('.fbsbx.com'))?u.href:null}catch(e){return null}
+}
+async function loadRejectedListings(){
+ if(rejectedBusy)return;
+ const host=document.getElementById('rejectedResults'),status=document.getElementById('rejectedStatus');
+ const params=rejectedSearchParams();
+ const low=params.get('min_price'),high=params.get('max_price');
+ if(low!==null&&high!==null&&Number(low)>Number(high)){
+  status.textContent='Minimum price cannot exceed maximum price. Correct the Find deals filters before inspecting them.';
+  host.replaceChildren();return;
+ }
+ rejectedBusy=true;
+ status.textContent='Inspecting archived filter decisions…';host.replaceChildren();
  try{
-  const data=await request('/listings/location-audit');
-  const counts=data.counts||{};
-  status.textContent=(counts.bohol||0)+' accepted Bohol · '+(counts.verify||0)+' need verification · '+(counts.outside||0)+' marked outside. Showing '+data.sample.length+' of '+data.total_rejected+' excluded listings.';
-  logActivity('location_audit_completed',{counts:counts,shown:data.sample.length,totalRejected:data.total_rejected});
-  for(const item of data.sample){
-   const row=document.createElement('div');row.className='log-entry';
-   const head=document.createElement('strong');head.textContent=item.title+' · '+money(item.price);
-   const meta=document.createElement('small');meta.textContent='City: '+(item.city||'missing')+' · Province: '+(item.province||'missing')+' · Category: '+(item.category||'Other');
-   const reason=document.createElement('p');reason.textContent='Decision: '+item.location_status+' — '+item.reason+(item.has_coordinates?' (coordinates supplied)':' (no coordinates)');
-   row.append(head,meta,reason);host.append(row);
+  const data=await request('/listings/rejected?'+params.toString());
+  rejectedLastPage=data.pages;
+  status.textContent=data.checked_count+' archived records checked · '+data.accepted_count+' accepted · '+data.rejected_count+
+   ' rejected by at least one rule · '+data.matched_reason_count+' matching the selected rejection reason.';
+  const reasonSelect=document.getElementById('rejectedReason'),chosen=reasonSelect.value;
+  reasonSelect.replaceChildren();
+  const all=document.createElement('option');all.value='';all.textContent='All reasons';reasonSelect.append(all);
+  const stats=document.getElementById('rejectedReasonStats');stats.replaceChildren();
+  for(const [key,label] of Object.entries(data.reason_labels)){
+   const n=data.reason_counts[key]||0;
+   const opt=document.createElement('option');opt.value=key;opt.textContent=label+' ('+n+')';reasonSelect.append(opt);
+   if(n){
+    const chip=document.createElement('button');chip.type='button';chip.className='chip';
+    chip.textContent=label+': '+n;
+    chip.addEventListener('click',()=>{reasonSelect.value=key;rejectedPage=1;loadRejectedListings()});
+    stats.append(chip);
+   }
   }
- }catch(error){status.textContent='Location audit could not load: '+error.message}
-});
+  reasonSelect.value=chosen;
+  for(const item of data.items){
+   const row=document.createElement('article');row.className='log-entry';
+   const line=document.createElement('div');line.className='headrow';
+   const title=document.createElement('strong');title.textContent=item.title;
+   const price=document.createElement('strong');price.textContent=money(item.price);
+   line.append(title,price);row.append(line);
+   const photo=safeMarketplacePhoto(item.image_url);
+   if(photo){
+    const img=document.createElement('img');img.src=photo;img.loading='lazy';img.alt='Listing photo';
+    img.referrerPolicy='no-referrer';img.style.cssText='width:115px;height:90px;object-fit:cover;border-radius:8px;margin-top:8px';
+    row.append(img);
+   }
+   const meta=document.createElement('small');meta.textContent=
+    'Category: '+(item.category||'Other')+' · Town: '+(item.city||'unknown')+
+    ' · State: '+(item.province||'unknown')+' · Location: '+item.location_status+
+    ' · Intent: '+item.listing_intent;row.append(meta);
+   if(item.location_text){
+    const loc=document.createElement('small');loc.textContent='Original location text: '+item.location_text;row.append(loc);
+   }
+   if(item.latitude!==null&&item.longitude!==null){
+    const coords=document.createElement('small');coords.textContent='Coordinates: '+item.latitude+', '+item.longitude;row.append(coords);
+   }
+   const reasons=document.createElement('p');
+   reasons.textContent='Excluded because: '+item.reason_labels.join(' · ');
+   reasons.style.color='var(--orange)';row.append(reasons);
+   if(item.reasons.includes('outside_bohol')||item.reasons.includes('unverified_location')){
+    const detail=document.createElement('small');detail.textContent='Location decision: '+item.location_reason;row.append(detail);
+   }
+   if(item.reasons.some(x=>['accessory','repair','wanted','other_intent'].includes(x))){
+    const detail=document.createElement('small');detail.textContent='Sale classification: '+item.intent_reason;row.append(detail);
+   }
+   const url=safeMarketplaceLink(item.url);
+   if(url){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+    a.textContent='View original Marketplace listing';row.append(a)}
+   host.append(row);
+  }
+  if(!data.items.length){
+   const note=document.createElement('p');note.textContent='No rejected listings on this page for these settings.';host.append(note);
+  }
+  document.getElementById('rejectedPageInfo').textContent='Page '+data.page+' of '+data.pages;
+  document.getElementById('rejectedPrev').disabled=data.page<=1;
+  document.getElementById('rejectedNext').disabled=data.page>=data.pages;
+ }catch(error){status.textContent='Could not inspect listings: '+error.message}
+ finally{rejectedBusy=false}
+}
+document.getElementById('rejectedRefresh').addEventListener('click',()=>{rejectedPage=1;loadRejectedListings()});
+for(const name of ['rejectedScope','rejectedReason','rejectedPageSize']){
+ document.getElementById(name).addEventListener('change',()=>{rejectedPage=1;loadRejectedListings()});
+}
+document.getElementById('rejectedPrev').addEventListener('click',()=>{if(rejectedPage>1){rejectedPage--;loadRejectedListings()}});
+document.getElementById('rejectedNext').addEventListener('click',()=>{if(rejectedPage<rejectedLastPage){rejectedPage++;loadRejectedListings()}});
+
 document.getElementById('logClear').addEventListener('click',()=>{
  if(!confirm('Clear all locally stored Marketplace Finder logs?'))return;
  try{localStorage.removeItem(logKey)}catch(e){}renderActivityLogs();
@@ -278,7 +406,7 @@ function toggleExtraFilters(open){
  document.getElementById('extraFiltersToggle').textContent=open?'Fewer filters ▴':'More filters ▾';
 }
 
-const views=['discover','saved','watchlist','profit','activity'];
+const views=['discover','saved','watchlist','profit','activity','rejected'];
 function navigate(view){
  if(!views.includes(view))return;
  views.forEach(v=>{document.getElementById('view-'+v).hidden=v!==view});
@@ -287,6 +415,7 @@ function navigate(view){
  if(view==='saved')loadSaved();
  if(view==='watchlist')loadWatch();
  if(view==='activity')renderActivityLogs();
+ if(view==='rejected')loadRejectedListings();
  window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.view)));
