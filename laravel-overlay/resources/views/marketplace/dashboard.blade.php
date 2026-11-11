@@ -450,10 +450,30 @@ async function loadWatch(){
 document.getElementById('saveForm').addEventListener('submit',async e=>{e.preventDefault();try{await request('/collections/saved','POST',Object.fromEntries(new FormData(e.currentTarget)));e.currentTarget.reset();document.getElementById('saveStatus').textContent='Item saved.';loadSaved()}catch(error){document.getElementById('saveStatus').textContent=error.message}});
 document.getElementById('watchForm').addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));data.enabled=true;if(!data.max_price)data.max_price=null;try{await request('/collections/watchlist','POST',data);e.currentTarget.reset();document.getElementById('watchStatus').textContent='Device added.';loadWatch()}catch(error){document.getElementById('watchStatus').textContent=error.message}});
 document.getElementById('calcForm').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('calcStatus');status.textContent='';try{const data=await request('/calculator/estimate','POST',Object.fromEntries(new FormData(e.currentTarget)));document.getElementById('calcProfit').textContent=money(data.profit);document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%'}catch(error){status.textContent=error.message}});
+let activeScanPlan=null;
+async function refreshScanPlan(){
+ const form=document.getElementById('scanForm');
+ const params=new URLSearchParams();
+ const keyword=form.elements.namedItem('keyword').value.trim();
+ const selected=form.elements.namedItem('category').value||'All';
+ if(keyword)params.set('keyword',keyword);
+ params.set('category',selected);
+ const node=document.getElementById('scanPlanPreview');
+ activeScanPlan=null;
+ try{
+  const plan=await request('/marketplace/scan-plan?'+params.toString());
+  activeScanPlan=plan;
+  node.textContent='Planned '+plan.requests+' potentially billable Apify request(s): '+plan.terms.join(', ')+'. '+plan.coverage_note;
+ }catch(error){node.textContent='Unable to preview scan plan: '+error.message}
+}
+document.querySelectorAll('#scanForm input[name="keyword"], #scanForm select[name="category"]').forEach(input=>input.addEventListener('change',refreshScanPlan));
+document.getElementById('scanSettings').addEventListener('toggle',()=>{if(document.getElementById('scanSettings').open)refreshScanPlan()});
 document.getElementById('scanForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if(!document.getElementById('paidScan').checked){logActivity('scan_not_started',{reason:'approval_checkbox_unchecked'});return}
- if(!confirm('This can charge your Apify account. Start one scan?')){logActivity('scan_cancelled',{reason:'user_cancelled_confirmation'});return}
+ await refreshScanPlan();
+ if(!activeScanPlan){document.getElementById('scanStatus').textContent='Unable to verify scan plan. Nothing was charged.';return}
+ if(!confirm('Approve '+activeScanPlan.requests+' potentially billable Apify run(s) for: '+activeScanPlan.terms.join(', ')+'? The actor charge parameter is not a guaranteed billing ceiling.')){logActivity('scan_cancelled',{reason:'user_cancelled_confirmation'});return}
  const btn=document.getElementById('scanButton'),status=document.getElementById('scanStatus');btn.disabled=true;status.textContent='Scanning…';
  try{
  const data=Object.fromEntries(new FormData(e.currentTarget));
@@ -464,17 +484,19 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  else data.max_price=Number(data.max_price);
  if(!data.category)delete data.category;
  data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
- logActivity('scan_requested',{keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
+ logActivity('scan_requested',{terms:activeScanPlan.terms,requests:activeScanPlan.requests,keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
  const outcome=await request('/marketplace/scan','POST',data);
  logActivity('scan_completed',{keyword:data.keyword||'(blank)',rawCount:outcome.diagnostics?.raw_count??outcome.raw_count,
   normalized:outcome.diagnostics?.normalized_count??outcome.returned,
   archived:outcome.diagnostics?.archived_count??outcome.archived_count,
+  new:outcome.new_count,previouslySeen:outcome.previously_seen_count,terms:outcome.planned_terms,failedTerms:outcome.failed_terms,
   bohol:outcome.diagnostics?.bohol_count??null,
   outside:outcome.diagnostics?.outside_count??null,unverified:outcome.diagnostics?.unverified_count??null});
- status.textContent=outcome.archived_count+' identifiable listings archived. Only records with Bohol location evidence display; category coverage is not guaranteed.';
+ status.textContent=outcome.completed_requests+' request(s) completed: '+outcome.new_count+' new and '+outcome.previously_seen_count+' previously known listings. '+(outcome.failed_terms.length?'Failed terms: '+outcome.failed_terms.join(', ')+'. ':'')+'Only Bohol-eligible matches appear below.';
  if(data.category){category=data.category;document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)))}
+ lastScanBatch=outcome.scan_batch;
  await loadListings();
- document.getElementById('scanSettings').open=false;
+ document.getElementById('listingHeading').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(error){status.textContent=error.message;logActivity('scan_failed',{message:String(error.message||'Unknown error').slice(0,180)});openActivityLogs()}
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
 });
