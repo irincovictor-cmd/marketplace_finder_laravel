@@ -151,7 +151,7 @@ class DiscoveredListingController extends Controller
             'max_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
             'batch' => ['nullable', 'uuid'],
-            'reason' => ['nullable', 'in:outside_bohol,unverified_location,accessory,repair,wanted,other_intent,keyword,below_min_price,above_max_price,category,first_seen'],
+            'reason' => ['nullable', 'in:outside_bohol,unverified_location,accessory,repair,wanted,other_intent,keyword,below_min_price,above_max_price,category,first_seen,manual_inactive'],
             'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
