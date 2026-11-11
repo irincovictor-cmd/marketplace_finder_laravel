@@ -2,23 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\MarketplaceScanService;
+use App\Models\DiscoveredListing;
+use App\Services\BoholLocationService;
 use App\Services\ListingArchiveService;
+use App\Services\MarketplaceScanService;
+use App\Services\ScanPlanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class MarketplaceScanController extends Controller
 {
-    public function scan(Request $request, MarketplaceScanService $service, ListingArchiveService $archive): JsonResponse
+    public function preview(Request $request, ScanPlanService $planner): JsonResponse
     {
+        $data = $request->validate([
+            'keyword' => ['nullable', 'string', 'max:80', 'regex:/^[a-zA-Z0-9 +._-]+$/'],
+            'category' => ['nullable', 'in:All,Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+        ]);
+
+        return response()->json($planner->preview($data['keyword'] ?? '', $data['category'] ?? 'All'));
+    }
+
+    public function scan(
+        Request $request,
+        MarketplaceScanService $service,
+        ListingArchiveService $archive,
+        BoholLocationService $location,
+        ScanPlanService $planner
+    ): JsonResponse {
         if (! app()->environment('local', 'testing') || ! config('marketplace.scan_enabled')) {
             return response()->json(['message' => 'Live scanning is disabled.'], 503);
         }
 
         $data = $request->validate([
             'keyword' => ['nullable', 'string', 'min:2', 'max:80', 'regex:/^[a-zA-Z0-9 +._-]+$/'],
-            'category' => ['nullable', 'in:Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+            'category' => ['nullable', 'in:All,Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
             'min_price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'max_price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
@@ -37,22 +56,47 @@ class MarketplaceScanController extends Controller
             return response()->json(['message' => 'Configure APIFY_TOKEN on the server first.'], 503);
         }
 
-        try {
-            $result = $service->scan($data);
-        } catch (RuntimeException $e) {
-            // Do not expose provider responses, request URLs or secrets.
-            return response()->json(['message' => 'Marketplace scan failed. Check server configuration or provider status.'], 502);
+        $terms = $planner->terms($data['keyword'] ?? '', $data['category'] ?? 'All');
+        $batch = (string) Str::uuid();
+        $seen = [];
+        $rawCount = 0;
+        $errors = [];
+        $completed = 0;
+
+        // At most two billable actor requests. Each keyword is an independent run,
+        // as in legacy FlipRadar. Dedupe by listing URL or provider id.
+        foreach ($terms as $term) {
+            try {
+                $result = $service->scan([...$data, 'keyword' => $term]);
+                $completed++;
+                $rawCount += $result['raw_count'];
+                foreach ($result['listings'] as $item) {
+                    $identity = $item['url'] ?: ($item['id'] ?? '');
+                    if (! is_string($identity) || $identity === '') continue;
+                    $seen[hash('sha256', $identity)] = $item;
+                }
+            } catch (RuntimeException $e) {
+                $errors[] = $term;
+            }
         }
 
-        $stored = $archive->store($result['listings']);
+        if ($completed === 0) {
+            // Do not include provider errors, headers or account secrets.
+            return response()->json([
+                'message' => 'All Marketplace provider searches failed. Review Apify status and server configuration.',
+                'planned_terms' => $terms,
+                'completed_requests' => 0,
+                'failed_terms' => $errors,
+            ], 502);
+        }
 
-        // Aggregate diagnostics only. Do not log tokens, raw provider records,
-        // seller details or listing URLs.
-        $bohol = 0;
-        $outside = 0;
-        $verify = 0;
-        foreach ($result['listings'] as $item) {
-            $status = app(\App\Services\BoholLocationService::class)->assess(
+        $items = array_values($seen);
+        $existing = DiscoveredListing::query()->whereIn('source_key', array_keys($seen))->count();
+        $stored = $archive->store($items, $batch);
+        $newCount = max(0, $stored - $existing);
+        $bohol = $outside = $verify = 0;
+        foreach ($items as $item) {
+            $status = $location->assess(
                 $item['city'] ?? null,
                 $item['province'] ?? null,
                 $item['location_text'] ?? null,
@@ -65,19 +109,29 @@ class MarketplaceScanController extends Controller
         }
 
         return response()->json([
-            ...$result,
+            'listings' => $items,
+            'returned' => count($items),
+            'raw_count' => $rawCount,
             'archived_count' => $stored,
+            'new_count' => $newCount,
+            'previously_seen_count' => $stored - $newCount,
+            'scan_batch' => $batch,
+            'planned_terms' => $terms,
+            'completed_requests' => $completed,
+            'failed_terms' => $errors,
             'diagnostics' => [
-                'raw_count' => $result['raw_count'],
-                'normalized_count' => $result['returned'],
+                'raw_count' => $rawCount,
+                'normalized_count' => count($items),
                 'archived_count' => $stored,
+                'new_count' => $newCount,
+                'previously_seen_count' => $stored - $newCount,
                 'bohol_count' => $bohol,
                 'outside_count' => $outside,
                 'unverified_count' => $verify,
             ],
             'keyword' => $data['keyword'] ?? '',
             'category' => $data['category'] ?? null,
-            'notice' => 'Results and geography are unverified; charges depend on Apify billing.',
+            'notice' => 'Keyword probes are not an exhaustive Facebook category search. Charges depend on Apify billing.',
         ]);
     }
 }
