@@ -111,4 +111,28 @@ class DiscoveredListingTest extends TestCase
             ->assertOk()->assertJsonPath('items.0.title', 'ThinkPad laptop');
     }
 
+    public function test_legacy_photos_restore_only_for_existing_matching_facebook_listings(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'test-photo-a', 'title' => 'Redmi Note 15', 'price' => 6500,
+                'city' => 'Tagbilaran', 'url' => 'https://www.facebook.com/marketplace/item/12345/'],
+            ['id' => 'test-photo-b', 'title' => 'Another phone', 'price' => 8000,
+                'city' => 'Dauis', 'url' => 'https://www.facebook.com/marketplace/item/98765/'],
+        ]);
+
+        $this->postJson('/listings/restore-images', ['images' => [
+            ['listing_url' => 'https://www.facebook.com/marketplace/item/12345',
+             'image_url' => 'https://scontent.xx.fbcdn.net/redmi.jpg'],
+            ['listing_url' => 'https://www.facebook.com/marketplace/item/98765/',
+             'image_url' => 'https://untrusted.example/image.png'],
+            ['listing_url' => 'https://www.facebook.com/marketplace/item/55555/',
+             'image_url' => 'https://scontent.xx.fbcdn.net/fake.jpg'],
+        ]])->assertOk()->assertJsonPath('updated', 1);
+
+        $this->getJson('/listings?q=redmi')->assertOk()
+            ->assertJsonPath('items.0.image_url', 'https://scontent.xx.fbcdn.net/redmi.jpg');
+        $this->assertDatabaseCount('discovered_listings', 2);
+    }
+
+
 }
