@@ -84,7 +84,6 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run approved searches</button>
 </form>
-<p id="scanCooldownMessage" role="status" class="muted"></p>
 <p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
 </details>
 
@@ -275,7 +274,7 @@ async function request(path,method='GET',body){
   if(response.status===429){
    const retryHeader=Number(response.headers.get('Retry-After'));
    const retrySeconds=Number.isFinite(retryHeader)&&retryHeader>0?Math.ceil(retryHeader):60;
-   const error=new Error('Scan request limit reached. Wait about '+retrySeconds+' seconds before trying again. No Apify scan was started by this rejected request.');
+   const error=new Error('A provider or infrastructure rate limit was reached. Retry after approximately '+retrySeconds+' seconds.');
    error.status=429;error.retryAfter=retrySeconds;
    throw error;
   }
@@ -480,41 +479,10 @@ async function refreshScanPlan(){
 }
 document.querySelectorAll('#scanForm input[name="keyword"], #scanForm select[name="category"]').forEach(input=>input.addEventListener('change',refreshScanPlan));
 document.getElementById('scanSettings').addEventListener('toggle',()=>{if(document.getElementById('scanSettings').open)refreshScanPlan()});
-const scanCooldownKey='marketplace_finder_scan_cooldown_until_v1';
 let scanInFlight=false;
-function secondsUntilScanAllowed(){
- let expires=0;
- try{expires=Number(localStorage.getItem(scanCooldownKey)||0)}catch(error){}
- return Math.max(0,Math.ceil((expires-Date.now())/1000));
-}
-function showScanCooldown(){
- const remaining=secondsUntilScanAllowed();
- const button=document.getElementById('scanButton');
- const notice=document.getElementById('scanCooldownMessage');
- if(remaining>0){
-  notice.textContent='Scan cooldown: '+remaining+' seconds remaining. Browsing stored listings is still available.';
-  if(!scanInFlight){button.disabled=true;button.textContent='Scan available in '+remaining+'s';}
- }else{
-  notice.textContent='';
-  try{localStorage.removeItem(scanCooldownKey)}catch(error){}
-  if(!scanInFlight){button.disabled=false;button.textContent='Run approved searches';}
- }
- return remaining;
-}
-function startScanCooldown(seconds){
- const until=Date.now()+Math.max(1,Number(seconds)||60)*1000;
- try{localStorage.setItem(scanCooldownKey,String(until))}catch(error){}
- showScanCooldown();
-}
-window.setInterval(showScanCooldown,1000);
-showScanCooldown();
 document.getElementById('scanForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if(scanInFlight)return;
- if(showScanCooldown()>0){
-  document.getElementById('scanStatus').textContent='Scan temporarily unavailable. Wait for the countdown; you can still apply local filters.';
-  return;
- }
  // Capture the HTML form synchronously. e.currentTarget becomes null after await.
  const scanForm=e.currentTarget;
  const approvedData=Object.fromEntries(new FormData(scanForm));
@@ -557,8 +525,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  }catch(error){
   status.textContent=error.message;
   if(error.status===429){
-   startScanCooldown(error.retryAfter||60);
-   logActivity('scan_rate_limited',{reason:'Laravel scan submission cooldown',retryAfterSeconds:error.retryAfter||60,providerRequestStarted:false});
+   logActivity('scan_rate_limited',{reason:'Provider or infrastructure rate limit',retryAfterSeconds:error.retryAfter||60});
   }else{
    logActivity('scan_failed',{message:String(error.message||'Unknown error').slice(0,180)});
   }
@@ -568,7 +535,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
   status.setAttribute('role','alert');
   status.scrollIntoView({behavior:'smooth',block:'nearest'});
  }
- finally{scanInFlight=false;showScanCooldown();document.getElementById('paidScan').checked=false}
+ finally{scanInFlight=false;btn.disabled=false;btn.textContent='Run approved searches';document.getElementById('paidScan').checked=false}
 });
 restoreFilters();
 loadListings();
