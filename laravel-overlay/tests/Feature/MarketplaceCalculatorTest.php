@@ -44,6 +44,15 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString("status.setAttribute('role','alert');", $blade);
     }
 
+    public function test_paid_scan_has_visible_cooldown_and_no_auto_retry(): void
+    {
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString('id="scanCooldownMessage"', $blade);
+        $this->assertStringContainsString('secondsUntilScanAllowed()', $blade);
+        $this->assertStringContainsString('startScanCooldown(error.retryAfter||60)', $blade);
+        $this->assertStringContainsString('if(showScanCooldown()>0)', $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
