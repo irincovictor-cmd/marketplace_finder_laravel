@@ -186,4 +186,68 @@ class DiscoveredListingTest extends TestCase
     }
 
 
+    public function test_rejected_inspector_lists_all_reasons_and_does_not_change_stored_listings(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'accepted', 'title' => 'Redmi Note 15', 'price' => 8000, 'city' => 'Dauis', 'province' => 'Bohol', 'url' => null],
+            ['id' => 'outside', 'title' => 'Redmi Note 15', 'price' => 9000, 'city' => 'Mandaue', 'province' => 'Cebu', 'url' => null],
+            ['id' => 'unknown', 'title' => 'Mystery device', 'price' => 20000, 'city' => '', 'province' => 'PH-07', 'url' => null],
+            ['id' => 'case', 'title' => 'iPhone 16 ProMax Cases', 'price' => 1500, 'city' => 'Tagbilaran', 'province' => 'Bohol', 'url' => null],
+            ['id' => 'buyer', 'title' => 'LF budget phone', 'price' => 5000, 'city' => 'Panglao', 'province' => 'Bohol', 'url' => null],
+            ['id' => 'above', 'title' => 'Redmi Note 15', 'price' => 25000, 'city' => 'Panglao', 'province' => 'Bohol', 'url' => null],
+        ]);
+        $this->assertDatabaseCount('discovered_listings', 6);
+
+        $response = $this->getJson('/listings/rejected?q=redmi&category=Phones&min_price=4000&max_price=10000&per_page=2')
+            ->assertOk()
+            ->assertJsonPath('checked_count', 6)
+            ->assertJsonPath('accepted_count', 1)
+            ->assertJsonPath('rejected_count', 5)
+            ->assertJsonPath('matched_reason_count', 5)
+            ->assertJsonCount(2, 'items')
+            ->assertJsonPath('pages', 3)
+            ->assertJsonPath('read_only', true);
+
+        $this->assertSame(2, count($response->json('items')));
+        $this->assertSame(1, $response->json('reason_counts.outside_bohol'));
+        $this->assertSame(1, $response->json('reason_counts.unverified_location'));
+        $this->assertSame(1, $response->json('reason_counts.accessory'));
+        $this->assertSame(1, $response->json('reason_counts.wanted'));
+        $this->assertGreaterThanOrEqual(1, $response->json('reason_counts.above_max_price'));
+        $this->getJson('/listings?q=redmi&category=Phones&min_price=4000&max_price=10000')
+            ->assertOk()->assertJsonCount(1, 'items');
+
+        $onlyCases = $this->getJson('/listings/rejected?reason=accessory')
+            ->assertOk()->assertJsonPath('matched_reason_count', 1)
+            ->assertJsonCount(1, 'items');
+        $this->assertSame('iPhone 16 ProMax Cases', $onlyCases->json('items.0.title'));
+        $this->assertDatabaseCount('discovered_listings', 6);
+    }
+
+    public function test_rejected_inspector_paginates_past_one_hundred_records(): void
+    {
+        $records = [];
+        for ($i = 1; $i <= 123; $i++) {
+            $records[] = ['id' => 'cebu-' . $i, 'title' => 'Redmi phone ' . $i,
+                'price' => 6500, 'city' => 'Mandaue', 'province' => 'Cebu', 'url' => null];
+        }
+        app(ListingArchiveService::class)->store($records);
+
+        $this->getJson('/listings/rejected?per_page=100')
+            ->assertOk()->assertJsonCount(100, 'items')
+            ->assertJsonPath('rejected_count', 123)
+            ->assertJsonPath('pages', 2);
+        $this->getJson('/listings/rejected?per_page=100&page=2')
+            ->assertOk()->assertJsonCount(23, 'items')
+            ->assertJsonPath('rejected_count', 123);
+        $this->assertDatabaseCount('discovered_listings', 123);
+    }
+
+    public function test_rejected_inspector_rejects_invalid_filter_ranges(): void
+    {
+        $this->getJson('/listings/rejected?min_price=10000&max_price=5000')->assertUnprocessable();
+        $this->getJson('/listings/rejected?reason=invalid')->assertUnprocessable();
+    }
+
+
 }
