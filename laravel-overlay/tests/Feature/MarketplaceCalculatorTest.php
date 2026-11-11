@@ -74,6 +74,16 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee('id="rejectedNext"', false);
     }
 
+    public function test_manual_availability_sidebar_and_card_controls_render(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('data-view="status"', false)
+            ->assertSee('id="view-status"', false)
+            ->assertSee('id="manualHistoryEntries"', false)
+            ->assertSee('makeManualStatusControl(', false)
+            ->assertSee('Availability history');
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
