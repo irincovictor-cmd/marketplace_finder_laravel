@@ -54,6 +54,27 @@ class DiscoveredListingTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('sort');
     }
 
+    public function test_blank_search_returns_all_eligible_local_bohol_listings_and_diagnostics(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'b1', 'title' => 'iPhone 13', 'price' => 9000, 'city' => 'Tagbilaran', 'url' => null],
+            ['id' => 'b2', 'title' => 'Canon camera', 'price' => 16000, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'c3', 'title' => 'iPhone Cebu', 'price' => 5000, 'city' => 'Mandaue', 'province' => 'Cebu', 'url' => null],
+        ]);
+        $this->getJson('/listings?q=')
+            ->assertOk()->assertJsonCount(2, 'items')
+            ->assertJsonPath('diagnostics.stored_total', 3)
+            ->assertJsonPath('diagnostics.bohol_total', 2)
+            ->assertJsonPath('diagnostics.hidden_outside_or_unknown', 1)
+            ->assertJsonPath('diagnostics.keyword_supplied', false);
+
+        $this->getJson('/listings?category=Electronics&q=')
+            ->assertOk()->assertJsonCount(2, 'items');
+        $this->getJson('/listings?q=&min_price=17000')
+            ->assertOk()->assertJsonCount(0, 'items')
+            ->assertJsonPath('diagnostics.matching_filters', 0);
+    }
+
     public function test_items_without_identifiers_are_not_merged_by_title(): void
     {
         $archive = app(ListingArchiveService::class);
