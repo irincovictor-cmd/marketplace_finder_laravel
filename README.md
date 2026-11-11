@@ -55,6 +55,10 @@ The Blade dashboard now includes the legacy-inspired **Activity log & scan diagn
 
 To troubleshoot, open the Activity log after clicking Apply filters and check `local_search_completed`; to capture live scanning, explicitly approve the scan and review `scan_completed` or `scan_failed`. Run the PHPUnit suite after rebuilding; automated tests do not call Apify.
 
+## Restore photos from earlier FlipRadar scans
+
+Existing SQLite records from before the image feature may have `image_url = null`. On the **Find deals** screen, use **Restore photos from classic FlipRadar** to copy photo URLs from the original app's `fr_live` browser cache, when both apps have been opened under the same site origin (for example `http://localhost:8000` for both views). The import matches existing Facebook Marketplace item IDs and validates that photos come from an HTTPS Facebook CDN. It doesn't add new listings, call Apify or trigger charges. If the legacy cache is missing, or a matching item never appeared in that cache, restoration will report zero and you'll need a fresh explicitly approved scan to populate the image.
+
 ## Marketplace listing photos
 
 Laravel now retains `primary_listing_photo_url` from the approved Apify Marketplace result and stores its HTTPS image URL in the additive `discovered_listings.image_url` SQLite column. Product cards display the **actual Marketplace thumbnail** instead of only category emoji when the actor provides a permitted `fbcdn.net` or `fbsbx.com` URL. The image is loaded lazily in the browser with no referrer; unreadable, missing or expired photos fall back to a category icon. URLs are not fetched on the Laravel server.
