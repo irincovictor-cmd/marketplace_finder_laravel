@@ -470,13 +470,16 @@ document.querySelectorAll('#scanForm input[name="keyword"], #scanForm select[nam
 document.getElementById('scanSettings').addEventListener('toggle',()=>{if(document.getElementById('scanSettings').open)refreshScanPlan()});
 document.getElementById('scanForm').addEventListener('submit',async e=>{
  e.preventDefault();
+ // Capture the HTML form synchronously. e.currentTarget becomes null after await.
+ const scanForm=e.currentTarget;
+ const approvedData=Object.fromEntries(new FormData(scanForm));
  if(!document.getElementById('paidScan').checked){logActivity('scan_not_started',{reason:'approval_checkbox_unchecked'});return}
  await refreshScanPlan();
  if(!activeScanPlan){document.getElementById('scanStatus').textContent='Unable to verify scan plan. Nothing was charged.';return}
  if(!confirm('Approve '+activeScanPlan.requests+' potentially billable Apify run(s) for: '+activeScanPlan.terms.join(', ')+'? The actor charge parameter is not a guaranteed billing ceiling.')){logActivity('scan_cancelled',{reason:'user_cancelled_confirmation'});return}
  const btn=document.getElementById('scanButton'),status=document.getElementById('scanStatus');btn.disabled=true;status.textContent='Scanning…';
  try{
- const data=Object.fromEntries(new FormData(e.currentTarget));
+ const data=approvedData;
  if(!data.keyword)delete data.keyword;
  if(!data.min_price)delete data.min_price;
  else data.min_price=Number(data.min_price);
