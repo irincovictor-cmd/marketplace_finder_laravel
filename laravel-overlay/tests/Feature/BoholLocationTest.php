@@ -70,4 +70,37 @@ class BoholLocationTest extends TestCase
         $service = app(BoholLocationService::class);
         $this->assertSame('outside', $service->assess('Dauis', 'Bohol', null, 10.31, 123.92)['status']);
     }
+    public function test_rejected_listing_inspector_reports_evidence_without_changing_visibility(): void
+    {
+        $archive = app(ListingArchiveService::class);
+        $archive->store([
+            ['id' => 'audit-bohol', 'title' => 'Xiaomi 14 Bohol', 'price' => 9000,
+             'city' => 'Tagbilaran', 'province' => 'Bohol', 'url' => null],
+            ['id' => 'audit-cebu', 'title' => 'Xiaomi 14 Cebu', 'price' => 8500,
+             'city' => 'Mandaue', 'province' => 'Cebu', 'url' => null],
+            ['id' => 'audit-unknown', 'title' => 'Xiaomi 14 Unknown', 'price' => 8200,
+             'city' => '', 'province' => 'PH-07', 'url' => null],
+        ]);
+
+        $response = $this->getJson('/listings/location-audit')->assertOk()
+            ->assertJsonPath('counts.bohol', 1)
+            ->assertJsonPath('counts.outside', 1)
+            ->assertJsonPath('counts.verify', 1)
+            ->assertJsonPath('total_rejected', 2)
+            ->assertJsonPath('read_only', true)
+            ->assertJsonCount(2, 'sample');
+        $this->assertContains('Other province stated', array_column($response->json('sample'), 'reason'));
+        $this->getJson('/listings?q=Xiaomi')->assertOk()->assertJsonCount(1, 'items');
+        $this->assertDatabaseCount('discovered_listings', 3);
+    }
+
+    public function test_ambiguous_town_requires_province_even_when_region_code_is_present(): void
+    {
+        $service = app(BoholLocationService::class);
+        $this->assertSame('verify', $service->assess('Carmen', 'PH-07')['status']);
+        $this->assertSame('bohol', $service->assess('Carmen', 'Bohol')['status']);
+        $this->assertSame('verify', $service->assess('Valencia', 'PH-07')['status']);
+        $this->assertSame('outside', $service->assess('Mandaue', 'Bohol')['status']);
+    }
+
 }
