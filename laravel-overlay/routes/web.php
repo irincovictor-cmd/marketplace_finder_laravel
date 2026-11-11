@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'marketplace.dashboard')->name('marketplace.dashboard');
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
+Route::get('/listings/rejected', [DiscoveredListingController::class, 'rejected'])
+    ->name('marketplace.listings.rejected');
 Route::get('/listings/location-audit', [DiscoveredListingController::class, 'locationAudit'])
     ->middleware('throttle:30,1')
     ->name('marketplace.listings.location-audit');
