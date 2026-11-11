@@ -3,12 +3,20 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MarketplaceScanTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Never consult a real saved user's Apify token during automated tests.
+        Storage::fake('local');
+    }
 
     private function payload(array $overrides = []): array
     {
