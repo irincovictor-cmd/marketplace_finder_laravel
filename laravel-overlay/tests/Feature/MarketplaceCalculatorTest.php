@@ -33,7 +33,7 @@ class MarketplaceCalculatorTest extends TestCase
         $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
         $this->assertStringContainsString('response.status===429', $blade);
         $this->assertStringContainsString('scan_rate_limited', $blade);
-        $this->assertStringContainsString('Wait about ', $blade);
+        $this->assertStringContainsString('Retry after approximately ', $blade);
     }
 
     public function test_scan_failure_stays_on_discovery_screen(): void
@@ -44,13 +44,12 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString("status.setAttribute('role','alert');", $blade);
     }
 
-    public function test_paid_scan_has_visible_cooldown_and_no_auto_retry(): void
+    public function test_scan_has_no_browser_cooldown_and_still_prevents_duplicate_clicks(): void
     {
         $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
-        $this->assertStringContainsString('id="scanCooldownMessage"', $blade);
-        $this->assertStringContainsString('secondsUntilScanAllowed()', $blade);
-        $this->assertStringContainsString('startScanCooldown(error.retryAfter||60)', $blade);
-        $this->assertStringContainsString('if(showScanCooldown()>0)', $blade);
+        $this->assertStringNotContainsString('scanCooldownMessage', $blade);
+        $this->assertStringNotContainsString('startScanCooldown(', $blade);
+        $this->assertStringContainsString('if(scanInFlight)return;', $blade);
     }
 
     public function test_profit_and_roi_are_computed_on_server(): void
