@@ -57,15 +57,17 @@ class ListingArchiveService
         return $count;
     }
 
-    // Provisional UI grouping; NOT equivalent to FlipRadar's detailed classifier.
+    // Legacy classify.js is the reference. This is a tested first slice of its
+    // device-kind mapping, not yet full accessory/repair/wanted parity.
+    // Keep the original title so questionable items remain inspectable.
     public function category(string $title): string
     {
         $s = mb_strtolower($title);
-        if (preg_match('/\\b(camera|cameras|dslr|mirrorless|canon|nikon|fujifilm|instax|gopro|lumix|sony zv|sony a[0-9]{4}|lens)\\b/u', $s)) return 'Cameras';
-        if (preg_match('/\b(iphone|samsung|galaxy|redmi|poco|iqoo|realme|oneplus|pixel|phone|oppo|vivo)\b/u', $s)) return 'Phones';
-        if (preg_match('/\b(laptop|notebook|thinkpad|macbook|ideapad|aspire)\b/u', $s)) return 'Laptops';
-        if (preg_match('/\b(ps[345]|playstation|xbox|nintendo|switch)\b/u', $s)) return 'Consoles';
-        if (preg_match('/\b(rtx|gtx|radeon|ryzen|motherboard|gpu|cpu|ssd|monitor)\b/u', $s)) return 'PC Parts';
+        if (preg_match('/\b(camera|cameras|dslr|mirrorless|canon|nikon|fujifilm|instax|gopro|lumix|sony zv|sony a[0-9]{4})\b/u', $s)) return 'Cameras';
+        if (preg_match('/\b(laptop|notebook|thinkpad|macbook|ideapad|vivobook|chromebook|legion|nitro|aspire)\b/u', $s)) return 'Laptops';
+        if (preg_match('/\b(ps[345]|playstation|xbox|nintendo|switch|steam deck|rog ally)\b/u', $s)) return 'Consoles';
+        if (preg_match('/\b(rtx|gtx|radeon|ryzen|motherboard|gpu|cpu|ssd|nvme|monitor|ddr[345])\b/u', $s)) return 'PC Parts';
+        if (preg_match('/\b(iphone|samsung|galaxy|redmi|xiaomi|poco|iqoo|realme|oneplus|pixel|phone|cellphone|smartphone|oppo|vivo|infinix|tecno|honor|huawei|motorola|moto|nubia|nothing|zte|itel|cherry mobile|xperia)\b/u', $s)) return 'Phones';
         return 'Other';
     }
 }
