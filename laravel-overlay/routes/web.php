@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'marketplace.dashboard')->name('marketplace.dashboard');
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
+Route::get('/listings/manual-status-history', [DiscoveredListingController::class, 'manualStatusHistory'])->name('marketplace.listings.status-history');
+Route::patch('/listings/{listing}/manual-status', [DiscoveredListingController::class, 'updateManualStatus'])->name('marketplace.listings.manual-status');
 Route::get('/listings/rejected', [DiscoveredListingController::class, 'rejected'])
     ->name('marketplace.listings.rejected');
 Route::get('/listings/location-audit', [DiscoveredListingController::class, 'locationAudit'])
