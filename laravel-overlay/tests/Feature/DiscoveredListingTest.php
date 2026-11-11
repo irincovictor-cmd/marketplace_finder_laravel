@@ -250,4 +250,57 @@ class DiscoveredListingTest extends TestCase
     }
 
 
+    public function test_manual_sold_and_pending_tags_hide_active_deals_without_deleting_archive(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'manual-phone-a', 'title' => 'Redmi Note 15', 'price' => 6500, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'manual-phone-b', 'title' => 'POCO F7', 'price' => 12000, 'city' => 'Tagbilaran', 'url' => null],
+            ['id' => 'manual-phone-c', 'title' => 'iPhone 13', 'price' => 9000, 'city' => 'Panglao', 'url' => null],
+        ]);
+        $ids = DiscoveredListing::query()->pluck('id', 'title');
+        $this->patchJson('/listings/'.$ids['Redmi Note 15'].'/manual-status', ['status' => 'sold'])
+            ->assertOk()->assertJsonPath('manual_status', 'sold')
+            ->assertJsonPath('source', 'user_reported');
+        $this->patchJson('/listings/'.$ids['POCO F7'].'/manual-status', ['status' => 'pending'])
+            ->assertOk()->assertJsonPath('manual_status', 'pending');
+
+        $this->getJson('/listings')->assertOk()->assertJsonCount(1, 'items')
+            ->assertJsonPath('diagnostics.hidden_manual_status', 2);
+        $this->getJson('/listings?availability=all')->assertOk()->assertJsonCount(3, 'items');
+        $this->getJson('/listings?availability=sold')->assertOk()->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.manual_status', 'sold');
+
+        // Re-scanning a known listing does not reset its user-reported status.
+        app(ListingArchiveService::class)->store([
+            ['id' => 'manual-phone-a', 'title' => 'Redmi Note 15', 'price' => 6300, 'city' => 'Dauis', 'url' => null],
+        ]);
+        $this->assertDatabaseHas('discovered_listings', ['id' => $ids['Redmi Note 15'], 'manual_status' => 'sold', 'price' => 6300]);
+        $this->getJson('/listings')->assertOk()->assertJsonCount(1, 'items');
+
+        $this->patchJson('/listings/'.$ids['Redmi Note 15'].'/manual-status', ['status' => 'unverified'])
+            ->assertOk()->assertJsonPath('manual_status', 'unverified')
+            ->assertJsonPath('manual_status_updated_at', null);
+        $this->getJson('/listings')->assertOk()->assertJsonCount(2, 'items');
+        $this->assertDatabaseCount('discovered_listings', 3);
+    }
+
+    public function test_manual_availability_history_and_input_validation(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'history-a', 'title' => 'Xiaomi 14T', 'price' => 8500, 'city' => 'Dauis', 'url' => null],
+        ]);
+        $id = DiscoveredListing::query()->firstOrFail()->id;
+        $this->patchJson('/listings/'.$id.'/manual-status', ['status' => 'sold_out'])
+            ->assertUnprocessable()->assertJsonValidationErrors('status');
+        $this->patchJson('/listings/999999/manual-status', ['status' => 'sold'])->assertNotFound();
+        $this->patchJson('/listings/'.$id.'/manual-status', ['status' => 'unavailable'])->assertOk();
+
+        $this->getJson('/listings/manual-status-history')
+            ->assertOk()->assertJsonPath('total', 1)
+            ->assertJsonPath('items.0.manual_status', 'unavailable');
+
+        $this->patchJson('/listings/'.$id.'/manual-status', ['status' => 'unverified'])->assertOk();
+        $this->getJson('/listings/manual-status-history')->assertOk()->assertJsonPath('total', 0);
+    }
+
 }
