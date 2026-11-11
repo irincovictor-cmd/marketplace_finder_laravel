@@ -1,3 +1,11 @@
+## Manual listing availability (no Apify credits)
+
+Each archived deal card now has a **Your availability tag** selector: Not verified, Available, Pending/reserved, Sold, or Unavailable/removed. These are **user reports**, not Facebook-verified statuses. After viewing the original listing on Facebook, choose a tag; it saves immediately through `PATCH /listings/{id}/manual-status`. Pending, Sold and Unavailable items disappear from default **Find deals** results, but remain in SQLite. **Availability history** in the sidebar (`/#status`) lists all manually tagged records, with original Marketplace links when present and controls to change/undo a tag. Set **Not verified** to clear a tag and return the item to active results; Available records also remain visible.
+
+`GET /listings?availability=active` (default) excludes user-tagged inactive listings, while `availability=all` or a specific status can inspect them for troubleshooting. The separate Rejected listings inspector records `manual_inactive` as a rejection reason. Future Apify rescans update listing details and last-seen times but do **not** reset user-specified availability. No automatic status verification, periodic checking, scraping, or provider charges are triggered by tagging.
+
+This is designed for a **localhost-only single-user** app; add authentication/authorization before making the write endpoint publicly accessible. Manual tags are not evidence of sale or unavailability until the user has checked the source.
+
 ## Rejected listings inspector (full archive)
 
 Use **Rejected listings** in the Laravel sidebar (`/#rejected`) to inspect **every stored item excluded from Find deals**. Unlike the original location-only audit (capped at 100 records), the new read-only `GET /listings/rejected` endpoint evaluates every archived record in the selected scope, returns counts by rejection reason, and paginates the full matching set (20, 40, or 100 per page). An item can be rejected for multiple reasons, so counts by reason can exceed the number of rejected items.
