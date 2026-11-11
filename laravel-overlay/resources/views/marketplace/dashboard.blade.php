@@ -12,7 +12,7 @@
 main{width:100%;max-width:1190px;margin:0 auto;padding:37px 40px 75px}.view[hidden]{display:none!important}.eyebrow{text-transform:uppercase;letter-spacing:1.5px;font-weight:800;font-size:12px;color:var(--orange)}h1{font-size:clamp(30px,4vw,43px);line-height:1.15;letter-spacing:-1.2px;margin:10px 0}h2{font-size:22px;margin:0}h3{font-size:17px;margin:0 0 7px}p{color:var(--muted);margin:8px 0 18px}.intro{margin-bottom:26px}.intro p{font-size:15px}.status{font-size:12px;color:var(--mint);background:#15332f;border:1px solid #285e51;border-radius:50px;padding:7px 12px;display:inline-block}.headrow{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
 .btn{border:0;border-radius:12px;background:var(--orange);color:#201508;padding:11px 18px;font-weight:800;white-space:nowrap}.btn.alt{background:#283951;color:var(--text);border:1px solid #40516b}.btn.subtle{background:transparent;color:var(--muted);border:1px solid var(--line)}.btn.sm{font-size:12px;padding:8px 12px}.btn:hover:not(:disabled){filter:brightness(1.07)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:22px}.searchbox{padding:19px;background:linear-gradient(120deg,#1b2c46,#172238);border:1px solid #384963;border-radius:19px}.searchrow{display:grid;grid-template-columns:minmax(0,2fr) minmax(130px,1fr) minmax(145px,1fr) auto;gap:11px;align-items:end}.filterrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:13px}.filterrow label{min-width:0}.filter-summary{padding:10px 1px 0;color:var(--muted);font-size:12px}.filter-toggle{border:0;background:transparent;padding:9px 3px;color:var(--orange);font-weight:700;font-size:13px}.extra-filters[hidden]{display:none}.searchbox .chip{margin-bottom:2px}label{display:block;color:var(--muted);font-size:12px;font-weight:600}input,select{display:block;width:100%;min-width:0;border-radius:11px;border:1px solid #42526b;background:#101c2e;color:var(--text);padding:11px 12px;margin-top:6px}input::placeholder{color:#8190a9}.quicklinks{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 0}.chip{border:1px solid #40516a;border-radius:50px;padding:8px 13px;background:#1e2b42;color:#d0d9e9;font-size:12px}.chip[aria-pressed=true]{background:#3b3228;color:var(--orange);border-color:#b77d35}.muted{color:var(--muted);font-size:12px}.sectiontop{margin:27px 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.stack{display:grid;gap:13px}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.listing{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.listing-art{height:190px;display:grid;place-items:center;background:linear-gradient(130deg,#263b57,#1b263c);font-size:32px;overflow:hidden;position:relative}.listing-art img{width:100%;height:100%;object-fit:cover;display:block}.listing-art .photo-fallback{font-size:35px}.listing-art .photo-label{position:absolute;bottom:7px;right:9px;background:#101a2ad9;color:#b9c6d8;border-radius:6px;padding:2px 6px;font-size:10px}.listing-info{padding:15px;display:flex;flex-direction:column;flex:1}.listing h3{font-size:16px;margin:7px 0}.listing-price{font-size:24px;font-weight:850;letter-spacing:-.5px;margin:8px 0}.listing-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px}.pill{font-size:11px;color:var(--mint);font-weight:700}.empty{padding:30px 24px;border:1px dashed #44536b;border-radius:16px;text-align:center;background:var(--panel)}.empty strong{font-size:17px}.empty p{max-width:470px;margin:7px auto 16px}.hint{margin-top:14px;padding:13px 15px;border-radius:12px;background:#1e2a3f;border:1px solid #3b4c63;color:#c1cede;font-size:13px}
-details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--side)}summary{cursor:pointer;color:#f4dfbd;font-weight:700}details.settings p{font-size:13px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.formrow{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storageitem{display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:12px;background:#17263b;border:1px solid var(--line);padding:13px;margin-top:10px}.storageitem a{color:var(--orange);overflow-wrap:anywhere}.storageitem small{display:block;color:var(--muted);font-size:12px}.error{color:var(--red)}.success{color:var(--mint)}.out{font-size:29px;font-weight:850}.checkboxrow{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin:17px 0}.checkboxrow input{width:18px;height:18px;margin:1px 0}.summarygrid{display:flex;gap:45px;flex-wrap:wrap}.notice{border-top:1px solid var(--line);padding-top:18px;margin-top:24px;color:var(--muted);font-size:12px}
+details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--side)}summary{cursor:pointer;color:#f4dfbd;font-weight:700}details.settings p{font-size:13px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.formrow{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storageitem{display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:12px;background:#17263b;border:1px solid var(--line);padding:13px;margin-top:10px}.storageitem a{color:var(--orange);overflow-wrap:anywhere}.storageitem small{display:block;color:var(--muted);font-size:12px}.error{color:var(--red)}.success{color:var(--mint)}.out{font-size:29px;font-weight:850}.checkboxrow{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin:17px 0}.checkboxrow input{width:18px;height:18px;margin:1px 0}.summarygrid{display:flex;gap:45px;flex-wrap:wrap}.log-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.log-actions .btn{width:auto}.log-entry{padding:12px 14px;background:#162238;border:1px solid var(--line);border-radius:12px;margin-top:9px}.log-entry strong{font-size:13px}.log-entry small{display:block;color:var(--muted);font-size:11px}.log-entry pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow:auto;color:#bdcde0;font:12px/1.5 ui-monospace,monospace;margin:8px 0 0}.log-badge{font-weight:700;color:var(--mint)}.log-badge.error{color:var(--red)}.notice{border-top:1px solid var(--line);padding-top:18px;margin-top:24px;color:var(--muted);font-size:12px}
 @media(max-width:950px){.app{display:block}.aside{padding:12px 16px;gap:8px;border-right:0;border-bottom:1px solid var(--line)}.menu{display:flex;overflow:auto;gap:6px}.menu button{width:auto;white-space:nowrap}.asidefoot{display:none}main{padding:25px 19px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.searchrow,.filterrow,.grid2,.grid3,.formrow,.cards{grid-template-columns:1fr}.panel{padding:16px}.listing-art{height:175px}.headrow{align-items:flex-start}.storageitem{align-items:flex-start;flex-direction:column}.btn{width:100%}.listing-actions .btn{width:auto}.menu button{padding:10px 12px}}
 </style>
@@ -84,6 +84,18 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </form>
 <p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
 </details>
+<details class="settings" id="activityPanel">
+<summary>Activity log &amp; scan diagnostics <span id="logCount" class="muted"></span></summary>
+<p class="muted">Shows local searches, applied filters, scan attempts, result counts, and errors. Last 100 events are stored in this browser. It never intentionally records your API token. Review the log before sharing it.</p>
+<div class="log-actions">
+<button id="logAudit" type="button" class="btn sm alt">Record filters</button>
+<button id="logExport" type="button" class="btn sm alt">Export JSON</button>
+<button id="logCopy" type="button" class="btn sm alt">Copy logs</button>
+<button id="logClear" type="button" class="btn sm subtle">Clear logs</button>
+</div>
+<p id="logFeedback" class="muted" role="status"></p>
+<div id="logEntries"></div>
+</details>
 </section>
 <section class="view" id="view-saved" hidden>
 <div class="intro"><div class="eyebrow">Your collection</div><h1>Saved items</h1><p>Keep interesting Marketplace links in one place, ready to compare later.</p></div>
@@ -128,6 +140,67 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 'use strict';
 const csrf=document.querySelector('meta[name="csrf-token"]').content;
 const money=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(n||0));
+const logKey='marketplace_finder_activity_log_v1';
+function redactLog(value){
+ const serialized=JSON.stringify(value??{});
+ if(!serialized)return {};
+ const safe=serialized.replace(/apify_api_[a-z0-9_-]+/gi,'[REDACTED]')
+  .replace(/(token|authorization|api_key|secret|password)(["']?\\s*[:=]\\s*["']?)[^,}\\s"']+/gi,'$1$2[REDACTED]')
+  .replace(/Bearer\\s+[^\\s"']+/gi,'Bearer [REDACTED]');
+ try{return JSON.parse(safe)}catch(e){return {message:'Details redacted'}}
+}
+function activityLogs(){
+ try{const items=JSON.parse(localStorage.getItem(logKey)||'[]');return Array.isArray(items)?items.slice(0,100):[]}catch(e){return []}
+}
+function logActivity(type,details={}){
+ const log=[{time:new Date().toISOString(),type,details:redactLog(details)},...activityLogs()].slice(0,100);
+ try{localStorage.setItem(logKey,JSON.stringify(log))}catch(e){}
+ renderActivityLogs();
+}
+function diagnosticsExport(){
+ return JSON.stringify({app:'Marketplace Finder Laravel',version:1,exportedAt:new Date().toISOString(),
+  note:'Logs may contain search words, budget and category settings. Review before sharing. API tokens are not deliberately stored.',
+  events:activityLogs()},null,2);
+}
+function renderActivityLogs(){
+ const entries=document.getElementById('logEntries');if(!entries)return;
+ const data=activityLogs();entries.replaceChildren();
+ document.getElementById('logCount').textContent='· '+data.length+' events';
+ if(!data.length){entries.textContent='No events recorded yet. Apply filters or run a scan to see what happens.';return}
+ for(const item of data.slice(0,40)){
+  const row=document.createElement('div');row.className='log-entry';
+  const title=document.createElement('strong');title.className='log-badge'+(String(item.type).includes('failed')?' error':'');title.textContent=item.type;
+  const time=document.createElement('small');time.textContent=item.time;
+  const extra=document.createElement('pre');extra.textContent=JSON.stringify(item.details,null,2);
+  row.append(title,time,extra);entries.append(row);
+ }
+}
+function downloadActivityLogs(){
+ const blob=new Blob([diagnosticsExport()],{type:'application/json'});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;
+ a.download='marketplace-finder-logs-'+new Date().toISOString().slice(0,10)+'.json';
+ document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function openActivityLogs(){const panel=document.getElementById('activityPanel');panel.open=true;panel.scrollIntoView({behavior:'smooth',block:'start'})}
+document.getElementById('logAudit').addEventListener('click',()=>{
+ logActivity('filter_audit',{category:category||'All',keyword:document.getElementById('search').value.trim(),
+  minPrice:document.getElementById('minPrice').value||null,maxPrice:document.getElementById('budget').value||null,
+  sort:document.getElementById('sort').value,discoveredWithin:document.getElementById('foundWithinDays').value||null,area:'Bohol'});
+ document.getElementById('logFeedback').textContent='Current filters recorded.';
+});
+document.getElementById('logExport').addEventListener('click',downloadActivityLogs);
+document.getElementById('logCopy').addEventListener('click',async()=>{
+ try{await navigator.clipboard.writeText(diagnosticsExport());document.getElementById('logFeedback').textContent='Activity log copied.'}
+ catch(e){document.getElementById('logFeedback').textContent='Clipboard unavailable. Use Export JSON instead.'}
+});
+document.getElementById('logClear').addEventListener('click',()=>{
+ if(!confirm('Clear all locally stored Marketplace Finder logs?'))return;
+ try{localStorage.removeItem(logKey)}catch(e){}renderActivityLogs();
+ document.getElementById('logFeedback').textContent='Activity log cleared.';
+});
+renderActivityLogs();
+
 const filterKey='marketplace_finder_filters_v1';
 const defaults={q:'',category:'',min_price:'',max_price:'',sort:'newest',found_within_days:''};
 const categories=['','Electronics','Phones','Laptops','Cameras','PC Parts','Consoles'];
