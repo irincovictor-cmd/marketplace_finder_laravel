@@ -19,6 +19,8 @@ class DiscoveredListingController extends Controller
             'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
         ]);
 
+        $totalArchived = DiscoveredListing::query()->count();
+        $boholArchived = DiscoveredListing::query()->where('location_status', 'bohol')->count();
         $query = DiscoveredListing::query()->where('location_status', 'bohol');
         if (filled($params['q'] ?? null)) {
             $query->where('title', 'like', '%'.addcslashes($params['q'], '%_\\').'%');
@@ -50,7 +52,17 @@ class DiscoveredListingController extends Controller
         // Excluded records stay in SQLite for diagnostics, never shown as Bohol deals.
         $hiddenCount = DiscoveredListing::query()->where('location_status', '!=', 'bohol')->count();
 
+        $matchingCount = (clone $query)->reorder()->count();
+
         return response()->json([
+            'diagnostics' => [
+                'stored_total' => $totalArchived,
+                'bohol_total' => $boholArchived,
+                'matching_filters' => $matchingCount,
+                'hidden_outside_or_unknown' => $hiddenCount,
+                'keyword_supplied' => filled($params['q'] ?? null),
+                'source' => 'local_sqlite',
+            ],
             'excluded_unverified' => $hiddenCount,
             'location_policy' => 'bohol_only',
             'items' => $query->limit(100)->get()->map(fn ($item) => [
