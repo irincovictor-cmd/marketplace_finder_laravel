@@ -9,7 +9,7 @@ class ListingArchiveService
 {
     public function __construct(private readonly BoholLocationService $location) {}
 
-    public function store(array $items): int
+    public function store(array $items, ?string $scanBatch = null): int
     {
         $count = 0;
         foreach ($items as $item) {
@@ -49,6 +49,7 @@ class ListingArchiveService
                 'image_url' => $item['image_url'] ?? $record->image_url,
                 'category' => $this->category($title),
                 'last_seen_at' => now(),
+                'last_scan_batch' => $scanBatch ?? $record->last_scan_batch,
             ]);
             $record->save();
             $count++;
