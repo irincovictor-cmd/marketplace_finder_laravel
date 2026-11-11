@@ -47,6 +47,10 @@ docker compose exec -T app php artisan test --filter=BoholLocationTest
 docker compose exec -T app php artisan test
 ```
 
+## Scan submission cooldown
+
+Live scanning uses the Laravel `throttle:2,1` route limiter: at most **two scan submissions per 60 seconds** from the same client. This is a protective app-level limit; each accepted submission can contain up to two independently billable keyword probes. An HTTP 429 response means Laravel rejected that submission before any new Apify request began. The dashboard now displays a clear cooldown message using the `Retry-After` response header when provided and records `scan_rate_limited` in Activity logs. There is no automatic retry and no reduction in the server-side limit. Do not bypass the limit by repeatedly submitting paid scans.
+
 ## Legacy-informed blank keyword scans and latest scan results
 
 The legacy app does not send an unconstrained blank query. It creates a bounded keyword plan based on category. Laravel now mirrors this idea with a conservative maximum of **two** provider requests per approved scan, chosen server-side. Explicit search terms create only one request. Category defaults: Phones (`phone`, `redmi`), Laptops (`laptop`, `notebook`), Cameras (`camera`, `canon`), PC Parts (`rtx`, `ryzen`), Consoles (`ps5`, `switch`), Electronics/All (`phone`, `laptop`). This is intentionally a small exploratory subset, **not** every Facebook Marketplace item in that category. All runs require manual checkbox and a confirmation dialog listing exactly which terms will run; a free `GET /marketplace/scan-plan` endpoint previews the plan. Apify costs are not guaranteed capped.
