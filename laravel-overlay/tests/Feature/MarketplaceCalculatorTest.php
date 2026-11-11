@@ -21,7 +21,7 @@ class MarketplaceCalculatorTest extends TestCase
     public function test_scan_form_is_captured_before_async_plan_request(): void
     {
         // Browser event.currentTarget is reset after async listener yields.
-        // Prevent a regression where new FormData(e.currentTarget) throws.
+        // Prevent a regression where FormData receives a cleared event target.
         $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
         $this->assertStringContainsString('const scanForm=e.currentTarget;', $blade);
         $this->assertStringContainsString('const approvedData=Object.fromEntries(new FormData(scanForm));', $blade);
