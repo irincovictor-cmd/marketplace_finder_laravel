@@ -85,6 +85,53 @@ class DiscoveredListingController extends Controller
         ]);
     }
     /**
+     * Read-only audit of archived location decisions. Never change listing
+     * visibility or trust unknown geography automatically.
+     */
+    public function locationAudit(\App\Services\BoholLocationService $location): JsonResponse
+    {
+        $counts = DiscoveredListing::query()
+            ->selectRaw('location_status, COUNT(*) AS total')
+            ->groupBy('location_status')->pluck('total', 'location_status');
+
+        $sample = DiscoveredListing::query()
+            ->where('location_status', '!=', 'bohol')
+            ->orderByDesc('last_seen_at')->limit(100)->get()
+            ->map(function ($listing) use ($location) {
+                $assessment = $location->assess(
+                    $listing->city,
+                    $listing->province,
+                    $listing->location_text,
+                    $listing->latitude === null ? null : (float) $listing->latitude,
+                    $listing->longitude === null ? null : (float) $listing->longitude
+                );
+                return [
+                    'id' => $listing->id,
+                    'title' => $listing->title,
+                    'price' => (float) $listing->price,
+                    'category' => $listing->category,
+                    'city' => $listing->city,
+                    'province' => $listing->province,
+                    'location_status' => $listing->location_status,
+                    'reason' => $assessment['reason'],
+                    'has_coordinates' => $listing->latitude !== null && $listing->longitude !== null,
+                ];
+            })->values();
+
+        return response()->json([
+            'counts' => [
+                'bohol' => (int) ($counts['bohol'] ?? 0),
+                'verify' => (int) ($counts['verify'] ?? 0),
+                'outside' => (int) ($counts['outside'] ?? 0),
+            ],
+            'total_rejected' => (int) ($counts['verify'] ?? 0) + (int) ($counts['outside'] ?? 0),
+            'sample_limit' => 100,
+            'sample' => $sample,
+            'read_only' => true,
+        ]);
+    }
+
+    /**
      * Restore thumbnails already captured by the original FlipRadar browser.
      * Only update existing rows with a matching Marketplace listing URL.
      * No Apify requests or remote image downloads are performed.
