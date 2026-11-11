@@ -101,7 +101,7 @@ class MarketplaceScanTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('latitude');
         Http::assertNothingSent();
     }
-    public function test_keyword_free_broad_scan_passes_optional_price_and_sort_to_actor(): void
+    public function test_blank_keyword_uses_bounded_category_terms_with_price_and_sort(): void
     {
         config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
         Http::preventStrayRequests();
@@ -118,12 +118,14 @@ class MarketplaceScanTest extends TestCase
             ->assertOk()->assertJsonPath('archived_count', 0)
             ->assertJsonPath('category', 'Electronics');
 
+        Http::assertSentCount(2);
         Http::assertSent(function ($request) {
-            return ! array_key_exists('searchKeyword', $request->data())
+            return $request['searchKeyword'] === 'phone'
                 && $request['minPrice'] === 2000
                 && $request['maxPrice'] === 20000
                 && $request['sortBy'] === 'price_ascend';
         });
+        Http::assertSent(fn ($request) => $request['searchKeyword'] === 'laptop');
     }
 
     public function test_scan_rejects_inverted_price_range_before_any_billable_request(): void
@@ -165,6 +167,44 @@ class MarketplaceScanTest extends TestCase
         $this->getJson('/listings?category=Cameras')->assertOk()
             ->assertJsonCount(1, 'items')
             ->assertJsonPath('items.0.image_url', 'https://scontent.xx.fbcdn.net/example-product.jpg');
+    }
+
+    public function test_scan_plan_is_free_and_category_aware(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+
+        $this->getJson('/marketplace/scan-plan?category=Phones')
+            ->assertOk()->assertJsonPath('requests', 2)
+            ->assertJsonPath('terms.0', 'phone')
+            ->assertJsonPath('terms.1', 'redmi');
+
+        $this->getJson('/marketplace/scan-plan?category=Cameras&keyword=Canon')
+            ->assertOk()->assertJsonPath('requests', 1)
+            ->assertJsonPath('terms.0', 'Canon');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_repeated_search_returns_zero_new_listings_and_a_distinct_batch(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([
+            ['id' => 'repeated-123', 'marketplace_listing_title' => 'Redmi 15',
+             'listing_price' => ['amount' => 6500],
+             'location' => ['reverse_geocode' => ['city' => 'Tagbilaran City', 'state' => 'Bohol']]],
+        ], 200)]);
+
+        $a = $this->postJson('/marketplace/scan', $this->payload())
+            ->assertOk()->assertJsonPath('new_count', 1)
+            ->assertJsonPath('previously_seen_count', 0);
+        $b = $this->postJson('/marketplace/scan', $this->payload())
+            ->assertOk()->assertJsonPath('new_count', 0)
+            ->assertJsonPath('previously_seen_count', 1);
+        $this->assertNotEquals($a->json('scan_batch'), $b->json('scan_batch'));
+        $this->getJson('/listings?batch='.$b->json('scan_batch'))
+            ->assertOk()->assertJsonCount(1, 'items');
     }
 
 }
