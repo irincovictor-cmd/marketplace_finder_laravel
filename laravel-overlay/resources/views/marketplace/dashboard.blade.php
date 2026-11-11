@@ -493,7 +493,15 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
   bohol:outcome.diagnostics?.bohol_count??null,
   outside:outcome.diagnostics?.outside_count??null,unverified:outcome.diagnostics?.unverified_count??null});
  status.textContent=outcome.completed_requests+' request(s) completed: '+outcome.new_count+' new and '+outcome.previously_seen_count+' previously known listings. '+(outcome.failed_terms.length?'Failed terms: '+outcome.failed_terms.join(', ')+'. ':'')+'Only Bohol-eligible matches appear below.';
- if(data.category){category=data.category;document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)))}
+ // Keep visible filters aligned with the scan just requested, not older
+ // browser preferences that could hide every result from the new batch.
+ category=data.category||'';
+ document.getElementById('search').value=data.keyword||'';
+ document.getElementById('minPrice').value=data.min_price??'';
+ document.getElementById('budget').value=data.max_price??'';
+ document.getElementById('foundWithinDays').value='';
+ document.getElementById('sort').value=data.sort_by==='price_ascend'?'price_low':data.sort_by==='price_descend'?'price_high':'newest';
+ document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));
  lastScanBatch=outcome.scan_batch;
  await loadListings();
  document.getElementById('listingHeading').scrollIntoView({behavior:'smooth',block:'start'});
