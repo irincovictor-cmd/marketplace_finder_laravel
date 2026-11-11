@@ -13,6 +13,7 @@ class ListingFilterAuditService
         'accessory' => 'Accessory or replacement part',
         'repair' => 'Repair service',
         'wanted' => 'Buying request',
+        'other_intent' => 'Other non-sale classification',
         'keyword' => 'Keyword mismatch',
         'below_min_price' => 'Below minimum price',
         'above_max_price' => 'Above maximum price',
@@ -26,7 +27,7 @@ class ListingFilterAuditService
     ) {}
 
     /** Return every reason a stored record fails the current Find deals filters. */
-    public function reasons(DiscoveredListing $listing, array $filters, CarbonInterface $cutoff = null): array
+    public function reasons(DiscoveredListing $listing, array $filters, ?CarbonInterface $cutoff = null): array
     {
         $reasons = [];
         if ($listing->location_status === 'outside') {
@@ -37,7 +38,7 @@ class ListingFilterAuditService
         if ($listing->listing_intent !== 'reviewable') {
             // Existing DB column preserves the decision made when archived.
             $intent = (string) $listing->listing_intent;
-            $reasons[] = array_key_exists($intent, self::REASONS) ? $intent : 'unverified_location';
+            $reasons[] = array_key_exists($intent, self::REASONS) ? $intent : 'other_intent';
         }
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '' && mb_stripos($listing->title, $q) === false) {
