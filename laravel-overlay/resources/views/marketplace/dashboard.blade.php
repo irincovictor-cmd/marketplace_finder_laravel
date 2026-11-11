@@ -270,7 +270,18 @@ async function request(path,method='GET',body){
  if(body!==undefined){options.headers['Content-Type']='application/json';options.body=JSON.stringify(body)}
  const response=await fetch(path,options);
  const value=await response.json().catch(()=>({}));
- if(!response.ok)throw Error(value.errors?Object.values(value.errors).flat().join(' '):value.message||'Request failed');
+ if(!response.ok){
+  if(response.status===429){
+   const retryHeader=Number(response.headers.get('Retry-After'));
+   const retrySeconds=Number.isFinite(retryHeader)&&retryHeader>0?Math.ceil(retryHeader):60;
+   const error=new Error('Scan request limit reached. Wait about '+retrySeconds+' seconds before trying again. No Apify scan was started by this rejected request.');
+   error.status=429;error.retryAfter=retrySeconds;
+   throw error;
+  }
+  const error=new Error(value.errors?Object.values(value.errors).flat().join(' '):value.message||'Request failed');
+  error.status=response.status;
+  throw error;
+ }
  return value;
 }
 const label=(text,cls)=>{const e=document.createElement('span');e.className=cls||'';e.textContent=text;return e};
@@ -487,7 +498,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  else data.max_price=Number(data.max_price);
  if(!data.category)delete data.category;
  data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
- logActivity('scan_requested',{terms:activeScanPlan.terms,requests:activeScanPlan.requests,keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
+ logActivity('scan_submission_attempted',{terms:activeScanPlan.terms,requests:activeScanPlan.requests,keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
  const outcome=await request('/marketplace/scan','POST',data);
  logActivity('scan_completed',{keyword:data.keyword||'(blank)',rawCount:outcome.diagnostics?.raw_count??outcome.raw_count,
   normalized:outcome.diagnostics?.normalized_count??outcome.returned,
@@ -508,7 +519,15 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  lastScanBatch=outcome.scan_batch;
  await loadListings();
  document.getElementById('listingHeading').scrollIntoView({behavior:'smooth',block:'start'});
- }catch(error){status.textContent=error.message;logActivity('scan_failed',{message:String(error.message||'Unknown error').slice(0,180)});openActivityLogs()}
+ }catch(error){
+  status.textContent=error.message;
+  if(error.status===429){
+   logActivity('scan_rate_limited',{reason:'Laravel scan submission cooldown',retryAfterSeconds:error.retryAfter||60,providerRequestStarted:false});
+  }else{
+   logActivity('scan_failed',{message:String(error.message||'Unknown error').slice(0,180)});
+  }
+  openActivityLogs();
+ }
  finally{btn.disabled=false;document.getElementById('paidScan').checked=false}
 });
 restoreFilters();
