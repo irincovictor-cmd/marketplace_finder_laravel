@@ -47,6 +47,14 @@ docker compose exec -T app php artisan test --filter=BoholLocationTest
 docker compose exec -T app php artisan test
 ```
 
+## Legacy-informed blank keyword scans and latest scan results
+
+The legacy app does not send an unconstrained blank query. It creates a bounded keyword plan based on category. Laravel now mirrors this idea with a conservative maximum of **two** provider requests per approved scan, chosen server-side. Explicit search terms create only one request. Category defaults: Phones (`phone`, `redmi`), Laptops (`laptop`, `notebook`), Cameras (`camera`, `canon`), PC Parts (`rtx`, `ryzen`), Consoles (`ps5`, `switch`), Electronics/All (`phone`, `laptop`). This is intentionally a small exploratory subset, **not** every Facebook Marketplace item in that category. All runs require manual checkbox and a confirmation dialog listing exactly which terms will run; a free `GET /marketplace/scan-plan` endpoint previews the plan. Apify costs are not guaranteed capped.
+
+The app deduplicates items across terms and across history using stable Marketplace URLs/provider IDs; each approved scan gets a unique batch ID. The API responds with `new_count`, `previously_seen_count`, `planned_terms`, `completed_requests`, `failed_terms` and Bohol diagnostics. A failure of every term returns an error; a partial scan keeps successful results while reporting failures. The main UI switches to **Latest scan — Bohol listings** immediately after completion, filtered by its batch ID. **Show all stored listings** returns to the full historical archive. User-set filter fields are synchronized to the scan settings, preventing stale previous filters from hiding the newest batch.
+
+An additive migration adds `last_scan_batch` and preserves pre-existing listings. Historical items have no batch until they occur in a new approved scan. No background scanning or extra image scraping occurs.
+
 ## Activity log and empty search diagnostics
 
 The Blade dashboard now includes the legacy-inspired **Activity logs** as its own sidebar section (reachable at `/#activity`) rather than taking space under Find deals. It keeps the most recent 100 events in this browser's localStorage, including local filter/search starts and result counts, failures, explicitly approved scan attempts, aggregate scan counts (raw, normalized, archived, Bohol, outside, unverified), plus manual filter audits. Users can export JSON, copy logs or clear the history. No token, provider raw payload, listing links or authorization header is intentionally recorded. Logs may contain user-entered keywords and prices; review before sharing. Clearing browser storage clears this history.
