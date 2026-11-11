@@ -50,8 +50,10 @@ cp /opt/marketplace/laravel-overlay/app/Models/WatchlistEntry.php app/Models/Wat
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000001_create_marketplace_collections.php database/migrations/2026_11_11_000001_create_marketplace_collections.php
 cp /opt/marketplace/laravel-overlay/app/Services/MarketplaceScanService.php app/Services/MarketplaceScanService.php
 cp /opt/marketplace/laravel-overlay/app/Services/ScanPlanService.php app/Services/ScanPlanService.php
+cp /opt/marketplace/laravel-overlay/app/Services/ListingIntentService.php app/Services/ListingIntentService.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000006_add_scan_batch_to_discovered_listings.php database/migrations/2026_11_11_000006_add_scan_batch_to_discovered_listings.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000007_reclassify_legacy_device_kinds.php database/migrations/2026_11_11_000007_reclassify_legacy_device_kinds.php
+cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000008_add_listing_intent.php database/migrations/2026_11_11_000008_add_listing_intent.php
 cp /opt/marketplace/laravel-overlay/config/marketplace.php config/marketplace.php
 cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.php resources/views/marketplace/dashboard.blade.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
