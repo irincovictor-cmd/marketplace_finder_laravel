@@ -165,4 +165,25 @@ class DiscoveredListingTest extends TestCase
             ->assertJsonCount(1, 'items')->assertJsonPath('items.0.category', 'Cameras');
     }
 
+    public function test_legacy_intent_filter_hides_phone_cases_and_buying_requests_without_deleting_archive(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'whole-phone', 'title' => 'iPhone 14 Pro Max rush sale', 'price' => 8500, 'city' => 'Panglao', 'url' => null],
+            ['id' => 'case-ad', 'title' => 'iPhone 16 promax Cases', 'price' => 1500, 'city' => 'Tagbilaran', 'url' => null],
+            ['id' => 'buyer', 'title' => 'LF budget phone', 'price' => 3000, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'repair', 'title' => 'iPhone repair service', 'price' => 1000, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'ram', 'title' => 'Laptop Ram DDR4 8gb 3200mhz', 'price' => 2000, 'city' => 'Panglao', 'url' => null],
+        ]);
+
+        $this->assertDatabaseCount('discovered_listings', 5);
+        $this->assertDatabaseHas('discovered_listings', ['title' => 'iPhone 16 promax Cases', 'listing_intent' => 'accessory']);
+        $this->assertDatabaseHas('discovered_listings', ['title' => 'iPhone repair service', 'listing_intent' => 'repair']);
+        $this->getJson('/listings?category=Phones')->assertOk()
+            ->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.title', 'iPhone 14 Pro Max rush sale')
+            ->assertJsonPath('diagnostics.hidden_non_sale', 3);
+        $this->getJson('/listings?category=Electronics')->assertOk()->assertJsonCount(2, 'items');
+    }
+
+
 }
