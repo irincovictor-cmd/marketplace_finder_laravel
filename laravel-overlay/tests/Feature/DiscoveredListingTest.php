@@ -135,4 +135,34 @@ class DiscoveredListingTest extends TestCase
     }
 
 
+    public function test_legacy_device_kind_aliases_include_xiaomi_and_camera(): void
+    {
+        $archive = app(ListingArchiveService::class);
+        $cases = [
+            'Xiaomi 14T 12/256GB' => 'Phones',
+            'Infinix Note 50 Pro 5G' => 'Phones',
+            'Tecno Camon 20 Pro' => 'Phones',
+            'Canon EOS R50 mirrorless' => 'Cameras',
+            'Sony ZV-E10 camera' => 'Cameras',
+            'Lenovo Legion gaming laptop' => 'Laptops',
+            'Nintendo Switch OLED' => 'Consoles',
+            'RTX 4060 8GB' => 'PC Parts',
+        ];
+        foreach ($cases as $title => $expected) {
+            $this->assertSame($expected, $archive->category($title), $title);
+        }
+    }
+
+    public function test_camera_and_xiaomi_titles_remain_filterable_after_archiving(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'fixture-xiaomi', 'title' => 'Xiaomi 14T', 'price' => 10000, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'fixture-camera', 'title' => 'Canon EOS R50 Camera', 'price' => 20000, 'city' => 'Tagbilaran', 'url' => null],
+        ]);
+        $this->getJson('/listings?category=Phones&q=xiaomi')->assertOk()
+            ->assertJsonCount(1, 'items')->assertJsonPath('items.0.category', 'Phones');
+        $this->getJson('/listings?category=Cameras')->assertOk()
+            ->assertJsonCount(1, 'items')->assertJsonPath('items.0.category', 'Cameras');
+    }
+
 }
