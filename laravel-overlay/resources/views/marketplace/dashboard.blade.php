@@ -70,9 +70,21 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
 <div class="hint">Missing product photos from earlier scans? <button class="btn sm alt" type="button" id="restoreLegacyImages">Restore photos from classic FlipRadar</button> <span id="photoRestoreStatus" role="status" class="muted">Uses existing browser data only. No paid scan.</span></div>
 <div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
+<details class="settings" id="apiKeySettings">
+<summary>Apify API key — secure local settings <span id="apiKeyState" class="muted">Checking…</span></summary>
+<p>Paste your Apify API key here instead of editing .env. Laravel encrypts it using this installation's APP_KEY and stores it in private server storage (not the browser or GitHub). The key is never shown again. Use only on localhost; anyone with access to this local app can replace it.</p>
+<form id="apiKeyForm" autocomplete="off">
+<label>Apify API key<input id="apiKeyInput" name="token" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" maxlength="512" placeholder="apify_api_…" required></label>
+<div class="log-actions">
+<button class="btn sm" type="submit" id="apiKeySave">Save / replace key</button>
+<button class="btn sm alt" type="button" id="apiKeyRemove">Remove saved key</button>
+</div>
+</form>
+<p class="muted" id="apiKeyMessage" role="status">No validation or paid scan happens when you save a key.</p>
+</details>
 <details class="settings" id="scanSettings">
 <summary>Fresh Marketplace search — setup and cost approval</summary>
-<p>Scanning uses a third-party Apify actor and may incur charges. It is disabled until you configure your private server token and explicitly enable it. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
+<p>Scanning uses a third-party Apify actor and may incur charges. Configure your key in the secure settings above. Each scan still requires separate cost approval. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
 <form id="scanForm">
 <div class="grid3">
 <label>Search keyword (optional)<input name="keyword" placeholder="Blank = broad browse" maxlength="80"></label>
@@ -86,7 +98,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run approved searches</button>
 </form>
-<p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
+<p id="scanStatus" role="status" class="muted">Configure your Apify API key above, then review the scan plan and approve the paid searches.</p>
 </details>
 
 </section>
@@ -730,6 +742,46 @@ document.getElementById('calcForm').addEventListener('submit',async e=>{
   document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%';
  }catch(error){status.textContent=error.message}
 });
+async function refreshApiKeyStatus(){
+ const flag=document.getElementById('apiKeyState'),message=document.getElementById('apiKeyMessage');
+ try{
+  const info=await request('/marketplace/api-key');
+  flag.textContent=info.configured?'Configured ('+(info.source==='environment'?'local .env':'encrypted server storage')+')':'Not configured';
+  document.getElementById('apiKeyRemove').disabled=!info.can_remove;
+  return info;
+ }catch(error){flag.textContent='Settings unavailable';message.textContent='Unable to read API key status: '+error.message;return null}
+}
+document.getElementById('apiKeyForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const form=e.currentTarget,field=document.getElementById('apiKeyInput');
+ const token=field.value.trim();
+ const save=document.getElementById('apiKeySave'),message=document.getElementById('apiKeyMessage');
+ if(!token){message.textContent='Paste an API key first.';return}
+ save.disabled=true;message.textContent='Encrypting and saving key on this server…';
+ try{
+  const outcome=await request('/marketplace/api-key','POST',{token});
+  field.value='';form.reset();
+  message.textContent=outcome.message+' This does not start a paid scan.';
+  await refreshApiKeyStatus();
+ }catch(error){message.textContent='Could not save API key. Check its format and try again.'}
+ finally{field.value='';save.disabled=false}
+});
+document.getElementById('apiKeyRemove').addEventListener('click',async()=>{
+ if(!confirm('Remove the encrypted API key stored by this app? No scans will be started.'))return;
+ const btn=document.getElementById('apiKeyRemove'),message=document.getElementById('apiKeyMessage');
+ btn.disabled=true;
+ try{
+  const result=await request('/marketplace/api-key','DELETE');
+  message.textContent=result.message;
+  document.getElementById('apiKeyInput').value='';
+  await refreshApiKeyStatus();
+ }catch(error){message.textContent='Could not remove saved API key: '+error.message;btn.disabled=false}
+});
+document.getElementById('apiKeySettings').addEventListener('toggle',()=>{
+ if(document.getElementById('apiKeySettings').open)refreshApiKeyStatus();
+});
+refreshApiKeyStatus();
+
 let activeScanPlan=null;
 async function refreshScanPlan(){
  const form=document.getElementById('scanForm');
