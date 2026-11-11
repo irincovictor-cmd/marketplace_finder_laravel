@@ -1,3 +1,7 @@
+## Legacy functional parity audit (in progress)
+
+The migration is being measured against the original FlipRadar implementation, not redesigned feature by feature. See [the tracked parity audit](docs/LEGACY_PARITY_AUDIT.md) for sources, known gaps and offline verification steps. A pre-audit code backup is available at `backup/pre-legacy-parity-audit-2026-11-11`. The first guarded fix recognizes Xiaomi and other missing legacy device brands, repairs camera categorization and reclassifies existing `Other` records without deleting old listings. The Activity logs sidebar now offers **Inspect excluded listings** to review read-only Bohol filter reasons (up to 100 excluded listings). This does **not** yet certify parity with the legacy radius/geography or wanted/repair/accessory classifier. Avoid live paid scan testing until offline comparison tests pass.
+
 # Marketplace Finder — Laravel
 
 A new, Docker-first Laravel rebuild of [FlipRadar / Marketplace_finder](https://github.com/irincovictor-cmd/Marketplace_finder).
