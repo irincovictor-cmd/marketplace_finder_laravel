@@ -63,6 +63,17 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('hidden_non_sale', $blade);
     }
 
+    public function test_rejected_listings_are_a_dedicated_sidebar_inspector(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('data-view="rejected"', false)
+            ->assertSee('id="view-rejected"', false)
+            ->assertSee('id="rejectedScope"', false)
+            ->assertSee('id="rejectedReason"', false)
+            ->assertSee('id="rejectedResults"', false)
+            ->assertSee('id="rejectedNext"', false);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
