@@ -13,7 +13,9 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee('Set up a fresh search')
             ->assertSee('Fresh Marketplace search')
             ->assertSee('Activity log &amp; scan diagnostics', false)
-            ->assertSee('id="logExport"', false);
+            ->assertSee('id="logExport"', false)
+            ->assertSee('data-view="activity"', false)
+            ->assertSee('id="view-activity"', false);
     }
 
     public function test_profit_and_roi_are_computed_on_server(): void
