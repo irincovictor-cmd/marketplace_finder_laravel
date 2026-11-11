@@ -50,6 +50,8 @@ cp /opt/marketplace/laravel-overlay/app/Models/WatchlistEntry.php app/Models/Wat
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000001_create_marketplace_collections.php database/migrations/2026_11_11_000001_create_marketplace_collections.php
 cp /opt/marketplace/laravel-overlay/app/Services/MarketplaceScanService.php app/Services/MarketplaceScanService.php
 cp /opt/marketplace/laravel-overlay/app/Services/ScanPlanService.php app/Services/ScanPlanService.php
+cp /opt/marketplace/laravel-overlay/app/Services/ApifyCredentialStore.php app/Services/ApifyCredentialStore.php
+cp /opt/marketplace/laravel-overlay/app/Http/Controllers/ApifySettingsController.php app/Http/Controllers/ApifySettingsController.php
 cp /opt/marketplace/laravel-overlay/app/Services/ListingIntentService.php app/Services/ListingIntentService.php
 cp /opt/marketplace/laravel-overlay/app/Services/ListingFilterAuditService.php app/Services/ListingFilterAuditService.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000006_add_scan_batch_to_discovered_listings.php database/migrations/2026_11_11_000006_add_scan_batch_to_discovered_listings.php
