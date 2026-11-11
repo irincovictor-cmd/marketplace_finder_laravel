@@ -18,12 +18,19 @@ class DiscoveredListingController extends Controller
             'sort' => ['nullable', 'in:newest,price_low,price_high,first_seen'],
             'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
             'batch' => ['nullable', 'uuid'],
+            'availability' => ['nullable', 'in:active,all,unverified,available,pending,sold,unavailable'],
         ]);
 
         $totalArchived = DiscoveredListing::query()->count();
         $boholArchived = DiscoveredListing::query()->where('location_status', 'bohol')->count();
         $query = DiscoveredListing::query()->where('location_status', 'bohol')
             ->where('listing_intent', 'reviewable');
+        $availability = $params['availability'] ?? 'active';
+        if ($availability === 'active') {
+            $query->whereIn('manual_status', ['unverified', 'available']);
+        } elseif ($availability !== 'all') {
+            $query->where('manual_status', $availability);
+        }
         if (filled($params['batch'] ?? null)) {
             $query->where('last_scan_batch', $params['batch']);
         }
@@ -66,6 +73,7 @@ class DiscoveredListingController extends Controller
                 'matching_filters' => $matchingCount,
                 'hidden_outside_or_unknown' => $hiddenCount,
                 'hidden_non_sale' => DiscoveredListing::query()->where('location_status', 'bohol')->where('listing_intent', '!=', 'reviewable')->count(),
+                'hidden_manual_status' => DiscoveredListing::query()->where('location_status', 'bohol')->where('listing_intent', 'reviewable')->whereIn('manual_status', ['pending', 'sold', 'unavailable'])->count(),
                 'keyword_supplied' => filled($params['q'] ?? null),
                 'source' => 'local_sqlite',
             ],
@@ -82,11 +90,53 @@ class DiscoveredListingController extends Controller
                 'image_url' => $item->image_url,
                 'category' => $item->category,
                 'listing_intent' => $item->listing_intent,
+                'manual_status' => $item->manual_status,
+                'manual_status_updated_at' => $item->manual_status_updated_at?->toIso8601String(),
                 'first_seen_at' => $item->first_seen_at?->toIso8601String(),
                 'last_seen_at' => $item->last_seen_at?->toIso8601String(),
             ]),
         ]);
     }
+    /**
+     * User-reported availability, not a Facebook verification. It is never
+     * reset by an Apify scan and does not delete the archived listing.
+     */
+    public function updateManualStatus(Request $request, DiscoveredListing $listing): JsonResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:unverified,available,pending,sold,unavailable'],
+        ]);
+        $listing->manual_status = $data['status'];
+        $listing->manual_status_updated_at = $data['status'] === 'unverified' ? null : now();
+        $listing->save();
+
+        return response()->json([
+            'id' => $listing->id,
+            'manual_status' => $listing->manual_status,
+            'manual_status_updated_at' => $listing->manual_status_updated_at?->toIso8601String(),
+            'source' => 'user_reported',
+        ]);
+    }
+
+    /** All manually tagged listings, including sold/removed, for easy undo. */
+    public function manualStatusHistory(Request $request): JsonResponse
+    {
+        $params = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $page = DiscoveredListing::query()
+            ->where('manual_status', '!=', 'unverified')
+            ->orderByDesc('manual_status_updated_at')
+            ->paginate(40, ['id', 'title', 'price', 'city', 'listing_url', 'image_url', 'manual_status', 'manual_status_updated_at'], 'page', (int) ($params['page'] ?? 1));
+        return response()->json([
+            'items' => $page->items(),
+            'page' => $page->currentPage(),
+            'pages' => $page->lastPage(),
+            'total' => $page->total(),
+            'source' => 'user_reported',
+        ]);
+    }
+
     /**
      * Paginated, read-only equivalent of the legacy rejected-listing inspector.
      * Scope by current scan batch when requested; enumerate ALL archived records
