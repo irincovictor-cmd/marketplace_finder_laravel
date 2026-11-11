@@ -21,6 +21,9 @@ Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calcula
 
 // Runs a paid provider request only after an explicit opt-in and approval.
 // Its Docker port is bound to localhost; do not expose this unauthenticated route publicly.
+Route::get('/marketplace/scan-plan', [MarketplaceScanController::class, 'preview'])
+    ->middleware('throttle:30,1')
+    ->name('marketplace.scan-plan');
 Route::post('/marketplace/scan', [MarketplaceScanController::class, 'scan'])
     ->middleware('throttle:2,1')
     ->name('marketplace.scan');
