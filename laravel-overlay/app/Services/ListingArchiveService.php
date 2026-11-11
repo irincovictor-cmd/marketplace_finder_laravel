@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class ListingArchiveService
 {
-    public function __construct(private readonly BoholLocationService $location) {}
+    public function __construct(private readonly BoholLocationService $location, private readonly ListingIntentService $intent) {}
 
     public function store(array $items, ?string $scanBatch = null): int
     {
@@ -48,6 +48,7 @@ class ListingArchiveService
                 // Keep an earlier photo if a later scan omits the image.
                 'image_url' => $item['image_url'] ?? $record->image_url,
                 'category' => $this->category($title),
+                'listing_intent' => $this->intent->assess($title, $this->category($title))['status'],
                 'last_seen_at' => now(),
                 'last_scan_batch' => $scanBatch ?? $record->last_scan_batch,
             ]);
