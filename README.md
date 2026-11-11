@@ -49,7 +49,7 @@ docker compose exec -T app php artisan test
 
 ## Scan submission cooldown
 
-Live scanning uses the Laravel `throttle:2,1` route limiter: at most **two scan submissions per 60 seconds** from the same client. This is a protective app-level limit; each accepted submission can contain up to two independently billable keyword probes. An HTTP 429 response means Laravel rejected that submission before any new Apify request began. The dashboard now displays a clear cooldown message using the `Retry-After` response header when provided and records `scan_rate_limited` in Activity logs. There is no automatic retry and no reduction in the server-side limit. Do not bypass the limit by repeatedly submitting paid scans.
+Live scanning uses the Laravel `throttle:2,1` route limiter: at most **two scan submissions per 60 seconds** from the same client. This is a protective app-level limit; each accepted submission can contain up to two independently billable keyword probes. An HTTP 429 response means Laravel rejected that submission before any new Apify request began. The dashboard now displays a clear cooldown message using the `Retry-After` response header when provided, records `scan_rate_limited` in Activity logs, and temporarily disables the paid scan button with a countdown stored in browser localStorage. This is a usability safeguard only: the Laravel server-side throttle remains authoritative, and multiple tabs/browsers can still see different local countdown states. There is no automatic retry and no reduction in the server-side limit. Do not bypass the limit by repeatedly submitting paid scans.
 
 ## Legacy-informed blank keyword scans and latest scan results
 
