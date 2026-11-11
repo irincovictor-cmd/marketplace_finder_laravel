@@ -28,6 +28,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button type="button" data-view="profit">₱ &nbsp; Profit calculator</button>
 <button type="button" data-view="activity">▤ &nbsp; Activity logs</button>
 <button type="button" data-view="rejected">⊘ &nbsp; Rejected listings</button>
+<button type="button" data-view="status">✓ &nbsp; Availability history</button>
 </nav>
 <div class="asidefoot">Need the original tools?<br><a href="/flipradar/index.html">Open classic FlipRadar ↗</a></div>
 </aside>
@@ -137,6 +138,18 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button type="button" class="btn sm alt" id="rejectedNext">Next page</button>
 </div>
 <p class="muted">A location marked “unverified” means the archived metadata is insufficient—not proof the seller is outside Bohol. The inspector does not change or delete listings.</p>
+</div>
+</section>
+<section class="view" id="view-status" hidden>
+<div class="intro"><div class="eyebrow">Your archive / Manual checks</div>
+<h1>Availability history</h1>
+<p>Items you manually tagged after visiting Facebook. These are your observations, not verified Facebook statuses. You can undo a tag at any time without losing its discovery history.</p></div>
+<div class="panel">
+<div class="headrow"><h2>Tagged listings</h2><button id="refreshStatusHistory" type="button" class="btn sm alt">Refresh</button></div>
+<p id="manualHistoryFeedback" role="status" class="muted"></p>
+<div id="manualHistoryEntries" class="stack"></div>
+<div class="log-actions"><button id="statusPrev" class="btn sm alt" type="button">Previous</button>
+<span id="statusPage" class="muted" style="align-self:center"></span><button id="statusNext" type="button" class="btn sm alt">Next</button></div>
 </div>
 </section>
 <section class="view" id="view-saved" hidden>
@@ -406,7 +419,9 @@ function toggleExtraFilters(open){
  document.getElementById('extraFiltersToggle').textContent=open?'Fewer filters ▴':'More filters ▾';
 }
 
-const views=['discover','saved','watchlist','profit','activity','rejected'];
+let manualHistoryPage=1;
+let manualHistoryLastPage=1;
+const views=['discover','saved','watchlist','profit','activity','rejected','status'];
 function navigate(view){
  if(!views.includes(view))return;
  views.forEach(v=>{document.getElementById('view-'+v).hidden=v!==view});
@@ -416,6 +431,7 @@ function navigate(view){
  if(view==='watchlist')loadWatch();
  if(view==='activity')renderActivityLogs();
  if(view==='rejected')loadRejectedListings();
+ if(view==='status')loadManualStatusHistory();
  window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.view)));
@@ -441,6 +457,65 @@ async function request(path,method='GET',body){
 }
 const label=(text,cls)=>{const e=document.createElement('span');e.className=cls||'';e.textContent=text;return e};
 const button=(title,callback)=>{const e=document.createElement('button');e.className='btn sm alt';e.type='button';e.textContent=title;e.addEventListener('click',callback);return e};
+const manualStatusNames={unverified:'Not verified',available:'Available (user tagged)',pending:'Pending / reserved',sold:'Sold',unavailable:'Unavailable / removed'};
+const hiddenManualStatuses=new Set(['pending','sold','unavailable']);
+function makeManualStatusControl(item,onChanged){
+ const box=document.createElement('div');box.style.cssText='margin-top:12px;border-top:1px solid var(--line);padding-top:10px';
+ const title=document.createElement('label');title.textContent='Your availability tag (not Facebook-verified)';
+ const select=document.createElement('select');select.setAttribute('aria-label','Availability for '+item.title);
+ for(const [value,name] of Object.entries(manualStatusNames)){
+  const opt=document.createElement('option');opt.value=value;opt.textContent=name;select.append(opt);
+ }
+ select.value=item.manual_status||'unverified';
+ const info=document.createElement('small');info.className='muted';
+ info.textContent=item.manual_status_updated_at?'Last tagged '+new Date(item.manual_status_updated_at).toLocaleString():'No manual verification yet';
+ select.addEventListener('change',async()=>{
+  const old=item.manual_status||'unverified',value=select.value;
+  select.disabled=true;info.textContent='Saving your tag…';
+  try{
+   const result=await request('/listings/'+encodeURIComponent(item.id)+'/manual-status','PATCH',{status:value});
+   item.manual_status=result.manual_status;
+   item.manual_status_updated_at=result.manual_status_updated_at;
+   info.textContent='Saved as '+manualStatusNames[value]+'. This is your report.';
+   logActivity('manual_listing_status_changed',{listingId:item.id,from:old,to:value});
+   if(onChanged)await onChanged();
+  }catch(error){select.value=old;info.textContent='Could not save: '+error.message}
+  finally{select.disabled=false}
+ });
+ box.append(title,select,info);
+ return box;
+}
+async function loadManualStatusHistory(){
+ const host=document.getElementById('manualHistoryEntries');
+ const feedback=document.getElementById('manualHistoryFeedback');
+ feedback.textContent='Loading manually tagged listings…';host.replaceChildren();
+ try{
+  const data=await request('/listings/manual-status-history?page='+manualHistoryPage);
+  manualHistoryLastPage=data.pages;
+  feedback.textContent=data.total+' tagged listing(s) preserved in SQLite. Tags are user-reported and cost no Apify credits.';
+  for(const item of data.items){
+   const row=document.createElement('article');row.className='log-entry';
+   const heading=document.createElement('strong');heading.textContent=item.title+' · '+money(item.price);
+   const meta=document.createElement('small');meta.textContent=(item.city||'Location unknown')+' · '+manualStatusNames[item.manual_status];
+   row.append(heading,meta);
+   if(item.listing_url){
+    const link=document.createElement('a');
+    try{const url=new URL(item.listing_url);if(url.protocol==='https:'&&(url.hostname==='facebook.com'||url.hostname.endsWith('.facebook.com'))){
+     link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';link.textContent='View original Marketplace listing';row.append(link)
+    }}catch(e){}
+   }
+   row.append(makeManualStatusControl(item,loadManualStatusHistory));host.append(row);
+  }
+  if(!data.items.length){const empty=document.createElement('p');empty.textContent='No manually tagged listings on this page.';host.append(empty)}
+  document.getElementById('statusPage').textContent='Page '+data.page+' of '+data.pages;
+  document.getElementById('statusPrev').disabled=data.page<=1;
+  document.getElementById('statusNext').disabled=data.page>=data.pages;
+ }catch(e){feedback.textContent='Failed to load availability history: '+e.message}
+}
+document.getElementById('refreshStatusHistory').addEventListener('click',loadManualStatusHistory);
+document.getElementById('statusPrev').addEventListener('click',()=>{if(manualHistoryPage>1){manualHistoryPage--;loadManualStatusHistory()}});
+document.getElementById('statusNext').addEventListener('click',()=>{if(manualHistoryPage<manualHistoryLastPage){manualHistoryPage++;loadManualStatusHistory()}});
+
 async function loadListings(){
  const box=document.getElementById('listingResults');
  const feedback=document.getElementById('searchFeedback');
@@ -514,7 +589,8 @@ async function loadListings(){
   actions.append(a);
   actions.append(button('♡ Save',async()=>{try{await request('/collections/saved','POST',{title:item.title,listing_url:item.url,price:item.price,city:item.city});alert('Saved to your collection')}catch(e){alert(e.message)}}));
  }else{actions.append(label('Listing link unavailable','muted'))}
- body.append(badge,h,price,city,actions);card.append(art,body);box.append(card);
+ const availability=makeManualStatusControl(item,()=>loadListings());
+ body.append(badge,h,price,city,actions,availability);card.append(art,body);box.append(card);
  }
  }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message;logActivity('local_search_failed',{...safeFilters,error:String(e.message||'Request failed').slice(0,180)})}
  finally{searchButton.disabled=false;searchButton.textContent='Apply filters'}
