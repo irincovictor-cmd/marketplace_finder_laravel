@@ -484,9 +484,42 @@ async function loadWatch(){
  }
  }catch(e){box.textContent='Unable to load watchlist: '+e.message}
 }
-document.getElementById('saveForm').addEventListener('submit',async e=>{e.preventDefault();try{await request('/collections/saved','POST',Object.fromEntries(new FormData(e.currentTarget)));e.currentTarget.reset();document.getElementById('saveStatus').textContent='Item saved.';loadSaved()}catch(error){document.getElementById('saveStatus').textContent=error.message}});
-document.getElementById('watchForm').addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));data.enabled=true;if(!data.max_price)data.max_price=null;try{await request('/collections/watchlist','POST',data);e.currentTarget.reset();document.getElementById('watchStatus').textContent='Device added.';loadWatch()}catch(error){document.getElementById('watchStatus').textContent=error.message}});
-document.getElementById('calcForm').addEventListener('submit',async e=>{e.preventDefault();const status=document.getElementById('calcStatus');status.textContent='';try{const data=await request('/calculator/estimate','POST',Object.fromEntries(new FormData(e.currentTarget)));document.getElementById('calcProfit').textContent=money(data.profit);document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%'}catch(error){status.textContent=error.message}});
+document.getElementById('saveForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const form=e.currentTarget;
+ const payload=Object.fromEntries(new FormData(form));
+ try{
+  await request('/collections/saved','POST',payload);
+  form.reset();
+  document.getElementById('saveStatus').textContent='Item saved.';
+  loadSaved();
+ }catch(error){document.getElementById('saveStatus').textContent=error.message}
+});
+document.getElementById('watchForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const form=e.currentTarget;
+ const data=Object.fromEntries(new FormData(form));
+ data.enabled=true;
+ if(!data.max_price)data.max_price=null;
+ try{
+  await request('/collections/watchlist','POST',data);
+  form.reset();
+  document.getElementById('watchStatus').textContent='Device added.';
+  loadWatch();
+ }catch(error){document.getElementById('watchStatus').textContent=error.message}
+});
+document.getElementById('calcForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const form=e.currentTarget;
+ const payload=Object.fromEntries(new FormData(form));
+ const status=document.getElementById('calcStatus');
+ status.textContent='';
+ try{
+  const data=await request('/calculator/estimate','POST',payload);
+  document.getElementById('calcProfit').textContent=money(data.profit);
+  document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%';
+ }catch(error){status.textContent=error.message}
+});
 let activeScanPlan=null;
 async function refreshScanPlan(){
  const form=document.getElementById('scanForm');
