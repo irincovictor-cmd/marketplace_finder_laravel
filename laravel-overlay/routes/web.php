@@ -25,7 +25,6 @@ Route::get('/marketplace/scan-plan', [MarketplaceScanController::class, 'preview
     ->middleware('throttle:30,1')
     ->name('marketplace.scan-plan');
 Route::post('/marketplace/scan', [MarketplaceScanController::class, 'scan'])
-    ->middleware('throttle:2,1')
     ->name('marketplace.scan');
 
 
