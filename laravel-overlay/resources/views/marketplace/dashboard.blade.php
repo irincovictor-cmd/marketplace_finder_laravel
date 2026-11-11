@@ -327,7 +327,12 @@ async function loadListings(){
  const minimum=document.getElementById('minPrice').value;
  const date=document.getElementById('foundWithinDays').value;
  if(minimum!==''&&budget!==''&&Number(minimum)>Number(budget)){
-  feedback.textContent='Minimum price cannot exceed maximum price.';
+  feedback.textContent='Minimum price cannot exceed maximum price. Previous results have been cleared; correct the price range to search.';
+  box.replaceChildren();
+  box.className='stack';
+  const warning=document.createElement('div');
+  warning.className='empty';warning.textContent='No search performed: minimum price exceeds maximum price.';
+  box.append(warning);
   logActivity('local_search_invalid_filters',{reason:'minimum_exceeds_maximum',category:category||'All',minimum,maximum:budget});
   searchButton.disabled=false;searchButton.textContent='Apply filters';return;
  }
@@ -354,7 +359,7 @@ async function loadListings(){
  external.target='_blank';external.rel='noopener noreferrer';
  external.className='btn sm alt';external.textContent='Search on Facebook ↗';
  empty.append(heading,msg,button('Set up a fresh search',showScanSettings),document.createTextNode(' '),external,document.createTextNode(' '),button('Clear filters',()=>{document.getElementById('search').value='';clearFilters();loadListings()}));box.append(empty);return}
- box.className='cards';feedback.textContent=data.items.length+' matching Bohol listings from '+(d.bohol_total||0)+' archived local listings (not a fresh Facebook search). '+(data.excluded_unverified||0)+' unverified/outside listings hidden.';
+ box.className='cards';feedback.textContent=data.items.length+(lastScanBatch?' Bohol-eligible listing(s) from your latest scan.':' Bohol-eligible listing(s) from your saved archive.')+' '+(d.hidden_non_sale||0)+' non-sale/accessory ads in the archive are filtered out. '+(data.excluded_unverified||0)+' outside/unverified locations excluded.';
  for(const item of data.items){
  const card=document.createElement('article');card.className='listing';
  const art=document.createElement('div');art.className='listing-art';
@@ -568,7 +573,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
   new:outcome.new_count,previouslySeen:outcome.previously_seen_count,terms:outcome.planned_terms,failedTerms:outcome.failed_terms,
   bohol:outcome.diagnostics?.bohol_count??null,
   outside:outcome.diagnostics?.outside_count??null,unverified:outcome.diagnostics?.unverified_count??null});
- status.textContent=outcome.completed_requests+' request(s) completed: '+outcome.new_count+' new and '+outcome.previously_seen_count+' previously known listings. '+(outcome.failed_terms.length?'Failed terms: '+outcome.failed_terms.join(', ')+'. ':'')+'Only Bohol-eligible matches appear below.';
+ status.textContent=outcome.completed_requests+' keyword request(s) completed: '+outcome.raw_count+' raw items, '+outcome.returned+' unique normalized listings, '+(outcome.diagnostics?.bohol_count??'?')+' with Bohol location evidence ('+outcome.new_count+' newly archived, '+outcome.previously_seen_count+' previously known). '+(outcome.failed_terms.length?'Failed terms: '+outcome.failed_terms.join(', ')+'. ':'')+'The cards show only the matching local sale listings, not every raw provider item.';
  // Keep visible filters aligned with the scan just requested, not older
  // browser preferences that could hide every result from the new batch.
  category=data.category||'';
