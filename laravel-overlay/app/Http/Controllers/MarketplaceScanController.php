@@ -52,7 +52,7 @@ class MarketplaceScanController extends Controller
         $outside = 0;
         $verify = 0;
         foreach ($result['listings'] as $item) {
-            $status = app(\\App\\Services\\BoholLocationService::class)->assess(
+            $status = app(\App\Services\BoholLocationService::class)->assess(
                 $item['city'] ?? null,
                 $item['province'] ?? null,
                 $item['location_text'] ?? null,
