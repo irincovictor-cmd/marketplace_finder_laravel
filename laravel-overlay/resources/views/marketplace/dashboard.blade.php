@@ -26,6 +26,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button type="button" data-view="saved">♡ &nbsp; Saved items</button>
 <button type="button" data-view="watchlist">☆ &nbsp; Watchlist</button>
 <button type="button" data-view="profit">₱ &nbsp; Profit calculator</button>
+<button type="button" data-view="activity">▤ &nbsp; Activity logs</button>
 </nav>
 <div class="asidefoot">Need the original tools?<br><a href="/flipradar/index.html">Open classic FlipRadar ↗</a></div>
 </aside>
@@ -85,18 +86,26 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </form>
 <p id="scanStatus" role="status" class="muted">Scanning is off by default. Set APIFY_TOKEN and MARKETPLACE_SCAN_ENABLED in the private Laravel environment file to enable it.</p>
 </details>
-<details class="settings" id="activityPanel">
-<summary>Activity log &amp; scan diagnostics <span id="logCount" class="muted"></span></summary>
-<p class="muted">Shows local searches, applied filters, scan attempts, result counts, and errors. Last 100 events are stored in this browser. It never intentionally records your API token. Review the log before sharing it.</p>
+
+</section>
+<section class="view" id="view-activity" hidden>
+<div class="intro">
+<div class="eyebrow">Diagnostics / Activity</div>
+<h1>Activity logs</h1>
+<p>Check what happened when you searched, applied filters, or requested a Marketplace scan.</p>
+</div>
+<div class="panel" id="activityPanel">
+<div class="headrow"><h2>Search &amp; scan history</h2><span id="logCount" class="muted"></span></div>
+<p class="muted">The latest 100 events stay in this browser. No Apify token is intentionally stored. Logs may contain search terms and budget settings; review them before sharing.</p>
 <div class="log-actions">
-<button id="logAudit" type="button" class="btn sm alt">Record filters</button>
+<button id="logAudit" type="button" class="btn sm alt">Record current filters</button>
 <button id="logExport" type="button" class="btn sm alt">Export JSON</button>
 <button id="logCopy" type="button" class="btn sm alt">Copy logs</button>
 <button id="logClear" type="button" class="btn sm subtle">Clear logs</button>
 </div>
 <p id="logFeedback" class="muted" role="status"></p>
-<div id="logEntries"></div>
-</details>
+<div id="logEntries" aria-live="polite"></div>
+</div>
 </section>
 <section class="view" id="view-saved" hidden>
 <div class="intro"><div class="eyebrow">Your collection</div><h1>Saved items</h1><p>Keep interesting Marketplace links in one place, ready to compare later.</p></div>
@@ -183,7 +192,7 @@ function downloadActivityLogs(){
  a.download='marketplace-finder-logs-'+new Date().toISOString().slice(0,10)+'.json';
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
-function openActivityLogs(){const panel=document.getElementById('activityPanel');panel.open=true;panel.scrollIntoView({behavior:'smooth',block:'start'})}
+function openActivityLogs(){navigate('activity')}
 document.getElementById('logAudit').addEventListener('click',()=>{
  logActivity('filter_audit',{category:category||'All',keyword:document.getElementById('search').value.trim(),
   minPrice:document.getElementById('minPrice').value||null,maxPrice:document.getElementById('budget').value||null,
@@ -242,7 +251,7 @@ function toggleExtraFilters(open){
  document.getElementById('extraFiltersToggle').textContent=open?'Fewer filters ▴':'More filters ▾';
 }
 
-const views=['discover','saved','watchlist','profit'];
+const views=['discover','saved','watchlist','profit','activity'];
 function navigate(view){
  if(!views.includes(view))return;
  views.forEach(v=>{document.getElementById('view-'+v).hidden=v!==view});
@@ -250,6 +259,7 @@ function navigate(view){
  history.replaceState(null,'','#'+view);
  if(view==='saved')loadSaved();
  if(view==='watchlist')loadWatch();
+ if(view==='activity')renderActivityLogs();
  window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.view)));
