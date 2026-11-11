@@ -31,7 +31,8 @@ class MarketplaceScanController extends Controller
         BoholLocationService $location,
         ScanPlanService $planner
     ): JsonResponse {
-        if (! app()->environment('local', 'testing') || ! config('marketplace.scan_enabled')) {
+        $credentialStore = app(\App\Services\ApifyCredentialStore::class);
+        if (! app()->environment('local', 'testing') || (! config('marketplace.scan_enabled') && ! $credentialStore->hasStoredToken())) {
             return response()->json(['message' => 'Live scanning is disabled.'], 503);
         }
 
@@ -52,8 +53,8 @@ class MarketplaceScanController extends Controller
             return response()->json(['message' => 'Minimum price cannot exceed maximum price.'], 422);
         }
 
-        if ((string) config('marketplace.apify_token') === '') {
-            return response()->json(['message' => 'Configure APIFY_TOKEN on the server first.'], 503);
+        if (! $credentialStore->isConfigured()) {
+            return response()->json(['message' => 'Add your Apify API key in the dashboard settings first.'], 503);
         }
 
         $terms = $planner->terms($data['keyword'] ?? '', $data['category'] ?? 'All');
