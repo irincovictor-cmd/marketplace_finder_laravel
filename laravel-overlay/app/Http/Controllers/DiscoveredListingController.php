@@ -17,11 +17,15 @@ class DiscoveredListingController extends Controller
             'max_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'sort' => ['nullable', 'in:newest,price_low,price_high,first_seen'],
             'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
+            'batch' => ['nullable', 'uuid'],
         ]);
 
         $totalArchived = DiscoveredListing::query()->count();
         $boholArchived = DiscoveredListing::query()->where('location_status', 'bohol')->count();
         $query = DiscoveredListing::query()->where('location_status', 'bohol');
+        if (filled($params['batch'] ?? null)) {
+            $query->where('last_scan_batch', $params['batch']);
+        }
         if (filled($params['q'] ?? null)) {
             $query->where('title', 'like', '%'.addcslashes($params['q'], '%_\\').'%');
         }
