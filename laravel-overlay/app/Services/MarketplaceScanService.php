@@ -16,7 +16,7 @@ class MarketplaceScanService
      */
     public function scan(array $input): array
     {
-        $token = (string) config('marketplace.apify_token', '');
+        $token = app(ApifyCredentialStore::class)->getToken();
         if ($token === '') {
             throw new RuntimeException('Apify token is not configured.');
         }
