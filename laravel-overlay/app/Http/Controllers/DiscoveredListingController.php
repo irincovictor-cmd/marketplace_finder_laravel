@@ -88,6 +88,73 @@ class DiscoveredListingController extends Controller
         ]);
     }
     /**
+     * Paginated, read-only equivalent of the legacy rejected-listing inspector.
+     * Scope by current scan batch when requested; enumerate ALL archived records
+     * in that scope, and explain every failed Find deals rule.
+     */
+    public function rejected(Request $request, \App\Services\ListingFilterAuditService $audit): JsonResponse
+    {
+        $params = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'in:Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+            'min_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
+            'max_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
+            'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
+            'batch' => ['nullable', 'uuid'],
+            'reason' => ['nullable', 'in:outside_bohol,unverified_location,accessory,repair,wanted,other_intent,keyword,below_min_price,above_max_price,category,first_seen'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+        if (isset($params['min_price'], $params['max_price']) && (float) $params['min_price'] > (float) $params['max_price']) {
+            return response()->json(['message' => 'Minimum price cannot exceed maximum price.'], 422);
+        }
+
+        $page = (int) ($params['page'] ?? 1);
+        $pageSize = (int) ($params['per_page'] ?? 40);
+        $reasonFilter = $params['reason'] ?? '';
+        $cutoff = isset($params['found_within_days']) ? now()->subDays((int) $params['found_within_days']) : null;
+        $query = DiscoveredListing::query();
+        if (filled($params['batch'] ?? null)) {
+            $query->where('last_scan_batch', $params['batch']);
+        }
+
+        $checked = 0;
+        $rejected = 0;
+        $selectedCount = 0;
+        $reasonsCounts = array_fill_keys(array_keys(\App\Services\ListingFilterAuditService::REASONS), 0);
+        $items = [];
+        // Iterate in pages on the server, never impose a 100-record total cap.
+        foreach ($query->orderByDesc('id')->cursor() as $listing) {
+            $checked++;
+            $reasons = $audit->reasons($listing, $params, $cutoff);
+            if ($reasons === []) continue;
+            $rejected++;
+            foreach ($reasons as $reason) $reasonsCounts[$reason]++;
+            if ($reasonFilter !== '' && ! in_array($reasonFilter, $reasons, true)) continue;
+            $selectedCount++;
+            if ($selectedCount > ($page - 1) * $pageSize && count($items) < $pageSize) {
+                $items[] = $audit->explain($listing, $reasons);
+            }
+        }
+
+        return response()->json([
+            'read_only' => true,
+            'scope' => filled($params['batch'] ?? null) ? 'scan_batch' : 'archive',
+            'filters' => $params,
+            'checked_count' => $checked,
+            'rejected_count' => $rejected,
+            'accepted_count' => $checked - $rejected,
+            'matched_reason_count' => $selectedCount,
+            'reason_counts' => $reasonsCounts,
+            'reason_labels' => \App\Services\ListingFilterAuditService::REASONS,
+            'page' => $page,
+            'per_page' => $pageSize,
+            'pages' => max(1, (int) ceil($selectedCount / $pageSize)),
+            'items' => $items,
+        ]);
+    }
+
+    /**
      * Read-only audit of archived location decisions. Never change listing
      * visibility or trust unknown geography automatically.
      */
