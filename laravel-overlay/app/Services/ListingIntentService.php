@@ -14,7 +14,7 @@ class ListingIntentService
     {
         $t = mb_strtolower(trim($title));
         $selling = preg_match('/\b(for sale|selling|sell|rush|available|mupalit|brand\s?new|bnew)\b/u', $t) === 1;
-        if (preg_match('/\b(wtb|wanted|looking for|we buy|i buy|buying|binibili|bumibili|bilhan|paliton|iso|palit ko|pm sa naay)\b/u', $t)
+        if (preg_match('/\b(wtb|wanted|looking for|lf|we buy|i buy|buying|binibili|bumibili|bilhan|paliton|iso|palit ko|pm sa naay)\b/u', $t)
             && ! preg_match('/\bfor sale\b/u', $t)) {
             return ['status' => 'wanted', 'reason' => 'Buying request wording'];
         }
