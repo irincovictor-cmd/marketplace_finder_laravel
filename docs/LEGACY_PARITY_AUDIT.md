@@ -35,3 +35,14 @@ Status: **Phase 1 — baseline established; parity NOT yet certified**
 - Historical records may lack original Apify metadata; we cannot infer it retroactively. Repeated live scans cost money and are not an acceptable substitute for tests.
 - The Laravel UI's category labels remain coarse, and `classify.js` is richer than the PHP classifier.
 - Browser JavaScript syntax and GitHub commits alone do not demonstrate passing PHPUnit or visual/browser correctness. Tests still need running in the user's Docker environment.
+
+## Phase 2: blank-keyword coverage and intent filtering
+
+**Source comparison:** `plan.js` supports a configurable keyword scan (default up to six, hard maximum twelve), a broad phone pool and brand terms. It does **not** guarantee that Facebook returns every item in an electronics category. Our default Laravel plan deliberately submits only **two** terms for an unspecified keyword (`phone` and `laptop` for All/Electronics), and every term starts a separately billable actor run. Do not silently expand requests; an explicit paid scan-plan selector and additional consent would be needed for broader coverage.
+
+**Location:** Legacy recognizes a 48-municipality Bohol name dataset, but its distance calculations also depend on available Facebook coordinates or defined town centers and chosen radius. Laravel currently verifies Bohol location using a municipality list, province evidence, and a conservative rectangle; it does not enforce exact municipal boundaries or a precise 40 km radius for the archived-results view. Do not claim rectangular checks are true polygon containment.
+
+**Observed example:** User screenshot showed two approved keyword runs with 94 newly archived and 2 previously seen listings, but fewer Bohol-qualified cards. Raw/provider results, new-to-archive counts, location-eligible results, user price filters, and sale-intent filters are independent counts. The dashboard now prints the raw, unique, Bohol and new/seen breakdown.
+
+**Intent parity slice:** Added `ListingIntentService` using a conservative subset of legacy `classify.js`'s wanted, repair and accessory cues. The additive migration categorizes existing records, and archive updates re-evaluate intent on future scans. Clear phone-case ads, repair services, and buying requests are excluded from public deal cards but preserved in SQLite. Unknown listings remain reviewable. PC parts (RAM, CPU, GPU) are not automatically excluded as accessories. This is *not yet full classifier parity*; classification should be compared against the original Node `classify.js` with shared fixtures before wider rules are imported.
+
