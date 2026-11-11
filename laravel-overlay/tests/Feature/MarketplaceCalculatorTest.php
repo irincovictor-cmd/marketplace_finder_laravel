@@ -12,7 +12,7 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee('id="historySearchButton"', false)
             ->assertSee('Set up a fresh search')
             ->assertSee('Fresh Marketplace search')
-            ->assertSee('Activity log &amp; scan diagnostics', false)
+            ->assertSee('Activity logs')
             ->assertSee('id="logExport"', false)
             ->assertSee('data-view="activity"', false)
             ->assertSee('id="view-activity"', false);
