@@ -53,6 +53,7 @@ cp /opt/marketplace/laravel-overlay/app/Services/ScanPlanService.php app/Service
 cp /opt/marketplace/laravel-overlay/app/Services/ApifyCredentialStore.php app/Services/ApifyCredentialStore.php
 cp /opt/marketplace/laravel-overlay/app/Http/Controllers/ApifySettingsController.php app/Http/Controllers/ApifySettingsController.php
 cp /opt/marketplace/laravel-overlay/app/Services/ListingIntentService.php app/Services/ListingIntentService.php
+cp /opt/marketplace/laravel-overlay/app/Services/WatchlistMatchService.php app/Services/WatchlistMatchService.php
 cp /opt/marketplace/laravel-overlay/app/Services/ListingFilterAuditService.php app/Services/ListingFilterAuditService.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000006_add_scan_batch_to_discovered_listings.php database/migrations/2026_11_11_000006_add_scan_batch_to_discovered_listings.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000007_reclassify_legacy_device_kinds.php database/migrations/2026_11_11_000007_reclassify_legacy_device_kinds.php
