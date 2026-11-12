@@ -39,7 +39,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <form id="browseForm">
 <div class="searchrow">
 <label>Search term (optional)<input id="search" name="q" placeholder="Leave blank to browse all models" autocomplete="off"></label>
-<label>Maximum price (₱)<input id="budget" name="max_price" type="number" step="1" min="0" placeholder="Any price"></label>
+<label>Maximum price (₱)<input id="budget" name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Any price"></label>
 <label>Sort by<select id="sort" name="sort"><option value="newest">Recently found</option><option value="price_low">Price: lowest first</option><option value="price_high">Price: highest first</option><option value="first_seen">First discovered</option></select></label>
 <button class="btn" type="submit" id="historySearchButton">Apply filters</button>
 </div>
@@ -55,7 +55,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button id="extraFiltersToggle" type="button" class="filter-toggle" aria-expanded="false" aria-controls="extraFilters">More filters ▾</button>
 <div id="extraFilters" class="extra-filters" hidden>
 <div class="filterrow">
-<label>Minimum price (₱)<input id="minPrice" type="number" min="0" step="1" placeholder="No minimum"></label>
+<label>Minimum price (₱)<input id="minPrice" type="text" inputmode="decimal" data-money="true" placeholder="No minimum"></label>
 <label>First discovered<select id="foundWithinDays"><option value="">Any time</option><option value="1">Within 24 hours</option><option value="7">Within 7 days</option><option value="30">Within 30 days</option></select></label>
 <label>Search area<input disabled value="Bohol only (location verified by metadata)" aria-label="Search area"></label>
 </div>
@@ -90,8 +90,8 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <label>Search keyword (optional)<input name="keyword" placeholder="Blank = broad browse" maxlength="80"></label>
 <label>Area radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
 <label>Order from provider<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="price_ascend">Lowest price</option><option value="price_descend">Highest price</option><option value="distance_ascend">Nearest</option></select></label>
-<label>Minimum price (₱)<input name="min_price" type="number" min="0" step="1" placeholder="Any minimum"></label>
-<label>Maximum price (₱)<input name="max_price" type="number" min="0" step="1" placeholder="Any maximum"></label>
+<label>Minimum price (₱)<input name="min_price" type="text" inputmode="decimal" data-money="true" placeholder="Any minimum"></label>
+<label>Maximum price (₱)<input name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Any maximum"></label>
 <label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
 </div>
 <p class="muted">Blank keyword uses a small category-based keyword plan like classic FlipRadar. This is not a complete Facebook category feed.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
@@ -182,7 +182,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div class="panel"><h3>Add a device to watch</h3>
 <form id="watchForm" class="formrow">
 <label>Device name<input name="keyword" placeholder="e.g. iPhone 13" minlength="2" maxlength="80" required></label>
-<label>Maximum budget (₱)<input name="max_price" type="number" step=".01" min="0" placeholder="Optional"></label>
+<label>Maximum budget (₱)<input name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Optional"></label>
 <button class="btn" type="submit">Add device</button>
 </form>
 <p class="muted" id="watchStatus" role="status"></p>
@@ -194,9 +194,9 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div class="grid2">
 <div class="panel"><h3>Enter your prices</h3><form id="calcForm">
 <div class="grid3">
-<label>Buying price (₱)<input name="buying_price" type="number" min=".01" step=".01" value="8000" required></label>
-<label>Selling price (₱)<input name="selling_price" type="number" min="0" step=".01" value="10000" required></label>
-<label>Extra expenses (₱)<input name="extra_costs" type="number" min="0" step=".01" value="500" required></label>
+<label>Buying price (₱)<input name="buying_price" type="text" inputmode="decimal" data-money="true" value="8000" required></label>
+<label>Selling price (₱)<input name="selling_price" type="text" inputmode="decimal" data-money="true" value="10000" required></label>
+<label>Extra expenses (₱)<input name="extra_costs" type="text" inputmode="decimal" data-money="true" value="500" required></label>
 </div><p class="muted">Include delivery, repairs and other expenses.</p><button class="btn" type="submit">Calculate profit</button></form><p id="calcStatus" role="alert" class="error"></p></div>
 <div class="panel"><h3>Estimated result</h3><div class="summarygrid"><div><div class="muted">Net profit</div><div id="calcProfit" class="out">—</div></div><div><div class="muted">ROI</div><div id="calcRoi" class="out">—</div></div></div><p class="muted">A manual estimate, not a verified market resale price.</p></div>
 </div>
@@ -208,6 +208,32 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 const csrf=document.querySelector('meta[name="csrf-token"]').content;
 let lastScanBatch=null;
 const money=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(Number(n||0));
+
+// Currency inputs are text because HTML number inputs cannot display grouping
+// commas. Only normalized decimal strings are sent to Laravel.
+const moneyRaw=value=>String(value??'').replace(/,/g,'').trim();
+function formatPriceText(value){
+ const clean=moneyRaw(value).replace(/[^\d.]/g,'');
+ const dot=clean.indexOf('.');
+ const whole=(dot<0?clean:clean.slice(0,dot)).replace(/^0+(?=\d)/,'');
+ const grouped=whole.replace(/\B(?=(\d{3})+(?!\d))/g,',');
+ return dot<0?grouped:grouped+'.'+clean.slice(dot+1).replace(/\./g,'').slice(0,2);
+}
+function formatPriceField(el){
+ const start=el.selectionStart??el.value.length;
+ const old=el.value;
+ const left=formatPriceText(old.slice(0,start));
+ const next=formatPriceText(old);
+ el.value=next;
+ const cursor=Math.min(next.length,left.length);
+ try{el.setSelectionRange(cursor,cursor)}catch(e){}
+}
+document.querySelectorAll('input[data-money="true"]').forEach(el=>{
+ el.addEventListener('input',()=>formatPriceField(el));
+ el.addEventListener('blur',()=>{el.value=formatPriceText(el.value)});
+ el.value=formatPriceText(el.value);
+});
+
 const logKey='marketplace_finder_activity_log_v1';
 function redactLog(value){
  const serialized=JSON.stringify(value??{});
@@ -273,8 +299,8 @@ function rejectedSearchParams(){
   const q=document.getElementById('search').value.trim();
   if(q)p.set('q',q);
   if(category)p.set('category',category);
-  const min=document.getElementById('minPrice').value;
-  const max=document.getElementById('budget').value;
+  const min=moneyRaw(document.getElementById('minPrice').value);
+  const max=moneyRaw(document.getElementById('budget').value);
   const days=document.getElementById('foundWithinDays').value;
   if(min!=='')p.set('min_price',min);
   if(max!=='')p.set('max_price',max);
@@ -400,8 +426,8 @@ function readFilters(){
 }
 function rememberFilters(){
  const state={q:document.getElementById('search').value.trim(),category,
-  min_price:document.getElementById('minPrice').value,
-  max_price:document.getElementById('budget').value,
+  min_price:moneyRaw(document.getElementById('minPrice').value),
+  max_price:moneyRaw(document.getElementById('budget').value),
   sort:document.getElementById('sort').value,
   found_within_days:document.getElementById('foundWithinDays').value};
  try{localStorage.setItem(filterKey,JSON.stringify(state))}catch(e){}
@@ -418,7 +444,7 @@ function restoreFilters(){
   const input=document.getElementById(id);
   const val=String(saved[key]??'');
   if(input.tagName==='SELECT'&&!Array.from(input.options).some(o=>o.value===val))continue;
-  input.value=val;
+  input.value=input.dataset.money==='true'?formatPriceText(val):val;
  }
  document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));
  if(saved.min_price||saved.found_within_days)toggleExtraFilters(true);
@@ -539,8 +565,8 @@ async function loadListings(){
  if(lastScanBatch)p.set('batch',lastScanBatch);
  document.getElementById('listingHeading').textContent=lastScanBatch?'Latest scan — Bohol listings':'Bohol listings';
  document.getElementById('showArchive').hidden=!lastScanBatch;
- const budget=document.getElementById('budget').value;
- const minimum=document.getElementById('minPrice').value;
+ const budget=moneyRaw(document.getElementById('budget').value);
+ const minimum=moneyRaw(document.getElementById('minPrice').value);
  const date=document.getElementById('foundWithinDays').value;
  if(minimum!==''&&budget!==''&&Number(minimum)>Number(budget)){
   feedback.textContent='Minimum price cannot exceed maximum price. Previous results have been cleared; correct the price range to search.';
@@ -722,7 +748,8 @@ document.getElementById('watchForm').addEventListener('submit',async e=>{
  const form=e.currentTarget;
  const data=Object.fromEntries(new FormData(form));
  data.enabled=true;
- if(!data.max_price)data.max_price=null;
+ if(data.max_price)data.max_price=moneyRaw(data.max_price);
+ else data.max_price=null;
  try{
   await request('/collections/watchlist','POST',data);
   form.reset();
@@ -734,6 +761,7 @@ document.getElementById('calcForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const form=e.currentTarget;
  const payload=Object.fromEntries(new FormData(form));
+ for(const k of ['buying_price','selling_price','extra_costs'])payload[k]=moneyRaw(payload[k]);
  const status=document.getElementById('calcStatus');
  status.textContent='';
  try{
@@ -817,9 +845,9 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  const data=approvedData;
  if(!data.keyword)delete data.keyword;
  if(!data.min_price)delete data.min_price;
- else data.min_price=Number(data.min_price);
+ else data.min_price=Number(moneyRaw(data.min_price));
  if(!data.max_price)delete data.max_price;
- else data.max_price=Number(data.max_price);
+ else data.max_price=Number(moneyRaw(data.max_price));
  if(!data.category)delete data.category;
  data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
  logActivity('scan_submission_attempted',{terms:activeScanPlan.terms,requests:activeScanPlan.requests,keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
@@ -835,8 +863,8 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  // browser preferences that could hide every result from the new batch.
  category=data.category||'';
  document.getElementById('search').value=data.keyword||'';
- document.getElementById('minPrice').value=data.min_price??'';
- document.getElementById('budget').value=data.max_price??'';
+ document.getElementById('minPrice').value=formatPriceText(data.min_price??'');
+ document.getElementById('budget').value=formatPriceText(data.max_price??'');
  document.getElementById('foundWithinDays').value='';
  document.getElementById('sort').value=data.sort_by==='price_ascend'?'price_low':data.sort_by==='price_descend'?'price_high':'newest';
  document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));
