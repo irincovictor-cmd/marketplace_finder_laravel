@@ -187,6 +187,13 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </form>
 <p class="muted" id="watchStatus" role="status"></p>
 <div id="watchItems" aria-live="polite"></div>
+<div class="log-actions"><button id="watchPrev" class="btn sm alt" type="button">Previous</button><span id="watchPage" class="muted" style="align-self:center"></span><button id="watchNext" class="btn sm alt" type="button">Next</button></div>
+<div class="panel" id="watchMatchesPanel" style="margin-top:16px" hidden>
+<div class="headrow"><h3 id="watchMatchesHeading">Matching listings</h3><button type="button" class="btn sm alt" id="closeWatchMatches">Close matches</button></div>
+<p class="muted" id="watchMatchesInfo" role="status"></p>
+<div id="watchMatches" class="stack"></div>
+<div class="log-actions"><button type="button" class="btn sm alt" id="watchMatchPrev">Previous</button><span id="watchMatchPage" class="muted" style="align-self:center"></span><button type="button" class="btn sm alt" id="watchMatchNext">Next</button></div>
+</div>
 </div>
 </section>
 <section class="view" id="view-profit" hidden>
@@ -720,18 +727,70 @@ async function loadSaved(){
  }
  }catch(e){box.textContent='Unable to load saved items: '+e.message}
 }
+let watchPage=1,watchLastPage=1,watchMatchesPage=1,watchMatchesLastPage=1,activeWatchId=null;
 async function loadWatch(){
- const box=document.getElementById('watchItems');box.replaceChildren();
+ const box=document.getElementById('watchItems');
+ box.replaceChildren();
  try{
- const data=await request('/collections/watchlist');
- if(!data.items.length){box.append(label('Your watchlist is empty. Add a device you want to find.','muted'));return}
- for(const item of data.items){
-  const row=document.createElement('div');row.className='storageitem';const info=document.createElement('div');
-  info.append(label(item.keyword,'pill'),document.createElement('br'),label((item.max_price!==null?'Up to '+money(item.max_price):'Any price')+' · '+(item.enabled?'Enabled':'Paused'),'muted'));
-  row.append(info,button('Remove',async()=>{try{await request('/collections/watchlist/'+item.id,'DELETE');loadWatch()}catch(e){document.getElementById('watchStatus').textContent=e.message}}));box.append(row);
- }
+  const data=await request('/collections/watchlist?page='+watchPage);
+  watchLastPage=data.pages;
+  document.getElementById('watchPage').textContent='Page '+data.page+' of '+data.pages;
+  document.getElementById('watchPrev').disabled=data.page<=1;
+  document.getElementById('watchNext').disabled=data.page>=data.pages;
+  if(!data.items.length){box.append(label('Your watchlist is empty. Add a device you want to find.','muted'));return}
+  for(const item of data.items){
+   const row=document.createElement('div');row.className='storageitem';
+   const info=document.createElement('div');
+   info.append(label(item.keyword,'pill'),document.createElement('br'),
+    label((item.max_price!==null?'Up to '+money(item.max_price):'Any price')+' · '+(item.enabled?'Enabled':'Paused'),'muted'),
+    document.createElement('br'),label(item.match_count+' potential match(es) in the local Bohol archive','muted'));
+   const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+   const matchBtn=button('View '+item.match_count+' matches',()=>{
+    activeWatchId=item.id;watchMatchesPage=1;loadWatchMatches(item.keyword);
+   });
+   matchBtn.disabled=!item.enabled||item.match_count===0;actions.append(matchBtn);
+   actions.append(button('Remove',async()=>{
+    try{
+     await request('/collections/watchlist/'+item.id,'DELETE');
+     if(activeWatchId===item.id){activeWatchId=null;document.getElementById('watchMatchesPanel').hidden=true}
+     loadWatch();
+    }catch(e){document.getElementById('watchStatus').textContent=e.message}
+   }));
+   row.append(info,actions);box.append(row);
+  }
  }catch(e){box.textContent='Unable to load watchlist: '+e.message}
 }
+async function loadWatchMatches(keyword=''){
+ if(!activeWatchId)return;
+ const panel=document.getElementById('watchMatchesPanel'),host=document.getElementById('watchMatches');
+ const info=document.getElementById('watchMatchesInfo');
+ panel.hidden=false;host.replaceChildren();info.textContent='Checking previously archived local listings…';
+ try{
+  const data=await request('/collections/watchlist/'+activeWatchId+'/matches?page='+watchMatchesPage);
+  watchMatchesLastPage=data.pages;
+  document.getElementById('watchMatchesHeading').textContent='Matches for '+data.watchlist.keyword;
+  info.textContent=data.total+' potential match(es) · keyword and budget matched · Bohol sale rules passed · '+(data.watchlist.max_price!==null?'up to '+money(data.watchlist.max_price):'any price')+'. Check exact models and availability on Facebook.';
+  for(const item of data.items){
+   const row=document.createElement('div');row.className='storageitem';
+   const desc=document.createElement('div');desc.append(label(item.title,'pill'),document.createElement('br'),
+    label(money(item.price)+' · '+(item.city||'Bohol')+' · Last seen '+(item.last_seen_at?new Date(item.last_seen_at).toLocaleDateString():'unknown'),'muted'));
+   row.append(desc);
+   const url=safeMarketplaceLink(item.url);
+   if(url){const a=document.createElement('a');a.className='btn sm alt';a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='View on Facebook';row.append(a)}
+   host.append(row);
+  }
+  if(!data.items.length)host.append(label('No currently matching active archived listings.','muted'));
+  document.getElementById('watchMatchPage').textContent='Page '+data.page+' of '+data.pages;
+  document.getElementById('watchMatchPrev').disabled=data.page<=1;
+  document.getElementById('watchMatchNext').disabled=data.page>=data.pages;
+ }catch(e){info.textContent='Cannot load matching listings: '+e.message}
+}
+document.getElementById('watchPrev').addEventListener('click',()=>{if(watchPage>1){watchPage--;loadWatch()}});
+document.getElementById('watchNext').addEventListener('click',()=>{if(watchPage<watchLastPage){watchPage++;loadWatch()}});
+document.getElementById('watchMatchPrev').addEventListener('click',()=>{if(watchMatchesPage>1){watchMatchesPage--;loadWatchMatches()}});
+document.getElementById('watchMatchNext').addEventListener('click',()=>{if(watchMatchesPage<watchMatchesLastPage){watchMatchesPage++;loadWatchMatches()}});
+document.getElementById('closeWatchMatches').addEventListener('click',()=>{activeWatchId=null;document.getElementById('watchMatchesPanel').hidden=true});
+
 document.getElementById('saveForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const form=e.currentTarget;
