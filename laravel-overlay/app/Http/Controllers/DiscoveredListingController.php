@@ -18,6 +18,7 @@ class DiscoveredListingController extends Controller
             'sort' => ['nullable', 'in:newest,price_low,price_high,first_seen'],
             'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
             'batch' => ['nullable', 'uuid'],
+            'batch_scope' => ['nullable', 'in:all,new'],
             'availability' => ['nullable', 'in:active,all,unverified,available,pending,sold,unavailable'],
             'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'per_page' => ['nullable', 'integer', 'in:12,24,48'],
@@ -34,7 +35,11 @@ class DiscoveredListingController extends Controller
             $query->where('manual_status', $availability);
         }
         if (filled($params['batch'] ?? null)) {
-            $query->where('last_scan_batch', $params['batch']);
+            if (($params['batch_scope'] ?? 'all') === 'new') {
+                $query->where('first_scan_batch', $params['batch']);
+            } else {
+                $query->where('last_scan_batch', $params['batch']);
+            }
         }
         if (filled($params['q'] ?? null)) {
             $query->where('title', 'like', '%'.addcslashes($params['q'], '%_\\').'%');
@@ -102,6 +107,7 @@ class DiscoveredListingController extends Controller
                 'manual_status' => $item->manual_status,
                 'manual_status_updated_at' => $item->manual_status_updated_at?->toIso8601String(),
                 'first_seen_at' => $item->first_seen_at?->toIso8601String(),
+                'first_scan_batch' => $item->first_scan_batch,
                 'last_seen_at' => $item->last_seen_at?->toIso8601String(),
             ]),
         ]);
