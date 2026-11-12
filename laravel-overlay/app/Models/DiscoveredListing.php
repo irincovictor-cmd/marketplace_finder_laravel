@@ -9,13 +9,13 @@ class DiscoveredListing extends Model
 {
     protected $fillable = [
         'source_key', 'title', 'price', 'manual_status', 'manual_status_updated_at', 'listing_intent', 'city', 'listing_url', 'image_url', 'category',
-        'first_seen_at', 'last_seen_at', 'last_scan_batch', 'first_scan_batch', 'province', 'location_text', 'latitude', 'longitude', 'location_status',
+        'first_seen_at', 'last_seen_at', 'last_scan_batch', 'first_scan_batch', 'province', 'location_text', 'latitude', 'longitude', 'location_status', 'manual_location', 'manual_location_reviewed_at',
     ];
 
     /** Shared deal eligibility gate for browsing and watchlist matching. */
     public function scopeActiveBohol(Builder $query): Builder
     {
-        return $query->where('location_status', 'bohol')
+        return $query->whereRaw("COALESCE(manual_location, location_status) = 'bohol'")
             ->where('listing_intent', 'reviewable')
             ->whereIn('manual_status', ['unverified', 'available']);
     }
@@ -27,6 +27,7 @@ class DiscoveredListing extends Model
             'first_seen_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'manual_status_updated_at' => 'datetime',
+            'manual_location_reviewed_at' => 'datetime',
         ];
     }
 }
