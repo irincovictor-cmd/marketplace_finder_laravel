@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Services\ApifyCredentialStore;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ApifySettingsTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -46,8 +49,7 @@ class ApifySettingsTest extends TestCase
     {
         $this->postJson('/marketplace/api-key', ['token' => 'not-a-token'])
             ->assertUnprocessable()->assertJsonValidationErrors('token');
-        $this->withServerVariables(['HTTP_HOST' => 'example.com'])
-            ->postJson('/marketplace/api-key', ['token' => 'apify_api_exampleSecret123456789'])
+        $this->postJson('http://example.com/marketplace/api-key', ['token' => 'apify_api_exampleSecret123456789'])
             ->assertForbidden();
         Storage::disk('local')->assertMissing('private/marketplace/apify-token.enc');
     }
