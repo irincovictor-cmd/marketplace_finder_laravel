@@ -513,7 +513,9 @@ if(views.includes(legacyView)){
  history.replaceState({view:legacyView},'',viewPaths[legacyView]);
  navigate(legacyView,{updateHistory:false,scroll:false});
 }else{
- navigate(pathViews[location.pathname]||'discover',{updateHistory:false,scroll:false});
+ const initial=pathViews[location.pathname]||'discover';
+ if(!pathViews[location.pathname])history.replaceState({view:initial},'',viewPaths[initial]);
+ navigate(initial,{updateHistory:false,scroll:false});
 }
 async function request(path,method='GET',body){
  const options={method,headers:{Accept:'application/json','X-CSRF-TOKEN':csrf}};
