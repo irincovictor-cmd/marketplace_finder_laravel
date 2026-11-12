@@ -59,6 +59,7 @@ cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000006_add_sc
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000007_reclassify_legacy_device_kinds.php database/migrations/2026_11_11_000007_reclassify_legacy_device_kinds.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000008_add_listing_intent.php database/migrations/2026_11_11_000008_add_listing_intent.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_12_000009_add_manual_availability_to_discovered_listings.php database/migrations/2026_11_12_000009_add_manual_availability_to_discovered_listings.php
+cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_12_000010_track_first_discovery_batch.php database/migrations/2026_11_12_000010_track_first_discovery_batch.php
 cp /opt/marketplace/laravel-overlay/config/marketplace.php config/marketplace.php
 cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.php resources/views/marketplace/dashboard.blade.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
