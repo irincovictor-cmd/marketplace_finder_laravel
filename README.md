@@ -1,3 +1,10 @@
+## Clean Laravel URLs (named page routes)
+
+Marketplace Finder now uses bookmarkable Laravel page routes instead of basic hash URLs:
+`/discover`, `/saved-items`, `/watchlist`, `/profit-calculator`, `/activity-logs`, `/rejected-listings`, and `/availability-history`. All are GET routes rendering the Laravel dashboard Blade shell, named under `marketplace.*`. Sidebar items are proper links with real href attributes; the browser History API updates the URL without a page reload, and Back/Forward restores the correct view. Opening or refreshing any path directly works through Laravel routing.
+
+The previous `/#discover` and `/#watchlist` bookmarks are converted in-browser to their corresponding clean URLs. Loading the old `/` entry point also normalizes to `/discover`. These changes affect UI navigation only; internal JSON endpoints under `/collections`, `/listings` and `/marketplace` are unchanged. Browsing does not start a paid Apify scan.
+
 ## Watchlist matches, comma-formatted budgets and native Laravel paging (2026-11-12)
 
 **Watchlist is now connected to the SQLite archive at no extra Apify cost.** Add a device/model keyword and optional buying budget under Watchlist; the screen shows how many archived Bohol-eligible, non-sold sale records match each watched device. Use **View matches** to inspect candidates, last-seen dates, thumbnails when available, and Facebook links. **Pause/Resume** disables or re-enables an entry without deleting it. Matches are possible title/price matches, not precise model guarantees or proof that a seller still has stock. Existing scans update the archive as usual; Watchlist re-evaluates it on demand. A dedicated GET route, `/collections/watchlist/{watchlistEntry}/matches`, uses route model binding and Eloquent pagination (12 results per page), with no paid requests.
