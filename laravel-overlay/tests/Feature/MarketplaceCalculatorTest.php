@@ -164,6 +164,17 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('location.hash.slice(1)', $blade);
     }
 
+    public function test_route_overlay_is_deployed_by_bootstrap_after_clean_route_revisions(): void
+    {
+        $bootstrap = file_get_contents('/opt/marketplace/bootstrap.sh');
+        $this->assertStringContainsString("grep -Fq '\\$dashboardPages = [' routes/web.php", $bootstrap);
+        $this->assertStringContainsString('MARKETPLACE_FINDER_MANAGED_ROUTES', $bootstrap);
+        $this->assertStringContainsString(
+            'cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php',
+            $bootstrap
+        );
+    }
+
     public function test_api_key_has_dedicated_settings_route_and_scan_is_above_archive(): void
     {
         $this->get('/settings')->assertOk()
