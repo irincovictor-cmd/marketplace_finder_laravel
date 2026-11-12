@@ -58,7 +58,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <a href="/availability-history" data-view="status">✓ &nbsp; Availability history</a>
 <a href="/settings" data-view="settings">⚙ &nbsp; Settings</a>
 </nav>
-<div class="asidefoot">Need the original tools?<br><a href="/flipradar/index.html">Open classic FlipRadar ↗</a></div>
+
 </aside>
 <main>
 <section class="view" id="view-discover">
@@ -76,7 +76,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <label>Maximum price (₱)<input name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Any maximum"></label>
 <label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
 </div>
-<p class="muted">Blank keyword uses a small category-based keyword plan like classic FlipRadar. This is not a complete Facebook category feed.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
+<p class="muted">A blank keyword uses a small sample of category-related search terms, not the complete Facebook Marketplace inventory.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
 <label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run approved searches</button>
 </form>
@@ -121,7 +121,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <span class="muted" id="listingPageInfo" style="align-self:center"></span>
 <button class="btn sm alt" id="listingNext" type="button">Next</button>
 </div>
-<div class="hint">Missing product photos from earlier scans? <button class="btn sm alt" type="button" id="restoreLegacyImages">Restore photos from classic FlipRadar</button> <span id="photoRestoreStatus" role="status" class="muted">Uses existing browser data only. No paid scan.</span></div>
+
 <div class="hint">Need another batch of listings? <button class="btn sm alt" type="button" id="openFreshScan">Jump to Fresh Marketplace search</button> Every paid scan still requires your approval.</div>
 
 
@@ -254,7 +254,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div class="panel"><h3>Estimated result</h3><div class="summarygrid"><div><div class="muted">Net profit</div><div id="calcProfit" class="out">—</div></div><div><div class="muted">ROI</div><div id="calcRoi" class="out">—</div></div></div><p class="muted">A manual estimate, not a verified market resale price.</p></div>
 </div>
 </section>
-<div class="notice">Marketplace Finder · Laravel + SQLite · Single-user local development. Original FlipRadar data is kept separate until imported. <a href="/flipradar/index.html">Classic app</a></div>
+<div class="notice">Marketplace Finder · Laravel + SQLite · Private local workspace. Listings are stored in your archive.</div>
 </main></div>
 <script>
 'use strict';
@@ -769,41 +769,6 @@ document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('clic
  document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
  loadListings();
 }));
-function restoreLegacyImagesFromBrowser(){
- const status=document.getElementById('photoRestoreStatus');
- let records;
- try{records=JSON.parse(localStorage.getItem('fr_live')||'[]')}catch(e){records=[]}
- if(!Array.isArray(records)||!records.length){
-  status.textContent='No classic FlipRadar listing cache found in this browser and site origin.';
-  logActivity('photo_restore_skipped',{reason:'legacy_cache_empty'});
-  return;
- }
- const seen=new Set(),images=[];
- for(const entry of records){
-  if(!entry||typeof entry!=='object'||typeof entry.u!=='string'||typeof entry.i!=='string')continue;
-  if(!/^https:\/\/(?:[a-z0-9-]+\.)?facebook\.com\/marketplace\/item\/[0-9]+\/?(?:\?.*)?$/i.test(entry.u))continue;
-  if(!/^https:\/\/[a-z0-9.-]+\.(?:fbcdn\.net|fbsbx\.com)\//i.test(entry.i))continue;
-  const id=entry.u.match(/\/marketplace\/item\/([0-9]+)/)?.[1];
-  if(!id||seen.has(id))continue;
-  seen.add(id);images.push({listing_url:entry.u,image_url:entry.i});
-  if(images.length>=100)break;
- }
- if(!images.length){
-  status.textContent='The classic cache has no matching Marketplace item photos.';
-  logActivity('photo_restore_skipped',{reason:'no_usable_photo_links'});
-  return;
- }
- status.textContent='Checking '+images.length+' cached photo links…';
- request('/listings/restore-images','POST',{images}).then(async(result)=>{
-  status.textContent=result.updated+' existing listing photo(s) restored from the classic cache. Missing photos need a new approved scan.';
-  logActivity('photo_restore_completed',{submitted:images.length,restored:result.updated});
-  await loadListings();
- }).catch(err=>{
-  status.textContent='Photo restore failed: '+err.message;
-  logActivity('photo_restore_failed',{message:String(err.message).slice(0,160)});
- });
-}
-document.getElementById('restoreLegacyImages').addEventListener('click',restoreLegacyImagesFromBrowser);
 let savedPage=1,savedLastPage=1;
 document.getElementById('savedPrev').addEventListener('click',()=>{if(savedPage>1){savedPage--;loadSaved()}});
 document.getElementById('savedNext').addEventListener('click',()=>{if(savedPage<savedLastPage){savedPage++;loadSaved()}});
