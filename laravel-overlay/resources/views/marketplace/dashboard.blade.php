@@ -23,6 +23,25 @@ main{width:100%;max-width:1190px;margin:0 auto;padding:37px 40px 75px}.view[hidd
 details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--side)}summary{cursor:pointer;color:#f4dfbd;font-weight:700}details.settings p{font-size:13px}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.formrow{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:end}.storageitem{display:flex;align-items:center;justify-content:space-between;gap:14px;border-radius:12px;background:#17263b;border:1px solid var(--line);padding:13px;margin-top:10px}.storageitem a{color:var(--orange);overflow-wrap:anywhere}.storageitem small{display:block;color:var(--muted);font-size:12px}.error{color:var(--red)}.success{color:var(--mint)}.out{font-size:29px;font-weight:850}.checkboxrow{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:var(--muted);margin:17px 0}.checkboxrow input{width:18px;height:18px;margin:1px 0}.summarygrid{display:flex;gap:45px;flex-wrap:wrap}.log-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.log-actions .btn{width:auto}.log-entry{padding:12px 14px;background:#162238;border:1px solid var(--line);border-radius:12px;margin-top:9px}.log-entry strong{font-size:13px}.log-entry small{display:block;color:var(--muted);font-size:11px}.log-entry pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow:auto;color:#bdcde0;font:12px/1.5 ui-monospace,monospace;margin:8px 0 0}.log-badge{font-weight:700;color:var(--mint)}.log-badge.error{color:var(--red)}.notice{border-top:1px solid var(--line);padding-top:18px;margin-top:24px;color:var(--muted);font-size:12px}
 @media(max-width:950px){.app{display:block}.aside{padding:12px 16px;gap:8px;border-right:0;border-bottom:1px solid var(--line)}.menu{display:flex;overflow:auto;gap:6px}.menu a{width:auto;white-space:nowrap}.asidefoot{display:none}main{padding:25px 19px}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.searchrow,.filterrow,.grid2,.grid3,.formrow,.cards{grid-template-columns:1fr}.panel{padding:16px}.listing-art{height:175px}.headrow{align-items:flex-start}.storageitem{align-items:flex-start;flex-direction:column}.btn{width:100%}.listing-actions .btn{width:auto}.menu a{padding:10px 12px}}
+/* Discovery sections */
+.scan-lead,.archive-lead{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:26px 0 10px}
+.scan-lead h2,.archive-lead h2{margin:4px 0 4px}
+.scan-lead p,.archive-lead p{margin:4px 0;color:var(--muted);font-size:13px}
+.scan-panel{margin-top:12px!important;border-color:#576581!important;background:linear-gradient(145deg,#15243a,#101b2d)!important;padding:20px!important}
+.scan-panel summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;cursor:pointer}
+.scan-panel summary::-webkit-details-marker{display:none}
+.scan-heading{font-size:16px;color:var(--text);font-weight:800}
+.scan-tag{font-size:11px;color:var(--orange);border:1px solid #88643c;background:#312919;border-radius:99px;padding:4px 9px}
+.scan-chevron{margin-left:auto;font-size:12px;color:var(--muted)}
+.scan-panel[open] summary{margin-bottom:16px}
+.scan-panel .grid3{row-gap:15px}
+.scan-panel .hint{margin-top:14px}
+.archive-lead{margin-top:33px;padding-top:20px;border-top:1px solid var(--line)}
+.settings-panel{max-width:860px}
+.settings-panel .settings{background:#17253a;margin:15px 0}
+.settings-panel .hint p{margin:6px 0 12px}
+.settings-note{font-size:12px;color:var(--mint);border:1px solid #285e51;border-radius:999px;padding:5px 10px}
+@media(max-width:640px){.scan-lead,.archive-lead{align-items:flex-start;flex-direction:column}.scan-lead>.btn{width:100%}.scan-panel{padding:14px!important}.scan-panel summary{gap:8px}.scan-chevron{margin-left:0}}
 </style>
 </head>
 <body>
@@ -37,12 +56,33 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <a href="/activity-logs" data-view="activity">▤ &nbsp; Activity logs</a>
 <a href="/rejected-listings" data-view="rejected">⊘ &nbsp; Rejected listings</a>
 <a href="/availability-history" data-view="status">✓ &nbsp; Availability history</a>
+<a href="/settings" data-view="settings">⚙ &nbsp; Settings</a>
 </nav>
 <div class="asidefoot">Need the original tools?<br><a href="/flipradar/index.html">Open classic FlipRadar ↗</a></div>
 </aside>
 <main>
 <section class="view" id="view-discover">
 <div class="intro"><div class="eyebrow">Discover / Bohol</div><h1>Find your next great deal.</h1><p>Browse Bohol listings found in earlier scans, compare prices, and save promising deals.</p><span class="status">● Your workspace is ready</span></div>
+<div class="scan-lead"><div><span class="eyebrow">New discoveries</span><h2>Search Facebook Marketplace</h2><p>Fetch new listings only when you approve the Apify requests. Archived browsing below remains free.</p></div><a class="btn sm alt" href="/settings" data-view="settings">API key settings</a></div>
+<details class="settings scan-panel" id="scanSettings" open>
+<summary><span class="scan-heading">Fresh Marketplace search</span><span class="scan-tag">Paid provider · approval required</span><span class="scan-chevron">Configure search</span></summary>
+<p>Scanning uses a third-party Apify actor and may incur charges. Manage your key under Settings → Apify API key. Each scan still requires separate cost approval. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
+<form id="scanForm">
+<div class="grid3">
+<label>Search keyword (optional)<input name="keyword" placeholder="Blank = broad browse" maxlength="80"></label>
+<label>Area radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
+<label>Order from provider<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="price_ascend">Lowest price</option><option value="price_descend">Highest price</option><option value="distance_ascend">Nearest</option></select></label>
+<label>Minimum price (₱)<input name="min_price" type="text" inputmode="decimal" data-money="true" placeholder="Any minimum"></label>
+<label>Maximum price (₱)<input name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Any maximum"></label>
+<label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
+</div>
+<p class="muted">Blank keyword uses a small category-based keyword plan like classic FlipRadar. This is not a complete Facebook category feed.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
+<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
+<button class="btn" id="scanButton" type="submit">Run approved searches</button>
+</form>
+<p id="scanStatus" role="status" class="muted">Review the plan and confirm explicitly before any paid search. API key: Settings → Apify API key.</p>
+</details>
+<div class="archive-lead"><div><span class="eyebrow">Your collection</span><h2>Browse archived Bohol deals</h2><p>Search and filter listings already stored in SQLite—no scan charges.</p></div></div>
 <div class="searchbox">
 <form id="browseForm">
 <div class="searchrow">
@@ -82,9 +122,17 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button class="btn sm alt" id="listingNext" type="button">Next</button>
 </div>
 <div class="hint">Missing product photos from earlier scans? <button class="btn sm alt" type="button" id="restoreLegacyImages">Restore photos from classic FlipRadar</button> <span id="photoRestoreStatus" role="status" class="muted">Uses existing browser data only. No paid scan.</span></div>
-<div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
-<details class="settings" id="apiKeySettings">
-<summary>Apify API key — secure local settings <span id="apiKeyState" class="muted">Checking…</span></summary>
+<div class="hint">Need another batch of listings? <button class="btn sm alt" type="button" id="openFreshScan">Jump to Fresh Marketplace search</button> Every paid scan still requires your approval.</div>
+
+
+</section>
+<section class="view" id="view-settings" hidden>
+<div class="intro"><div class="eyebrow">Workspace / Security</div><h1>Settings</h1>
+<p>Manage your private Apify credential and local workspace preferences. Saving or removing your API key never starts a paid scan.</p></div>
+<div class="panel settings-panel">
+<div class="headrow"><div><h2>Apify API key</h2><p>Encrypted on this Laravel installation, never displayed after saving.</p></div><span class="settings-note">Local server only</span></div>
+<details class="settings" id="apiKeySettings" open>
+<summary>Key management <span id="apiKeyState" class="muted">Checking…</span></summary>
 <p>Paste your Apify API key here instead of editing .env. Laravel encrypts it using this installation's APP_KEY and stores it in private server storage (not the browser or GitHub). The key is never shown again. Use only on localhost; anyone with access to this local app can replace it.</p>
 <form id="apiKeyForm" autocomplete="off">
 <label>Apify API key<input id="apiKeyInput" name="token" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" maxlength="512" placeholder="apify_api_…" required></label>
@@ -95,25 +143,9 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </form>
 <p class="muted" id="apiKeyMessage" role="status">No validation or paid scan happens when you save a key.</p>
 </details>
-<details class="settings" id="scanSettings">
-<summary>Fresh Marketplace search — setup and cost approval</summary>
-<p>Scanning uses a third-party Apify actor and may incur charges. Configure your key in the secure settings above. Each scan still requires separate cost approval. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
-<form id="scanForm">
-<div class="grid3">
-<label>Search keyword (optional)<input name="keyword" placeholder="Blank = broad browse" maxlength="80"></label>
-<label>Area radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
-<label>Order from provider<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="price_ascend">Lowest price</option><option value="price_descend">Highest price</option><option value="distance_ascend">Nearest</option></select></label>
-<label>Minimum price (₱)<input name="min_price" type="text" inputmode="decimal" data-money="true" placeholder="Any minimum"></label>
-<label>Maximum price (₱)<input name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Any maximum"></label>
-<label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
-</div>
-<p class="muted">Blank keyword uses a small category-based keyword plan like classic FlipRadar. This is not a complete Facebook category feed.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
-<label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
-<button class="btn" id="scanButton" type="submit">Run approved searches</button>
-</form>
-<p id="scanStatus" role="status" class="muted">Configure your Apify API key above, then review the scan plan and approve the paid searches.</p>
-</details>
 
+<div class="hint"><strong>Provider safety</strong><p>Each new Marketplace scan still requires reviewing its plan and approving its billable requests. Keep this localhost application private.</p><a href="/discover" data-view="discover" class="btn sm alt">Back to Find deals</a></div>
+</div>
 </section>
 <section class="view" id="view-activity" hidden>
 <div class="intro">
@@ -487,7 +519,8 @@ const viewPaths={
  profit:'/profit-calculator',
  activity:'/activity-logs',
  rejected:'/rejected-listings',
- status:'/availability-history'
+ status:'/availability-history',
+ settings:'/settings'
 };
 const pathViews=Object.fromEntries(Object.entries(viewPaths).map(([view,path])=>[path,view]));
 const views=Object.keys(viewPaths);
@@ -508,6 +541,7 @@ function navigate(view,{updateHistory=true,replace=false,scroll=true}={}){
  if(view==='activity')renderActivityLogs();
  if(view==='rejected')loadRejectedListings();
  if(view==='status')loadManualStatusHistory();
+ if(view==='settings')refreshApiKeyStatus();
  if(scroll)window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('[data-view]').forEach(link=>link.addEventListener('click',e=>{
