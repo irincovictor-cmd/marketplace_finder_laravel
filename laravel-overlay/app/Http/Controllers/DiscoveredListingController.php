@@ -19,6 +19,8 @@ class DiscoveredListingController extends Controller
             'found_within_days' => ['nullable', 'integer', 'in:1,7,30'],
             'batch' => ['nullable', 'uuid'],
             'availability' => ['nullable', 'in:active,all,unverified,available,pending,sold,unavailable'],
+            'page' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'per_page' => ['nullable', 'integer', 'in:12,24,48'],
         ]);
 
         $totalArchived = DiscoveredListing::query()->count();
@@ -79,7 +81,10 @@ class DiscoveredListingController extends Controller
             ],
             'excluded_unverified' => $hiddenCount,
             'location_policy' => 'bohol_only',
-            'items' => $query->limit(100)->get()->map(fn ($item) => [
+            'page' => (int) ($params['page'] ?? 1),
+            'per_page' => (int) ($params['per_page'] ?? 24),
+            'pages' => max(1, (int) ceil($matchingCount / (int) ($params['per_page'] ?? 24))),
+            'items' => $query->forPage((int) ($params['page'] ?? 1), (int) ($params['per_page'] ?? 24))->get()->map(fn ($item) => [
                 'id' => $item->id,
                 'title' => $item->title,
                 'price' => (float) $item->price,
