@@ -112,6 +112,37 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString("loadWatchMatches(", $blade);
     }
 
+    public function test_named_clean_dashboard_routes_are_directly_accessible(): void
+    {
+        $paths = [
+            '/discover' => 'Find your next great deal',
+            '/saved-items' => 'Saved items',
+            '/watchlist' => 'Your watchlist',
+            '/profit-calculator' => 'Profit calculator',
+            '/activity-logs' => 'Activity logs',
+            '/rejected-listings' => 'Rejected listings',
+            '/availability-history' => 'Availability history',
+        ];
+        foreach ($paths as $path => $content) {
+            $this->get($path)->assertOk()->assertSee($content);
+        }
+        $this->get('/')->assertOk();
+    }
+
+    public function test_sidebar_uses_clean_laravel_urls_and_supports_history(): void
+    {
+        $this->get('/discover')->assertOk()
+            ->assertSee('href="/watchlist"', false)
+            ->assertSee('href="/saved-items"', false)
+            ->assertSee('href="/rejected-listings"', false)
+            ->assertDontSee('href="#watchlist"', false);
+
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString('history.pushState({view}', $blade);
+        $this->assertStringContainsString("window.addEventListener('popstate'", $blade);
+        $this->assertStringContainsString('location.hash.slice(1)', $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
