@@ -143,6 +143,26 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('location.hash.slice(1)', $blade);
     }
 
+    public function test_old_ip_dashboard_address_redirects_to_localhost(): void
+    {
+        $this->get('http://127.0.0.1:8000/discover')
+            ->assertRedirect('http://localhost:8000/discover');
+        $this->get('http://127.0.0.1:8000/watchlist')
+            ->assertRedirect('http://localhost:8000/watchlist');
+        $this->get('http://127.0.0.1:8000/')
+            ->assertRedirect('http://localhost:8000/');
+        $this->get('http://localhost:8000/discover')->assertOk();
+        $this->get('http://localhost:8000/watchlist')->assertOk();
+    }
+
+    public function test_dashboard_has_client_fallback_for_old_address_and_hash_links(): void
+    {
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString("location.hostname === '127.0.0.1'", $blade);
+        $this->assertStringContainsString("location.replace('http://localhost:8000'", $blade);
+        $this->assertStringContainsString('location.hash.slice(1)', $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
