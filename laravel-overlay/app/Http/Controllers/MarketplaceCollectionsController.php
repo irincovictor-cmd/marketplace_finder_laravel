@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SavedListing;
 use App\Models\WatchlistEntry;
+use App\Services\WatchlistMatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -49,9 +50,45 @@ class MarketplaceCollectionsController extends Controller
         return response()->json(['deleted' => true]);
     }
 
-    public function watchlistIndex(): JsonResponse
+    public function watchlistIndex(Request $request, WatchlistMatchService $matcher): JsonResponse
     {
-        return response()->json(['items' => WatchlistEntry::orderBy('keyword')->limit(250)->get()]);
+        $data = $request->validate(['page' => ['nullable', 'integer', 'min:1']]);
+        $page = WatchlistEntry::query()->orderBy('keyword')->paginate(20, ['*'], 'page', (int) ($data['page'] ?? 1));
+
+        return response()->json([
+            'items' => collect($page->items())->map(function (WatchlistEntry $watch) use ($matcher) {
+                $row = $watch->toArray();
+                $row['match_count'] = $matcher->count($watch);
+                return $row;
+            })->values(),
+            'page' => $page->currentPage(),
+            'pages' => $page->lastPage(),
+            'total' => $page->total(),
+        ]);
+    }
+
+    public function watchlistMatches(Request $request, WatchlistEntry $watchlistEntry, WatchlistMatchService $matcher): JsonResponse
+    {
+        $data = $request->validate(['page' => ['nullable', 'integer', 'min:1']]);
+        $page = $matcher->query($watchlistEntry)->paginate(12, ['*'], 'page', (int) ($data['page'] ?? 1));
+
+        return response()->json([
+            'watchlist' => $watchlistEntry->only(['id', 'keyword', 'max_price', 'enabled']),
+            'items' => collect($page->items())->map(fn ($item) => [
+                'id' => $item->id,
+                'title' => $item->title,
+                'price' => (float) $item->price,
+                'city' => $item->city,
+                'url' => $item->listing_url,
+                'image_url' => $item->image_url,
+                'last_seen_at' => $item->last_seen_at?->toIso8601String(),
+                'manual_status' => $item->manual_status,
+            ])->values(),
+            'page' => $page->currentPage(),
+            'pages' => $page->lastPage(),
+            'total' => $page->total(),
+            'source' => 'local_sqlite',
+        ]);
     }
 
     public function saveWatchlist(Request $request): JsonResponse
