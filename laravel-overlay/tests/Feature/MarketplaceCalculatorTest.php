@@ -206,6 +206,27 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString("settings:'/settings'", $html);
     }
 
+    public function test_paid_discovery_and_free_archive_have_separate_explicit_modes(): void
+    {
+        $this->get('/discover')->assertOk()
+            ->assertSee('id="modeArchive"', false)
+            ->assertSee('id="modeScan"', false)
+            ->assertSee('id="scanWorkspace" hidden', false)
+            ->assertSee('id="archiveWorkspace"', false)
+            ->assertSee('FREE · NO API CHARGES', false)
+            ->assertSee('APIFY · PAID REQUESTS', false)
+            ->assertSee('id="paidScan"', false);
+
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString("function setDiscoveryMode(mode", $blade);
+        $this->assertStringContainsString("setDiscoveryMode('scan');", $blade);
+        $this->assertStringContainsString("document.getElementById('scanWorkspace').hidden=mode!=='scan';", $blade);
+        $this->assertTrue(strpos($blade,'id="scanWorkspace"') < strpos($blade,'id="archiveWorkspace"'));
+        $this->assertTrue(strpos($blade,'id="archiveWorkspace"') < strpos($blade,'id="listingResults"'));
+        $this->assertSame(1, substr_count($blade,'id="scanButton"'));
+        $this->assertSame(1, substr_count($blade,'id="historySearchButton"'));
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
