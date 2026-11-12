@@ -31,9 +31,10 @@ class ListingFilterAuditService
     public function reasons(DiscoveredListing $listing, array $filters, ?CarbonInterface $cutoff = null): array
     {
         $reasons = [];
-        if ($listing->location_status === 'outside') {
+        $effectiveLocation = $listing->manual_location ?? $listing->location_status;
+        if ($effectiveLocation === 'outside') {
             $reasons[] = 'outside_bohol';
-        } elseif ($listing->location_status !== 'bohol') {
+        } elseif ($effectiveLocation !== 'bohol') {
             $reasons[] = 'unverified_location';
         }
         if ($listing->listing_intent !== 'reviewable') {
@@ -92,8 +93,11 @@ class ListingFilterAuditService
             'location_text' => $listing->location_text,
             'latitude' => $listing->latitude === null ? null : (float) $listing->latitude,
             'longitude' => $listing->longitude === null ? null : (float) $listing->longitude,
-            'location_status' => $listing->location_status,
-            'location_reason' => $place['reason'],
+            'location_status' => $listing->manual_location ?? $listing->location_status,
+            'automatic_location_status' => $listing->location_status,
+            'manual_location' => $listing->manual_location,
+            'manual_location_reviewed_at' => $listing->manual_location_reviewed_at?->toIso8601String(),
+            'location_reason' => $listing->manual_location ? 'Manually reviewed (' . $listing->manual_location . '); original: ' . $place['reason'] : $place['reason'],
             'listing_intent' => $listing->listing_intent,
             'manual_status' => $listing->manual_status,
             'intent_reason' => $intent['reason'],
