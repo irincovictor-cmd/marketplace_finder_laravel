@@ -15,10 +15,7 @@ class WatchlistMatchService
 {
     public function query(WatchlistEntry $watch): Builder
     {
-        $query = DiscoveredListing::query()
-            ->where('location_status', 'bohol')
-            ->where('listing_intent', 'reviewable')
-            ->whereIn('manual_status', ['unverified', 'available']);
+        $query = DiscoveredListing::query()->activeBohol();
 
         if (! $watch->enabled) {
             return $query->whereRaw('1 = 0');
