@@ -122,6 +122,7 @@ class MarketplaceCalculatorTest extends TestCase
             '/activity-logs' => 'Activity logs',
             '/rejected-listings' => 'Rejected listings',
             '/availability-history' => 'Availability history',
+            '/settings' => 'Settings',
         ];
         foreach ($paths as $path => $content) {
             $this->get($path)->assertOk()->assertSee($content);
@@ -161,6 +162,24 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString("location.hostname === '127.0.0.1'", $blade);
         $this->assertStringContainsString("location.replace('http://localhost:8000'", $blade);
         $this->assertStringContainsString('location.hash.slice(1)', $blade);
+    }
+
+    public function test_api_key_has_dedicated_settings_route_and_scan_is_above_archive(): void
+    {
+        $this->get('/settings')->assertOk()
+            ->assertSee('id="view-settings"', false)
+            ->assertSee('href="/settings"', false)
+            ->assertSee('id="apiKeySettings"', false)
+            ->assertSee('id="apiKeyInput"', false)
+            ->assertSee('id="apiKeyRemove"', false);
+
+        $html = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertSame(1, substr_count($html, 'id="scanSettings"'));
+        $this->assertSame(1, substr_count($html, 'id="apiKeySettings"'));
+        $this->assertTrue(strpos($html, 'id="scanSettings"') < strpos($html, 'id="listingResults"'));
+        $this->assertTrue(strpos($html, 'id="listingResults"') < strpos($html, 'id="view-settings"'));
+        $this->assertTrue(strpos($html, 'id="view-settings"') < strpos($html, 'id="apiKeySettings"'));
+        $this->assertStringContainsString("settings:'/settings'", $html);
     }
 
     public function test_profit_and_roi_are_computed_on_server(): void
