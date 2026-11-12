@@ -484,6 +484,12 @@ async function loadRejectedListings(){
    const reasons=document.createElement('p');
    reasons.textContent='Excluded because: '+item.reason_labels.join(' · ');
    reasons.style.color='var(--orange)';row.append(reasons);
+   if(item.automatic_location_status==='verify'||item.manual_location){
+    const tip=document.createElement('p');tip.className='muted';
+    tip.textContent='Carmen and similar town names may exist in multiple provinces. Check the original Facebook listing before confirming a location.';
+    row.append(tip);
+    row.append(makeLocationReviewControl(item,async()=>{rejectedPage=1;await loadRejectedListings()}));
+   }
    if(item.reasons.includes('outside_bohol')||item.reasons.includes('unverified_location')){
     const detail=document.createElement('small');detail.textContent='Location decision: '+item.location_reason;row.append(detail);
    }
@@ -630,6 +636,33 @@ const label=(text,cls)=>{const e=document.createElement('span');e.className=cls|
 const button=(title,callback)=>{const e=document.createElement('button');e.className='btn sm alt';e.type='button';e.textContent=title;e.addEventListener('click',callback);return e};
 const manualStatusNames={unverified:'Not verified',available:'Available (user tagged)',pending:'Pending / reserved',sold:'Sold',unavailable:'Unavailable / removed'};
 const hiddenManualStatuses=new Set(['pending','sold','unavailable']);
+function makeLocationReviewControl(item,onChanged){
+ const box=document.createElement('div');
+ box.style.cssText='margin-top:10px;padding-top:10px;border-top:1px solid var(--line)';
+ const labelEl=document.createElement('label');
+ labelEl.textContent='Location review (your confirmation, not Facebook-verified)';
+ const select=document.createElement('select');select.setAttribute('aria-label','Location review for '+item.title);
+ const options=[['auto','Use automatic assessment'],['bohol','I checked: Bohol'],['outside','I checked: outside Bohol']];
+ for(const [value,title] of options){const opt=document.createElement('option');opt.value=value;opt.textContent=title;select.append(opt)}
+ select.value=item.manual_location||'auto';
+ const info=document.createElement('small');info.className='muted';
+ info.textContent='Automatic assessment: '+(item.automatic_location_status||item.location_status||'unverified');
+ select.addEventListener('change',async()=>{
+  const previous=item.manual_location||'auto',decision=select.value;
+  if(decision!=='auto'&&!confirm('Have you checked the original Facebook listing location? This manually changes whether the item qualifies as Bohol.')){select.value=previous;return}
+  select.disabled=true;
+  try{
+   const result=await request('/listings/'+encodeURIComponent(item.id)+'/location-review','PATCH',{decision});
+   item.manual_location=result.manual_location;
+   item.location_status=result.location_status;
+   info.textContent='Saved your location review. Automatic evidence remains separately recorded.';
+   if(onChanged)await onChanged();
+  }catch(e){select.value=previous;info.textContent='Could not save location review: '+e.message}
+  finally{select.disabled=false}
+ });
+ box.append(labelEl,select,info);
+ return box;
+}
 function makeManualStatusControl(item,onChanged){
  const box=document.createElement('div');box.style.cssText='margin-top:12px;border-top:1px solid var(--line);padding-top:10px';
  const title=document.createElement('label');title.textContent='Your availability tag (not Facebook-verified)';
@@ -787,7 +820,9 @@ async function loadListings(){
   actions.append(button('♡ Save',async()=>{try{await request('/collections/saved','POST',{title:item.title,listing_url:item.url,price:item.price,city:item.city});alert('Saved to your collection')}catch(e){alert(e.message)}}));
  }else{actions.append(label('Listing link unavailable','muted'))}
  const availability=makeManualStatusControl(item,()=>loadListings());
- body.append(badge,h,price,city,actions,availability);card.append(art,body);box.append(card);
+ body.append(badge,h,price,city,actions,availability);
+ if(item.manual_location)body.append(makeLocationReviewControl(item,()=>loadListings()));
+ card.append(art,body);box.append(card);
  }
  }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message;logActivity('local_search_failed',{...safeFilters,error:String(e.message||'Request failed').slice(0,180)})}
  finally{searchButton.disabled=false;searchButton.textContent='Apply filters'}
