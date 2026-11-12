@@ -180,6 +180,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </form>
 <p class="muted" id="saveStatus" role="status"></p>
 <div id="savedItems" aria-live="polite"></div>
+<div class="log-actions"><button id="savedPrev" class="btn sm alt" type="button">Previous</button><span class="muted" id="savedPage" style="align-self:center"></span><button id="savedNext" class="btn sm alt" type="button">Next</button></div>
 </div>
 </section>
 <section class="view" id="view-watchlist" hidden>
@@ -731,10 +732,17 @@ function restoreLegacyImagesFromBrowser(){
  });
 }
 document.getElementById('restoreLegacyImages').addEventListener('click',restoreLegacyImagesFromBrowser);
+let savedPage=1,savedLastPage=1;
+document.getElementById('savedPrev').addEventListener('click',()=>{if(savedPage>1){savedPage--;loadSaved()}});
+document.getElementById('savedNext').addEventListener('click',()=>{if(savedPage<savedLastPage){savedPage++;loadSaved()}});
 async function loadSaved(){
  const box=document.getElementById('savedItems');box.replaceChildren();
  try{
- const data=await request('/collections/saved');
+ const data=await request('/collections/saved?page='+savedPage);
+ savedLastPage=data.pages;
+ document.getElementById('savedPage').textContent='Page '+data.page+' of '+data.pages+' · '+data.total+' saved';
+ document.getElementById('savedPrev').disabled=data.page<=1;
+ document.getElementById('savedNext').disabled=data.page>=data.pages;
  if(!data.items.length){box.append(label('No saved items yet. Save one from Find deals or paste a Facebook listing link.','muted'));return}
  for(const item of data.items){
   const row=document.createElement('div');row.className='storageitem';const info=document.createElement('div');
