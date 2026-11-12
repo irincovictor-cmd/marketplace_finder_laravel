@@ -68,6 +68,11 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div class="sectiontop"><h2 id="listingHeading">Bohol listings</h2><button type="button" id="showArchive" class="btn sm alt" hidden>Show all stored listings</button><span class="muted">Only Bohol-eligible listings</span></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
+<div class="log-actions" id="listingPager" hidden>
+<button class="btn sm alt" id="listingPrev" type="button">Previous</button>
+<span class="muted" id="listingPageInfo" style="align-self:center"></span>
+<button class="btn sm alt" id="listingNext" type="button">Next</button>
+</div>
 <div class="hint">Missing product photos from earlier scans? <button class="btn sm alt" type="button" id="restoreLegacyImages">Restore photos from classic FlipRadar</button> <span id="photoRestoreStatus" role="status" class="muted">Uses existing browser data only. No paid scan.</span></div>
 <div class="hint">Want new Facebook Marketplace offers? <button class="btn sm alt" type="button" id="openFreshScan">Get fresh results</button> Live scans use Apify and may cost money; you will always be asked before one runs.</div>
 <details class="settings" id="apiKeySettings">
@@ -561,6 +566,9 @@ document.getElementById('refreshStatusHistory').addEventListener('click',loadMan
 document.getElementById('statusPrev').addEventListener('click',()=>{if(manualHistoryPage>1){manualHistoryPage--;loadManualStatusHistory()}});
 document.getElementById('statusNext').addEventListener('click',()=>{if(manualHistoryPage<manualHistoryLastPage){manualHistoryPage++;loadManualStatusHistory()}});
 
+let listingPage=1,listingLastPage=1;
+document.getElementById('listingPrev').addEventListener('click',()=>{if(listingPage>1){listingPage--;loadListings()}});
+document.getElementById('listingNext').addEventListener('click',()=>{if(listingPage<listingLastPage){listingPage++;loadListings()}});
 async function loadListings(){
  const box=document.getElementById('listingResults');
  const feedback=document.getElementById('searchFeedback');
@@ -569,6 +577,7 @@ async function loadListings(){
  searchButton.textContent='Searching…';
  feedback.textContent='Checking your stored listings…';
  const p=new URLSearchParams();const search=document.getElementById('search').value.trim();
+ p.set('page',String(listingPage));p.set('per_page','24');
  if(lastScanBatch)p.set('batch',lastScanBatch);
  document.getElementById('listingHeading').textContent=lastScanBatch?'Latest scan — Bohol listings':'Bohol listings';
  document.getElementById('showArchive').hidden=!lastScanBatch;
@@ -576,6 +585,7 @@ async function loadListings(){
  const minimum=moneyRaw(document.getElementById('minPrice').value);
  const date=document.getElementById('foundWithinDays').value;
  if(minimum!==''&&budget!==''&&Number(minimum)>Number(budget)){
+  document.getElementById('listingPager').hidden=true;
   feedback.textContent='Minimum price cannot exceed maximum price. Previous results have been cleared; correct the price range to search.';
   box.replaceChildren();
   box.className='stack';
@@ -594,6 +604,11 @@ async function loadListings(){
  logActivity('local_search_started',safeFilters);
  try{
  const data=await request('/listings?'+p.toString());
+ listingLastPage=data.pages||1;
+ const pager=document.getElementById('listingPager');pager.hidden=(data.pages||1)<=1;
+ document.getElementById('listingPageInfo').textContent='Page '+data.page+' of '+data.pages+' · '+data.total+' matches';
+ document.getElementById('listingPrev').disabled=data.page<=1;
+ document.getElementById('listingNext').disabled=data.page>=data.pages;
  box.replaceChildren();
  const d=data.diagnostics||{};
  logActivity('local_search_completed',{...safeFilters,shown:data.items.length,totalArchived:d.stored_total||0,boholArchived:d.bohol_total||0,matchingFilters:d.matching_filters||0,excluded:d.hidden_outside_or_unknown||0});
@@ -659,6 +674,7 @@ document.getElementById('openFreshScan').addEventListener('click',showScanSettin
 document.getElementById('browseForm').addEventListener('submit',async e=>{
  e.preventDefault();
  lastScanBatch=null;
+ listingPage=1;
  await loadListings();
  // Never confuse a local archive filter with a paid provider scan.
  // The user may open Fresh Marketplace search manually if desired.
@@ -672,10 +688,11 @@ function clearFilters(){
  document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category==='')));
  toggleExtraFilters(false);rememberFilters();
 }
-document.getElementById('resetFilters').addEventListener('click',()=>{clearFilters();lastScanBatch=null;loadListings()});
-document.getElementById('showArchive').addEventListener('click',()=>{lastScanBatch=null;loadListings()});
+document.getElementById('resetFilters').addEventListener('click',()=>{clearFilters();lastScanBatch=null;listingPage=1;loadListings()});
+document.getElementById('showArchive').addEventListener('click',()=>{lastScanBatch=null;listingPage=1;loadListings()});
 document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{
  category=b.dataset.category;
+ listingPage=1;
  document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
  loadListings();
 }));
@@ -928,6 +945,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  document.getElementById('sort').value=data.sort_by==='price_ascend'?'price_low':data.sort_by==='price_descend'?'price_high':'newest';
  document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));
  lastScanBatch=outcome.scan_batch;
+ listingPage=1;
  await loadListings();
  document.getElementById('listingHeading').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(error){
