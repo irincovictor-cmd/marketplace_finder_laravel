@@ -58,6 +58,11 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 .results-header h2{margin:3px 0}
 .results-header p{margin:4px 0 0;font-size:12px}
 @media(max-width:640px){.discovery-workflows{grid-template-columns:1fr}.workflow-option{padding:14px 16px}.results-header{align-items:flex-start;flex-direction:column}}
+.scan-result-filter{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:16px;margin-bottom:8px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.scan-result-filter[hidden]{display:none!important}
+.scan-result-filter .chip{white-space:normal}
+.scan-result-filter .muted:last-child{margin-left:auto}
+@media(max-width:640px){.scan-result-filter .muted:last-child{margin-left:0}}
 </style>
 </head>
 <body>
@@ -95,14 +100,20 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <p>Scanning uses a third-party Apify actor and may incur charges. Manage your key under Settings → Apify API key. Each scan still requires separate cost approval. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
 <form id="scanForm">
 <div class="grid3">
-<label>Search keyword (optional)<input name="keyword" placeholder="Blank = broad browse" maxlength="80"></label>
+<label>Search keyword (optional)<input name="keyword" placeholder="Blank = category-based searches" maxlength="80"></label>
 <label>Area radius<select name="radius_km"><option value="20">20 km</option><option value="40" selected>40 km</option><option value="60">60 km</option></select></label>
 <label>Order from provider<select name="sort_by"><option value="creation_time_descend">Newest</option><option value="price_ascend">Lowest price</option><option value="price_descend">Highest price</option><option value="distance_ascend">Nearest</option></select></label>
 <label>Minimum price (₱)<input name="min_price" type="text" inputmode="decimal" data-money="true" placeholder="Any minimum"></label>
 <label>Maximum price (₱)<input name="max_price" type="text" inputmode="decimal" data-money="true" placeholder="Any maximum"></label>
+<label>Search coverage (number of Apify requests)
+<select name="coverage" id="scanCoverage">
+<option value="quick" selected>Quick · up to 2 searches</option>
+<option value="balanced">Balanced · up to 4 searches</option>
+<option value="broad">Broad · up to 6 searches</option>
+</select></label>
 <label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
 </div>
-<p class="muted">A blank keyword uses a small sample of category-related search terms, not the complete Facebook Marketplace inventory.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
+<p class="muted">A blank keyword searches a limited set of terms selected by coverage. More keywords can increase provider charges, but none guarantees complete Facebook coverage.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
 <label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run approved searches</button>
 </form>
@@ -143,6 +154,12 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <p class="muted" style="margin:10px 4px 0">Applying these filters uses locally archived listings only. Choose “Find new Facebook listings” above to request another scan.</p>
 </div>
 <div class="results-header"><div><span class="eyebrow">Listing results</span><h2>Matching Bohol listings</h2><p id="resultsExplanation">These are listings already stored in your archive. Viewing them does not cost money.</p></div><button type="button" class="btn sm alt" id="switchToArchive" hidden>Browse archive</button></div>
+<div class="scan-result-filter" id="scanResultFilter" hidden>
+<span class="muted">Latest scan results</span>
+<button type="button" id="scanOnlyNew" class="chip" aria-pressed="true">New discoveries only</button>
+<button type="button" id="scanAllSeen" class="chip" aria-pressed="false">All seen in this scan</button>
+<span class="muted" id="scanFilterHelp">Rediscovered archived items are hidden.</span>
+</div>
 <div class="sectiontop"><h2 id="listingHeading">Bohol listings</h2>Bohol listings</h2><button type="button" id="showArchive" class="btn sm alt" hidden>Show all stored listings</button><span class="muted">Only Bohol-eligible listings</span></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
@@ -388,7 +405,8 @@ function rejectedSearchParams(){
   if(min!=='')p.set('min_price',min);
   if(max!=='')p.set('max_price',max);
   if(days)p.set('found_within_days',days);
-  if(lastScanBatch)p.set('batch',lastScanBatch);
+  if(lastScanBatch){p.set('batch',lastScanBatch);p.set('batch_scope',batchScope)}
+ syncBatchScope();
  }else if(mode==='batch'&&lastScanBatch){
   p.set('batch',lastScanBatch);
  }
@@ -672,6 +690,22 @@ document.getElementById('statusNext').addEventListener('click',()=>{if(manualHis
 let listingPage=1,listingLastPage=1;
 document.getElementById('listingPrev').addEventListener('click',()=>{if(listingPage>1){listingPage--;loadListings()}});
 document.getElementById('listingNext').addEventListener('click',()=>{if(listingPage<listingLastPage){listingPage++;loadListings()}});
+let batchScope='new';
+function syncBatchScope(){
+ const enabled=Boolean(lastScanBatch);
+ document.getElementById('scanResultFilter').hidden=!enabled;
+ document.getElementById('scanOnlyNew').setAttribute('aria-pressed',String(batchScope==='new'));
+ document.getElementById('scanAllSeen').setAttribute('aria-pressed',String(batchScope==='all'));
+ document.getElementById('scanFilterHelp').textContent=batchScope==='new'
+  ?'Only listings first discovered in this scan.'
+  :'Includes previously archived listings rediscovered by this scan.';
+}
+document.getElementById('scanOnlyNew').addEventListener('click',()=>{
+ batchScope='new';listingPage=1;loadListings();
+});
+document.getElementById('scanAllSeen').addEventListener('click',()=>{
+ batchScope='all';listingPage=1;loadListings();
+});
 async function loadListings(){
  const box=document.getElementById('listingResults');
  const feedback=document.getElementById('searchFeedback');
@@ -682,7 +716,7 @@ async function loadListings(){
  const p=new URLSearchParams();const search=document.getElementById('search').value.trim();
  p.set('page',String(listingPage));p.set('per_page','24');
  if(lastScanBatch)p.set('batch',lastScanBatch);
- document.getElementById('listingHeading').textContent=lastScanBatch?'Latest scan — Bohol listings':'Bohol listings';
+ document.getElementById('listingHeading').textContent=lastScanBatch?(batchScope==='new'?'New Bohol discoveries':'All Bohol listings seen in scan'):'Bohol listings';
  document.getElementById('showArchive').hidden=!lastScanBatch;
  const budget=moneyRaw(document.getElementById('budget').value);
  const minimum=moneyRaw(document.getElementById('minPrice').value);
@@ -718,7 +752,7 @@ async function loadListings(){
  if(!data.items.length){
  const zeroStored=(d.stored_total||0)===0;
  const noBohol=(d.bohol_total||0)===0;
- const reason=zeroStored?'No scans have archived any listings yet.':noBohol?'Archived listings exist, but none currently have enough Bohol location evidence.':'There are Bohol listings in the archive, but your selected filters excluded all of them.';
+ const reason=zeroStored?'No scans have archived any listings yet.':lastScanBatch&&batchScope==='new'?'No newly discovered Bohol-eligible listings match this scan. Try All seen in this scan, or review the rejected location records.':noBohol?'Archived listings exist, but none currently have enough Bohol location evidence.':'There are Bohol listings in the archive, but your selected filters excluded all of them.';
  feedback.textContent=reason+' '+(d.hidden_outside_or_unknown||0)+' out-of-area/unverified records hidden.';
  box.className='stack';const empty=document.createElement('div');empty.className='empty';const heading=document.createElement('strong');heading.textContent=zeroStored?'No scanned listings yet':noBohol?'No Bohol listings confirmed from metadata':'No matches with the current filters';const msg=document.createElement('p');msg.textContent=reason+' A blank search term means all models in the selected category; it does not trigger a paid scan.';
  const external=document.createElement('a');
@@ -1005,6 +1039,7 @@ async function refreshScanPlan(){
  const params=new URLSearchParams();
  const keyword=form.elements.namedItem('keyword').value.trim();
  const selected=form.elements.namedItem('category').value||'All';
+ params.set('coverage',form.elements.namedItem('coverage').value);
  if(keyword)params.set('keyword',keyword);
  params.set('category',selected);
  const node=document.getElementById('scanPlanPreview');
@@ -1012,10 +1047,10 @@ async function refreshScanPlan(){
  try{
   const plan=await request('/marketplace/scan-plan?'+params.toString());
   activeScanPlan=plan;
-  node.textContent='Planned '+plan.requests+' potentially billable Apify request(s): '+plan.terms.join(', ')+'. '+plan.coverage_note;
+  node.textContent='Planned '+plan.requests+' potentially billable Apify request(s): '+plan.terms.join(', ')+'. '+plan.coverage_note+' '+plan.billing_note;
  }catch(error){node.textContent='Unable to preview scan plan: '+error.message}
 }
-document.querySelectorAll('#scanForm input[name="keyword"], #scanForm select[name="category"]').forEach(input=>input.addEventListener('change',refreshScanPlan));
+document.querySelectorAll('#scanForm input[name="keyword"], #scanForm select[name="category"], #scanForm select[name="coverage"]').forEach(input=>input.addEventListener('change',refreshScanPlan));
 document.getElementById('scanSettings').addEventListener('toggle',()=>{if(document.getElementById('scanSettings').open)refreshScanPlan()});
 let scanInFlight=false;
 document.getElementById('scanForm').addEventListener('submit',async e=>{
@@ -1047,7 +1082,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
   new:outcome.new_count,previouslySeen:outcome.previously_seen_count,terms:outcome.planned_terms,failedTerms:outcome.failed_terms,
   bohol:outcome.diagnostics?.bohol_count??null,
   outside:outcome.diagnostics?.outside_count??null,unverified:outcome.diagnostics?.unverified_count??null});
- status.textContent=outcome.completed_requests+' keyword request(s) completed: '+outcome.raw_count+' raw items, '+outcome.returned+' unique normalized listings, '+(outcome.diagnostics?.bohol_count??'?')+' with Bohol location evidence ('+outcome.new_count+' newly archived, '+outcome.previously_seen_count+' previously known). '+(outcome.failed_terms.length?'Failed terms: '+outcome.failed_terms.join(', ')+'. ':'')+'The cards show only the matching local sale listings, not every raw provider item.';
+ status.textContent=outcome.completed_requests+' keyword request(s) completed: '+outcome.raw_count+' raw items, '+outcome.returned+' unique normalized listings, '+(outcome.diagnostics?.bohol_count??'?')+' with Bohol location evidence. '+outcome.new_count+' new to archive, '+outcome.previously_seen_count+' rediscovered. '+(outcome.failed_terms.length?'Failed terms: '+outcome.failed_terms.join(', ')+'. ':'')+'Deal cards below show new Bohol-eligible listings only unless you choose All seen in scan.';
  // Keep visible filters aligned with the scan just requested, not older
  // browser preferences that could hide every result from the new batch.
  category=data.category||'';
@@ -1058,9 +1093,10 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  document.getElementById('sort').value=data.sort_by==='price_ascend'?'price_low':data.sort_by==='price_descend'?'price_high':'newest';
  document.querySelectorAll('[data-category]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.category===category)));
  lastScanBatch=outcome.scan_batch;
+ batchScope='new';
  listingPage=1;
  await loadListings();
- document.getElementById('resultsExplanation').textContent='Showing Bohol-eligible matches from your latest approved scan. You can view your full archive using “Show all stored listings”.';
+ document.getElementById('resultsExplanation').textContent='New listings first discovered in the latest scan appear here. Choose “All seen in this scan” to include previously known items.';
  document.getElementById('listingHeading').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(error){
   status.textContent=error.message;
