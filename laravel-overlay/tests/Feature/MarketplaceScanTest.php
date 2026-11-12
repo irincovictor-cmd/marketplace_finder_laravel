@@ -264,7 +264,8 @@ class MarketplaceScanTest extends TestCase
         $this->getJson('/listings?batch='.$b.'&batch_scope=all')->assertOk()
             ->assertJsonCount(2, 'items');
         $this->getJson('/listings?batch='.$a.'&batch_scope=new')->assertOk()
-            ->assertJsonCount(0, 'items'); // Listing is now last-seen in a newer scan, but retains first batch.
+            ->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.title', 'ASUS laptop'); // Historical discovery remains linked to original scan.
         $this->assertDatabaseCount('discovered_listings', 2);
         $this->assertDatabaseHas('discovered_listings', ['title' => 'ASUS laptop', 'first_scan_batch' => $a, 'last_scan_batch' => $b]);
         $this->assertDatabaseHas('discovered_listings', ['title' => 'JBL speaker', 'first_scan_batch' => $b]);
