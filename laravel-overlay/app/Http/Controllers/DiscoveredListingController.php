@@ -25,8 +25,8 @@ class DiscoveredListingController extends Controller
         ]);
 
         $totalArchived = DiscoveredListing::query()->count();
-        $boholArchived = DiscoveredListing::query()->where('location_status', 'bohol')->count();
-        $query = DiscoveredListing::query()->where('location_status', 'bohol')
+        $boholArchived = DiscoveredListing::query()->whereRaw("COALESCE(manual_location, location_status) = 'bohol'")->count();
+        $query = DiscoveredListing::query()->whereRaw("COALESCE(manual_location, location_status) = 'bohol'")
             ->where('listing_intent', 'reviewable');
         $availability = $params['availability'] ?? 'active';
         if ($availability === 'active') {
@@ -71,7 +71,7 @@ class DiscoveredListingController extends Controller
         $query->orderByDesc('id');
 
         // Excluded records stay in SQLite for diagnostics, never shown as Bohol deals.
-        $hiddenCount = DiscoveredListing::query()->where('location_status', '!=', 'bohol')->count();
+        $hiddenCount = DiscoveredListing::query()->whereRaw("COALESCE(manual_location, location_status) != 'bohol'")->count();
 
         $page = $query->paginate((int) ($params['per_page'] ?? 24), ['*'], 'page', (int) ($params['page'] ?? 1));
         $matchingCount = $page->total();
@@ -82,7 +82,7 @@ class DiscoveredListingController extends Controller
                 'bohol_total' => $boholArchived,
                 'matching_filters' => $matchingCount,
                 'hidden_outside_or_unknown' => $hiddenCount,
-                'hidden_non_sale' => DiscoveredListing::query()->where('location_status', 'bohol')->where('listing_intent', '!=', 'reviewable')->count(),
+                'hidden_non_sale' => DiscoveredListing::query()->whereRaw("COALESCE(manual_location, location_status) = 'bohol'")->where('listing_intent', '!=', 'reviewable')->count(),
                 'hidden_manual_status' => DiscoveredListing::query()->where('location_status', 'bohol')->where('listing_intent', 'reviewable')->whereIn('manual_status', ['pending', 'sold', 'unavailable'])->count(),
                 'keyword_supplied' => filled($params['q'] ?? null),
                 'source' => 'local_sqlite',
@@ -99,7 +99,9 @@ class DiscoveredListingController extends Controller
                 'price' => (float) $item->price,
                 'city' => $item->city,
                 'province' => $item->province,
-                'location_status' => $item->location_status,
+                'location_status' => $item->manual_location ?? $item->location_status,
+                'automatic_location_status' => $item->location_status,
+                'manual_location' => $item->manual_location,
                 'url' => $item->listing_url,
                 'image_url' => $item->image_url,
                 'category' => $item->category,
@@ -130,6 +132,32 @@ class DiscoveredListingController extends Controller
             'manual_status' => $listing->manual_status,
             'manual_status_updated_at' => $listing->manual_status_updated_at?->toIso8601String(),
             'source' => 'user_reported',
+        ]);
+    }
+
+    /**
+     * A local user's review after checking the original Marketplace location.
+     * An automatic scan never overwrites this review. Use auto to undo.
+     * Only ambiguous (not expressly outside) records may be verified as Bohol.
+     */
+    public function reviewLocation(Request $request, DiscoveredListing $listing): JsonResponse
+    {
+        $data = $request->validate([
+            'decision' => ['required', 'in:bohol,outside,auto'],
+        ]);
+        if ($data['decision'] === 'bohol' && $listing->location_status === 'outside') {
+            return response()->json(['message' => 'This record has conflicting outside-Bohol location evidence. It cannot be promoted without correcting the source evidence.'], 422);
+        }
+        $listing->manual_location = $data['decision'] === 'auto' ? null : $data['decision'];
+        $listing->manual_location_reviewed_at = $listing->manual_location === null ? null : now();
+        $listing->save();
+
+        return response()->json([
+            'id' => $listing->id,
+            'automatic_location_status' => $listing->location_status,
+            'manual_location' => $listing->manual_location,
+            'location_status' => $listing->manual_location ?? $listing->location_status,
+            'source' => 'user_review',
         ]);
     }
 
