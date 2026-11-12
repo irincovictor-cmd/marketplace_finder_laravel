@@ -8,7 +8,7 @@ use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
 
 // Laravel-native dashboard (first migration slice).
-Route::redirect('/', '/discover')->name('marketplace.home');
+Route::view('/', 'marketplace.dashboard')->name('marketplace.home');
 
 // Distinct, bookmarkable Laravel page routes; the existing dashboard shell
 // switches sections client-side without a full reload after navigation.
