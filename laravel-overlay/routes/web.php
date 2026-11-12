@@ -8,17 +8,27 @@ use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
 
 // Laravel-native dashboard (first migration slice).
-Route::view('/', 'marketplace.dashboard')->name('marketplace.home');
-
-// Distinct, bookmarkable Laravel page routes; the existing dashboard shell
-// switches sections client-side without a full reload after navigation.
-Route::view('/discover', 'marketplace.dashboard')->name('marketplace.discover');
-Route::view('/saved-items', 'marketplace.dashboard')->name('marketplace.saved-items');
-Route::view('/watchlist', 'marketplace.dashboard')->name('marketplace.watchlist');
-Route::view('/profit-calculator', 'marketplace.dashboard')->name('marketplace.profit-calculator');
-Route::view('/activity-logs', 'marketplace.dashboard')->name('marketplace.activity-logs');
-Route::view('/rejected-listings', 'marketplace.dashboard')->name('marketplace.rejected-listings');
-Route::view('/availability-history', 'marketplace.dashboard')->name('marketplace.availability-history');
+// All dashboard entry routes use friendly localhost URLs in local development.
+// Redirect only GET dashboard pages; never redirect JSON API requests or paid POSTs.
+$dashboardPages = [
+    '/' => 'home',
+    '/discover' => 'discover',
+    '/saved-items' => 'saved-items',
+    '/watchlist' => 'watchlist',
+    '/profit-calculator' => 'profit-calculator',
+    '/activity-logs' => 'activity-logs',
+    '/rejected-listings' => 'rejected-listings',
+    '/availability-history' => 'availability-history',
+];
+foreach ($dashboardPages as $path => $name) {
+    Route::get($path, function (\Illuminate\Http\Request $request) {
+        if ($request->getHost() === '127.0.0.1' && $request->getPort() === 8000) {
+            $targetPath = $request->path() === '/' ? '/' : '/'.$request->path();
+            return redirect('http://localhost:8000'.$targetPath.($request->getQueryString() ? '?'.$request->getQueryString() : ''));
+        }
+        return view('marketplace.dashboard');
+    })->name('marketplace.'.$name);
+}
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
 Route::get('/listings/manual-status-history', [DiscoveredListingController::class, 'manualStatusHistory'])->name('marketplace.listings.status-history');
