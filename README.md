@@ -1,3 +1,9 @@
+## New discoveries versus rediscovered listings and blank-keyword coverage
+
+**Newly discovered** means an item was first added to the SQLite archive in this scan; **rediscovered** means the scan found an item already archived. On a completed scan, the results default to **New discoveries only**; select **All seen in this scan** to include older items found again. The immutable `first_scan_batch` column tracks first discovery separately from `last_scan_batch`, so later scans update listing details without changing original discovery history or manual availability tags. Existing archived records have no backfilled first-batch ID and will not be falsely marked new.
+
+A blank keyword is NOT an exhaustive Facebook category feed. The scan plan now offers **Quick** (2 terms, default), **Balanced** (4), and **Broad** (6), shown explicitly in the free preview and confirmation before each paid scan. An entered keyword still results in just one request regardless of coverage. The provider currently returns at most 60 results on one page from the last seven days *per term*; only records with sufficient Bohol evidence pass the local deal filter. Adding terms may increase Apify costs and does not guarantee more local listings. No automatic paid scans are scheduled.
+
 ## Find deals search modes
 
 The Find deals page separates two distinct activities into selectable modes:
