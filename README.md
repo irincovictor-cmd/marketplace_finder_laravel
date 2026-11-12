@@ -1,3 +1,11 @@
+## Ambiguous Bohol towns and manual location reviews
+
+Municipalities such as **Carmen** exist in Bohol and Cebu. Facebook/Apify location state **PH-07** identifies Central Visayas, not Bohol specifically. An ambiguous town plus PH-07 with no reliable Bohol-specific province or coordinates must remain **unverified**—never auto-approve all "Carmen" results.
+
+The **Rejected listings** inspector now offers **Location review** for ambiguous automatically unverified records. After opening the original Facebook listing and confirming its province, choose **I checked: Bohol**, **I checked: outside Bohol**, or **Use automatic assessment** (undo). A Bohol manual decision promotes the *specific listing* into eligible archived deals and Watchlist matching; explicit outside-province/contradictory automatic records cannot be force-promoted. The automatic result is preserved in `location_status` and user decision in `manual_location` with a timestamp, so a new scan does not silently clear an intentional user review. Items verified as Bohol expose an undo control on their Find deals card; items confirmed outside remain in the rejected inspector. The inspector reports the effective classification and its origin.
+
+This is a user-reported review, not proof independently verified by Facebook or Apify. No paid requests are made. Existing records remain in SQLite.
+
 ## New discoveries versus rediscovered listings and blank-keyword coverage
 
 **Newly discovered** means an item was first added to the SQLite archive in this scan; **rediscovered** means the scan found an item already archived. On a completed scan, the results default to **New discoveries only**; select **All seen in this scan** to include older items found again. The immutable `first_scan_batch` column tracks first discovery separately from `last_scan_batch`, so later scans update listing details without changing original discovery history or manual availability tags. Existing archived records have no backfilled first-batch ID and will not be falsely marked new.
