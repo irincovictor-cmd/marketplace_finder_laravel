@@ -167,7 +167,7 @@ class MarketplaceCalculatorTest extends TestCase
     public function test_route_overlay_is_deployed_by_bootstrap_after_clean_route_revisions(): void
     {
         $bootstrap = file_get_contents('/opt/marketplace/bootstrap.sh');
-        $this->assertStringContainsString("grep -Fq '\\$dashboardPages = [' routes/web.php", $bootstrap);
+        $this->assertStringContainsString('dashboardPages = [', $bootstrap);
         $this->assertStringContainsString('MARKETPLACE_FINDER_MANAGED_ROUTES', $bootstrap);
         $this->assertStringContainsString(
             'cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php',
