@@ -244,6 +244,15 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString("params.set('coverage'", $blade);
     }
 
+    public function test_rejected_listings_support_manual_location_review_ui(): void
+    {
+        $this->get('/rejected-listings')->assertOk()
+            ->assertSee('function makeLocationReviewControl(', false)
+            ->assertSee('I checked: Bohol')
+            ->assertSee('Use automatic assessment')
+            ->assertSee("'/location-review'", false);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
