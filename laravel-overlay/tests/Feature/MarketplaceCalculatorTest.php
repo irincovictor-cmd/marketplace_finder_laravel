@@ -227,6 +227,23 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertSame(1, substr_count($blade,'id="historySearchButton"'));
     }
 
+    public function test_new_scan_results_are_distinct_from_rediscovered_items_and_coverage_is_explicit(): void
+    {
+        $this->get('/discover')->assertOk()
+            ->assertSee('id="scanCoverage"', false)
+            ->assertSee('Quick · up to 2 searches', false)
+            ->assertSee('Balanced · up to 4 searches', false)
+            ->assertSee('Broad · up to 6 searches', false)
+            ->assertSee('id="scanOnlyNew"', false)
+            ->assertSee('id="scanAllSeen"', false)
+            ->assertSee('id="scanResultFilter" hidden', false);
+
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString("p.set('batch_scope',batchScope)", $blade);
+        $this->assertStringContainsString("batchScope='new'", $blade);
+        $this->assertStringContainsString("params.set('coverage'", $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
