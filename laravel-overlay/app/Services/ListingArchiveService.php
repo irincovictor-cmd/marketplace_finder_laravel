@@ -27,6 +27,7 @@ class ListingArchiveService
             $record = DiscoveredListing::firstOrNew(['source_key' => $key]);
             if (! $record->exists) {
                 $record->first_seen_at = now();
+                $record->first_scan_batch = $scanBatch;
             }
             $status = $this->location->assess(
                 $item['city'] ?? null,
