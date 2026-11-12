@@ -1,3 +1,7 @@
+## Preferred local URL
+
+Use **http://localhost:8000/discover** as the canonical development entry point. Sidebar navigation uses relative clean paths such as `/watchlist` and `/saved-items`, so the hostname stays `localhost`. The Docker host binding `127.0.0.1:8000:8000` is intentionally retained for loopback-only security; it does not force the browser to display `127.0.0.1`. Both aliases reach the same SQLite backend, but their browser storage and cookies are separate. For consistent preferences, open the app through `localhost` only. Legacy hash links remain supported.
+
 ## Clean Laravel URLs (named page routes)
 
 Marketplace Finder now uses bookmarkable Laravel page routes instead of basic hash URLs:
@@ -67,7 +71,7 @@ docker compose up -d --build
 docker compose logs -f app
 ```
 
-Open http://localhost:8000 for the new Blade dashboard and PHP-backed calculator. The original FlipRadar still works at http://localhost:8000/flipradar/index.html. If you modified `routes/web.php` yourself, the bootstrap script preserves it instead of replacing it.
+Open http://localhost:8000/discover for the new Blade dashboard and PHP-backed calculator. The original FlipRadar still works at http://localhost:8000/flipradar/index.html. If you modified `routes/web.php` yourself, the bootstrap script preserves it instead of replacing it.
 
 The first boot provisions a Laravel 13 skeleton into `laravel/`, creates a local SQLite database, installs Composer dependencies, and runs migrations. On every boot, it also syncs the tracked static compatibility frontend from `legacy/` to `laravel/public/flipradar/`, plus the new PHP/Blade overlay from `laravel-overlay/`. The node service installs frontend dependencies and starts Vite on Docker's internal network. Port 5173 is intentionally not published to Windows because the current Blade dashboard and legacy UI do not require Vite browser hot reload. The app remains at http://localhost:8000. Browser HMR will be configured explicitly when moving the dashboard styles/scripts to Vite.
 
@@ -78,7 +82,7 @@ The first boot provisions a Laravel 13 skeleton into `laravel/`, creates a local
 # From the project root after docker compose up -d --build:
 docker compose exec -T app php artisan route:list
 docker compose exec -T app php artisan test --filter=MarketplaceCalculatorTest
-curl -I http://localhost:8000/
+curl -I http://localhost:8000/discover
 ```
 
 The dashboard is a working Blade page with SQLite-backed archived listings and browser-side controls calling server-side filters. The calculator calls POST `/calculator/estimate` on Laravel with CSRF protection. A **separate, disabled-by-default** live scan panel calls POST `/marketplace/scan` only after a checkbox and native browser confirmation. No paid Apify requests occur at page load, build, or test time.
@@ -150,7 +154,7 @@ docker compose exec -T app php artisan test
 
 ## Phase 5: simpler discovery workflow
 
-Open http://localhost:8000 and use the four primary sections:
+Open http://localhost:8000/discover and use the four primary sections:
 
 1. **Find deals** — browse previously discovered, identifiable listings; filter by keyword, price and category; sort by price or recency; save real Facebook listing URLs.
 2. **Saved items** — open or remove manually saved listings.
@@ -197,7 +201,7 @@ Then restart the app container:
 docker compose restart app
 ```
 
-Visit http://localhost:8000, scroll to **Live Marketplace scan**, review the warning, and confirm a single request. At most two attempts per minute are allowed on the backend. The actor token is sent in the server-side Authorization header, not in the browser or query string.
+Visit http://localhost:8000/discover, scroll to **Live Marketplace scan**, review the warning, and confirm a single request. At most two attempts per minute are allowed on the backend. The actor token is sent in the server-side Authorization header, not in the browser or query string.
 
 **Limitations:** Returned items are basic raw-result mappings, *not* fully cleaned or independently verified results. The requested radius/sort may not be honored by the actor. Do not use these as guaranteed local deals. The original FlipRadar page still uses its old browser-side token handling, so prefer the new Laravel panel for any new token setup. The development endpoints bind to `127.0.0.1` only and do not implement user accounts; do **not** deploy this app publicly before authentication, secure scan authorization, spend limits and server-side rate limiting are reviewed.
 
