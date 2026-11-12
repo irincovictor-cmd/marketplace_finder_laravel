@@ -19,6 +19,7 @@ $dashboardPages = [
     '/activity-logs' => 'activity-logs',
     '/rejected-listings' => 'rejected-listings',
     '/availability-history' => 'availability-history',
+    '/settings' => 'settings',
 ];
 foreach ($dashboardPages as $path => $name) {
     Route::get($path, function (\Illuminate\Http\Request $request) {
