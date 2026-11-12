@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+<script>
+// Canonical browser address: old 127.0.0.1 bookmarks are moved to localhost.
+// Keep the original path, query and hash; the dashboard later converts #views
+// to proper Laravel page routes. No provider calls or local data changes.
+if (location.hostname === '127.0.0.1' && location.port === '8000') {
+  location.replace('http://localhost:8000' + location.pathname + location.search + location.hash);
+}
+</script>
 <title>Marketplace Finder — Find better deals</title>
 <style>
 :root{font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color-scheme:dark;--bg:#090f1c;--side:#0d1627;--panel:#121e31;--panel2:#19263a;--line:#2b3b52;--text:#f5f7fd;--muted:#a5b2c5;--orange:#ffb54d;--mint:#88e5c1;--red:#ff96a2}
