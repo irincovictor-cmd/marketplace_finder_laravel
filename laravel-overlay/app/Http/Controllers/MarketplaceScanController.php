@@ -40,6 +40,7 @@ class MarketplaceScanController extends Controller
         $data = $request->validate([
             'keyword' => ['nullable', 'string', 'min:2', 'max:80', 'regex:/^[a-zA-Z0-9 +._-]+$/'],
             'category' => ['nullable', 'in:All,Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+            'coverage' => ['nullable', 'in:quick,balanced,broad'],
             'min_price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'max_price' => ['nullable', 'integer', 'min:0', 'max:999999999'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
