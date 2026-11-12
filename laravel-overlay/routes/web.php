@@ -7,7 +7,7 @@ use App\Http\Controllers\MarketplaceCollectionsController;
 use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
 
-// Laravel-native dashboard (first migration slice).
+// MARKETPLACE_FINDER_MANAGED_ROUTES — generated dashboard routes maintained by the repository overlay.
 // All dashboard entry routes use friendly localhost URLs in local development.
 // Redirect only GET dashboard pages; never redirect JSON API requests or paid POSTs.
 $dashboardPages = [
