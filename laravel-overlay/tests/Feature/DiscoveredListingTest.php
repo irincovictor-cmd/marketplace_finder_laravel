@@ -303,4 +303,24 @@ class DiscoveredListingTest extends TestCase
         $this->getJson('/listings/manual-status-history')->assertOk()->assertJsonPath('total', 0);
     }
 
+    public function test_find_deals_paginates_all_archived_results_instead_of_truncating(): void
+    {
+        $rows = [];
+        for ($i = 1; $i <= 53; $i++) {
+            $rows[] = ['id' => 'paged-'.$i, 'title' => 'iPhone 13 listing '.$i,
+                'price' => 6000 + $i, 'city' => 'Dauis', 'url' => null];
+        }
+        app(ListingArchiveService::class)->store($rows);
+
+        $this->getJson('/listings?per_page=24&page=1')->assertOk()
+            ->assertJsonPath('total', 53)
+            ->assertJsonPath('pages', 3)
+            ->assertJsonPath('page', 1)
+            ->assertJsonCount(24, 'items');
+        $this->getJson('/listings?per_page=24&page=3')->assertOk()
+            ->assertJsonPath('total', 53)->assertJsonCount(5, 'items');
+        $this->getJson('/listings?per_page=1000')->assertUnprocessable();
+    }
+
+
 }
