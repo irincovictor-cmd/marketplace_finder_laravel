@@ -175,6 +175,19 @@ class MarketplaceCalculatorTest extends TestCase
         );
     }
 
+    public function test_dashboard_has_no_old_legacy_product_links_or_photo_restore_widget(): void
+    {
+        $this->get('/discover')->assertOk()
+            ->assertDontSee('Open classic FlipRadar')
+            ->assertDontSee('Need the original tools?')
+            ->assertDontSee('Restore photos from classic FlipRadar');
+
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringNotContainsString('id="restoreLegacyImages"', $blade);
+        $this->assertStringNotContainsString('id="photoRestoreStatus"', $blade);
+        $this->assertStringNotContainsString('href="/flipradar/index.html"', $blade);
+    }
+
     public function test_api_key_has_dedicated_settings_route_and_scan_is_above_archive(): void
     {
         $this->get('/settings')->assertOk()
