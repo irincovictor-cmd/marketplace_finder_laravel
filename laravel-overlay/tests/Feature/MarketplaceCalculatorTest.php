@@ -95,6 +95,23 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertDontSee('private-server-key-not-for-html');
     }
 
+    public function test_watchlist_matching_price_fields_and_listing_pagination_are_on_dashboard(): void
+    {
+        $this->get('/')->assertOk()
+            ->assertSee('id="watchMatchesPanel"', false)
+            ->assertSee('id="watchMatchNext"', false)
+            ->assertSee('id="listingPager"', false)
+            ->assertSee('id="listingNext"', false)
+            ->assertSee('data-money="true"', false)
+            ->assertSee('inputmode="decimal"', false);
+
+        $blade = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $this->assertStringContainsString('function formatPriceText(value)', $blade);
+        $this->assertStringContainsString('function formatPriceField(el)', $blade);
+        $this->assertStringContainsString("moneyRaw(payload[k])", $blade);
+        $this->assertStringContainsString("loadWatchMatches(", $blade);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
