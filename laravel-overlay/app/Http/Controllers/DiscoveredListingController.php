@@ -67,6 +67,7 @@ class DiscoveredListingController extends Controller
         $hiddenCount = DiscoveredListing::query()->where('location_status', '!=', 'bohol')->count();
 
         $matchingCount = (clone $query)->reorder()->count();
+        $page = $query->paginate((int) ($params['per_page'] ?? 24), ['*'], 'page', (int) ($params['page'] ?? 1));
 
         return response()->json([
             'diagnostics' => [
@@ -81,10 +82,11 @@ class DiscoveredListingController extends Controller
             ],
             'excluded_unverified' => $hiddenCount,
             'location_policy' => 'bohol_only',
-            'page' => (int) ($params['page'] ?? 1),
-            'per_page' => (int) ($params['per_page'] ?? 24),
-            'pages' => max(1, (int) ceil($matchingCount / (int) ($params['per_page'] ?? 24))),
-            'items' => $query->forPage((int) ($params['page'] ?? 1), (int) ($params['per_page'] ?? 24))->get()->map(fn ($item) => [
+            'page' => $page->currentPage(),
+            'per_page' => $page->perPage(),
+            'pages' => $page->lastPage(),
+            'total' => $page->total(),
+            'items' => collect($page->items())->map(fn ($item) => [
                 'id' => $item->id,
                 'title' => $item->title,
                 'price' => (float) $item->price,
