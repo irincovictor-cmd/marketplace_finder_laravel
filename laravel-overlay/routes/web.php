@@ -8,7 +8,17 @@ use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
 
 // Laravel-native dashboard (first migration slice).
-Route::view('/', 'marketplace.dashboard')->name('marketplace.dashboard');
+Route::redirect('/', '/discover')->name('marketplace.home');
+
+// Distinct, bookmarkable Laravel page routes; the existing dashboard shell
+// switches sections client-side without a full reload after navigation.
+Route::view('/discover', 'marketplace.dashboard')->name('marketplace.discover');
+Route::view('/saved-items', 'marketplace.dashboard')->name('marketplace.saved-items');
+Route::view('/watchlist', 'marketplace.dashboard')->name('marketplace.watchlist');
+Route::view('/profit-calculator', 'marketplace.dashboard')->name('marketplace.profit-calculator');
+Route::view('/activity-logs', 'marketplace.dashboard')->name('marketplace.activity-logs');
+Route::view('/rejected-listings', 'marketplace.dashboard')->name('marketplace.rejected-listings');
+Route::view('/availability-history', 'marketplace.dashboard')->name('marketplace.availability-history');
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
 Route::get('/listings/manual-status-history', [DiscoveredListingController::class, 'manualStatusHistory'])->name('marketplace.listings.status-history');
