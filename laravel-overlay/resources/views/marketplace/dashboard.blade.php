@@ -42,6 +42,22 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 .settings-panel .hint p{margin:6px 0 12px}
 .settings-note{font-size:12px;color:var(--mint);border:1px solid #285e51;border-radius:999px;padding:5px 10px}
 @media(max-width:640px){.scan-lead,.archive-lead{align-items:flex-start;flex-direction:column}.scan-lead>.btn{width:100%}.scan-panel{padding:14px!important}.scan-panel summary{gap:8px}.scan-chevron{margin-left:0}}
+/* Two distinct workflows, one shared listing-results area */
+.discovery-workflows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:26px 0 10px}
+.workflow-option{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:6px;padding:18px 20px;border-radius:16px;border:1px solid #41516b;background:#121e31;color:var(--text);transition:border-color .15s,background .15s}
+.workflow-option:hover{border-color:#8094b0;background:#19283f}
+.workflow-option.is-selected{border-color:#80d3b5;background:linear-gradient(115deg,#173333,#152638);box-shadow:inset 0 0 0 1px #356b62}
+.workflow-option strong{font-size:17px;line-height:1.3}
+.workflow-option small{font-size:12px;font-weight:400;color:#b7c6d9;line-height:1.5}
+.workflow-eyebrow{letter-spacing:.7px;font-size:10px;font-weight:900;color:var(--mint)}
+.workflow-eyebrow.paid{color:var(--orange)}
+.workflow-explanation{font-size:12px;color:var(--muted);padding:6px 2px 15px}
+#archiveWorkspace[hidden],#scanWorkspace[hidden]{display:none!important}
+#archiveWorkspace .archive-lead,#scanWorkspace .scan-lead{margin-top:6px}
+.results-header{margin:26px 0 10px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.results-header h2{margin:3px 0}
+.results-header p{margin:4px 0 0;font-size:12px}
+@media(max-width:640px){.discovery-workflows{grid-template-columns:1fr}.workflow-option{padding:14px 16px}.results-header{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -63,6 +79,16 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <main>
 <section class="view" id="view-discover">
 <div class="intro"><div class="eyebrow">Discover / Bohol</div><h1>Find your next great deal.</h1><p>Browse Bohol listings found in earlier scans, compare prices, and save promising deals.</p><span class="status">● Your workspace is ready</span></div>
+<div class="discovery-workflows" role="group" aria-label="Choose how to find deals">
+<button class="workflow-option is-selected" type="button" id="modeArchive" aria-pressed="true" aria-controls="archiveWorkspace">
+<span class="workflow-eyebrow">FREE · NO API CHARGES</span><strong>Browse collected listings</strong><small>Filter the deals you already have in your archive.</small>
+</button>
+<button class="workflow-option" type="button" id="modeScan" aria-pressed="false" aria-controls="scanWorkspace">
+<span class="workflow-eyebrow paid">APIFY · PAID REQUESTS</span><strong>Find new Facebook listings</strong><small>Scan for fresh offers, then save them to the archive.</small>
+</button>
+</div>
+<div class="workflow-explanation" id="workflowExplanation" role="status">Showing previously collected listings. Filters here are free and never contact Apify.</div>
+<div id="scanWorkspace" hidden>
 <div class="scan-lead"><div><span class="eyebrow">New discoveries</span><h2>Search Facebook Marketplace</h2><p>Fetch new listings only when you approve the Apify requests. Archived browsing below remains free.</p></div><a class="btn sm alt" href="/settings" data-view="settings">API key settings</a></div>
 <details class="settings scan-panel" id="scanSettings" open>
 <summary><span class="scan-heading">Fresh Marketplace search</span><span class="scan-tag">Paid provider · approval required</span><span class="scan-chevron">Configure search</span></summary>
@@ -82,6 +108,8 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 </form>
 <p id="scanStatus" role="status" class="muted">Review the plan and confirm explicitly before any paid search. API key: Settings → Apify API key.</p>
 </details>
+</div>
+<div id="archiveWorkspace">
 <div class="archive-lead"><div><span class="eyebrow">Your collection</span><h2>Browse archived Bohol deals</h2><p>Search and filter listings already stored in SQLite—no scan charges.</p></div></div>
 <div class="searchbox">
 <form id="browseForm">
@@ -112,8 +140,10 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <div class="filter-summary" id="filterSummary" role="status">Default: All categories · any price · recently found · Bohol only.</div>
 <button class="filter-toggle" id="resetFilters" type="button">Reset to defaults</button>
 </div>
-<p class="muted" style="margin:10px 4px 0">This searches results already collected on this PC. To look for new Facebook Marketplace listings, choose “Get fresh results” below.</p>
-<div class="sectiontop"><h2 id="listingHeading">Bohol listings</h2><button type="button" id="showArchive" class="btn sm alt" hidden>Show all stored listings</button><span class="muted">Only Bohol-eligible listings</span></div>
+<p class="muted" style="margin:10px 4px 0">Applying these filters uses locally archived listings only. Choose “Find new Facebook listings” above to request another scan.</p>
+</div>
+<div class="results-header"><div><span class="eyebrow">Listing results</span><h2>Matching Bohol listings</h2><p id="resultsExplanation">These are listings already stored in your archive. Viewing them does not cost money.</p></div><button type="button" class="btn sm alt" id="switchToArchive" hidden>Browse archive</button></div>
+<div class="sectiontop"><h2 id="listingHeading">Bohol listings</h2>Bohol listings</h2><button type="button" id="showArchive" class="btn sm alt" hidden>Show all stored listings</button><span class="muted">Only Bohol-eligible listings</span></div>
 <p id="searchFeedback" role="status" class="muted" style="margin:0 0 12px">Ready to search previously collected listings.</p>
 <div id="listingResults" class="cards" aria-live="polite"><div class="empty">Loading your discovered listings…</div></div>
 <div class="log-actions" id="listingPager" hidden>
@@ -122,7 +152,7 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 <button class="btn sm alt" id="listingNext" type="button">Next</button>
 </div>
 
-<div class="hint">Need another batch of listings? <button class="btn sm alt" type="button" id="openFreshScan">Jump to Fresh Marketplace search</button> Every paid scan still requires your approval.</div>
+<div class="hint">Need another batch of listings? <button class="btn sm alt" type="button" id="openFreshScan">Switch to new Facebook search</button> Every paid scan still requires your approval.</div>
 
 
 </section>
@@ -728,7 +758,31 @@ async function loadListings(){
  }catch(e){feedback.textContent='Search failed';box.textContent='Could not load listings: '+e.message;logActivity('local_search_failed',{...safeFilters,error:String(e.message||'Request failed').slice(0,180)})}
  finally{searchButton.disabled=false;searchButton.textContent='Apply filters'}
 }
+let discoveryMode='archive';
+function setDiscoveryMode(mode,{scroll=true}={}){
+ if(mode!=='archive'&&mode!=='scan')return;
+ discoveryMode=mode;
+ document.getElementById('scanWorkspace').hidden=mode!=='scan';
+ document.getElementById('archiveWorkspace').hidden=mode!=='archive';
+ const archive=document.getElementById('modeArchive'),scan=document.getElementById('modeScan');
+ archive.setAttribute('aria-pressed',String(mode==='archive'));
+ scan.setAttribute('aria-pressed',String(mode==='scan'));
+ archive.classList.toggle('is-selected',mode==='archive');
+ scan.classList.toggle('is-selected',mode==='scan');
+ document.getElementById('workflowExplanation').textContent=mode==='archive'
+  ?'Showing previously collected listings. Filters here are free and never contact Apify.'
+  :'New Facebook searches use paid Apify requests. Review the plan and approve each scan before it runs.';
+ document.getElementById('resultsExplanation').textContent=mode==='archive'
+  ?'These results are from your saved archive. Filters do not make paid requests.'
+  :'Newly discovered listings are added to your archive. Results below reflect the latest search and Bohol eligibility checks.';
+ document.getElementById('switchToArchive').hidden=mode==='archive';
+ if(scroll)document.querySelector('.discovery-workflows').scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.getElementById('modeArchive').addEventListener('click',()=>setDiscoveryMode('archive'));
+document.getElementById('modeScan').addEventListener('click',()=>setDiscoveryMode('scan'));
+document.getElementById('switchToArchive').addEventListener('click',()=>setDiscoveryMode('archive'));
 function showScanSettings(){
+ setDiscoveryMode('scan');
  const details=document.getElementById('scanSettings');
  const query=document.getElementById('search').value.trim();
  const scanKeyword=document.querySelector('#scanForm [name="keyword"]');
@@ -1006,6 +1060,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  lastScanBatch=outcome.scan_batch;
  listingPage=1;
  await loadListings();
+ document.getElementById('resultsExplanation').textContent='Showing Bohol-eligible matches from your latest approved scan. You can view your full archive using “Show all stored listings”.';
  document.getElementById('listingHeading').scrollIntoView({behavior:'smooth',block:'start'});
  }catch(error){
   status.textContent=error.message;
