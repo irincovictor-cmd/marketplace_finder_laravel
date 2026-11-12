@@ -34,6 +34,7 @@ foreach ($dashboardPages as $path => $name) {
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
 Route::get('/listings/manual-status-history', [DiscoveredListingController::class, 'manualStatusHistory'])->name('marketplace.listings.status-history');
 Route::patch('/listings/{listing}/manual-status', [DiscoveredListingController::class, 'updateManualStatus'])->name('marketplace.listings.manual-status');
+Route::patch('/listings/{listing}/location-review', [DiscoveredListingController::class, 'reviewLocation'])->name('marketplace.listings.location-review');
 Route::get('/listings/rejected', [DiscoveredListingController::class, 'rejected'])
     ->name('marketplace.listings.rejected');
 Route::get('/listings/location-audit', [DiscoveredListingController::class, 'locationAudit'])
