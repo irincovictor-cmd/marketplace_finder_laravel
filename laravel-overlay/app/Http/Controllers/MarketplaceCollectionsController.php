@@ -11,9 +11,16 @@ use Illuminate\Validation\ValidationException;
 
 class MarketplaceCollectionsController extends Controller
 {
-    public function savedIndex(): JsonResponse
+    public function savedIndex(Request $request): JsonResponse
     {
-        return response()->json(['items' => SavedListing::latest()->limit(250)->get()]);
+        $data = $request->validate(['page' => ['nullable', 'integer', 'min:1']]);
+        $page = SavedListing::query()->latest()->paginate(20, ['*'], 'page', (int) ($data['page'] ?? 1));
+        return response()->json([
+            'items' => $page->items(),
+            'page' => $page->currentPage(),
+            'pages' => $page->lastPage(),
+            'total' => $page->total(),
+        ]);
     }
 
     public function saveListing(Request $request): JsonResponse
