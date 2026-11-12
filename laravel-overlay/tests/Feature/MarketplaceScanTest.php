@@ -194,6 +194,82 @@ class MarketplaceScanTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_expanded_blank_keyword_coverage_is_previewed_before_any_paid_request(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+        $this->getJson('/marketplace/scan-plan?category=All&coverage=quick')
+            ->assertOk()->assertJsonPath('requests', 2)
+            ->assertJsonPath('terms.0', 'phone')
+            ->assertJsonPath('terms.1', 'laptop');
+        $this->getJson('/marketplace/scan-plan?category=All&coverage=balanced')
+            ->assertOk()->assertJsonPath('requests', 4)
+            ->assertJsonPath('terms.3', 'speaker');
+        $this->getJson('/marketplace/scan-plan?category=All&coverage=broad')
+            ->assertOk()->assertJsonPath('requests', 6)
+            ->assertJsonPath('terms.5', 'monitor');
+        $this->getJson('/marketplace/scan-plan?category=All&keyword=asus&coverage=broad')
+            ->assertOk()->assertJsonPath('requests', 1)
+            ->assertJsonPath('terms.0', 'asus');
+        $this->getJson('/marketplace/scan-plan?coverage=unlimited')
+            ->assertUnprocessable()->assertJsonValidationErrors('coverage');
+        Http::assertNothingSent();
+    }
+
+    public function test_broad_scan_requires_explicit_approval_and_executes_only_its_previewed_terms(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([], 200)]);
+        $payload = $this->payload(['keyword' => '', 'category' => 'All', 'coverage' => 'broad']);
+        $this->postJson('/marketplace/scan', [...$payload, 'confirm_paid_scan' => false])
+            ->assertUnprocessable();
+        Http::assertNothingSent();
+        $this->postJson('/marketplace/scan', $payload)->assertOk()
+            ->assertJsonPath('completed_requests', 6)
+            ->assertJsonPath('coverage', 'broad')
+            ->assertJsonPath('planned_terms.3', 'speaker');
+        Http::assertSentCount(6);
+    }
+
+    public function test_scan_tracks_new_and_rediscovered_records_in_separate_filters(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fakeSequence()
+            ->push([
+                ['id' => 'id-42', 'marketplace_listing_title' => 'ASUS laptop',
+                    'listing_price' => ['amount' => 15000],
+                    'location' => ['city' => 'Dauis']],
+            ])
+            ->push([
+                ['id' => 'id-42', 'marketplace_listing_title' => 'ASUS laptop',
+                    'listing_price' => ['amount' => 14000],
+                    'location' => ['city' => 'Dauis']],
+                ['id' => 'id-43', 'marketplace_listing_title' => 'JBL speaker',
+                    'listing_price' => ['amount' => 2500],
+                    'location' => ['city' => 'Dauis']],
+            ]);
+        $first = $this->postJson('/marketplace/scan', $this->payload())
+            ->assertOk()->assertJsonPath('new_count', 1);
+        $second = $this->postJson('/marketplace/scan', $this->payload())
+            ->assertOk()->assertJsonPath('new_count', 1)
+            ->assertJsonPath('previously_seen_count', 1);
+        $a = $first->json('scan_batch');
+        $b = $second->json('scan_batch');
+
+        $this->getJson('/listings?batch='.$b.'&batch_scope=new')->assertOk()
+            ->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.title', 'JBL speaker');
+        $this->getJson('/listings?batch='.$b.'&batch_scope=all')->assertOk()
+            ->assertJsonCount(2, 'items');
+        $this->getJson('/listings?batch='.$a.'&batch_scope=new')->assertOk()
+            ->assertJsonCount(0, 'items'); // Listing is now last-seen in a newer scan, but retains first batch.
+        $this->assertDatabaseCount('discovered_listings', 2);
+        $this->assertDatabaseHas('discovered_listings', ['title' => 'ASUS laptop', 'first_scan_batch' => $a, 'last_scan_batch' => $b]);
+        $this->assertDatabaseHas('discovered_listings', ['title' => 'JBL speaker', 'first_scan_batch' => $b]);
+    }
+
     public function test_repeated_search_returns_zero_new_listings_and_a_distinct_batch(): void
     {
         config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
