@@ -67,8 +67,20 @@ cp /opt/marketplace/laravel-overlay/tests/Feature/ApifySettingsTest.php tests/Fe
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCollectionsTest.php tests/Feature/MarketplaceCollectionsTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/DiscoveredListingTest.php tests/Feature/DiscoveredListingTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/BoholLocationTest.php tests/Feature/BoholLocationTest.php
-if grep -Fq "return view('welcome');" routes/web.php || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php || grep -Fq "Route::view('/', 'marketplace.dashboard')" routes/web.php; then
+# The Laravel app directory is a persistent volume, so source-overlay changes
+# must be deployed on every restart. Previous bootstrap versions only recognized
+# the original Route::view() marker, which stopped matching once we switched to
+# the $dashboardPages loop and silently left /settings at 404.
+#
+# Recognize our managed routing generations, while preserving genuinely custom
+# routes that do not originate from Marketplace Finder.
+if grep -Fq "return view('welcome');" routes/web.php \
+  || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php \
+  || grep -Fq "Route::view('/', 'marketplace.dashboard')" routes/web.php \
+  || grep -Fq '\$dashboardPages = [' routes/web.php \
+  || grep -Fq 'MARKETPLACE_FINDER_MANAGED_ROUTES' routes/web.php; then
   cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php
+  echo "[marketplace] Installed current Marketplace Finder routes."
 else
   echo "[marketplace] Existing custom routes/web.php preserved; integrate the new routes manually."
 fi
