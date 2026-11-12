@@ -62,12 +62,14 @@ class DiscoveredListingController extends Controller
             'first_seen' => $query->orderByDesc('first_seen_at'),
             default => $query->orderByDesc('last_seen_at'),
         };
+        // Stable tie-breaker prevents missing/duplicated records across pages.
+        $query->orderByDesc('id');
 
         // Excluded records stay in SQLite for diagnostics, never shown as Bohol deals.
         $hiddenCount = DiscoveredListing::query()->where('location_status', '!=', 'bohol')->count();
 
-        $matchingCount = (clone $query)->reorder()->count();
         $page = $query->paginate((int) ($params['per_page'] ?? 24), ['*'], 'page', (int) ($params['page'] ?? 1));
+        $matchingCount = $page->total();
 
         return response()->json([
             'diagnostics' => [
