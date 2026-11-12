@@ -1,3 +1,7 @@
+## Updated dashboard layout: scan first, credentials in Settings
+
+The Find deals page now places **Fresh Marketplace search** above archived-results browsing, with a clearly separated paid-provider panel, search terms, preview, opt-in approval and explicit Run approved searches button. Existing filter and archive behavior is unchanged. **Settings** in the sidebar, available directly at `http://localhost:8000/settings`, owns the Apify API key form (encrypted server-side, no plaintext read-back) and links back to Find deals. This keeps secret management out of the main browsing workflow. The existing **Get fresh results** shortcut still jumps to the top scan form. Both pages retain clean Laravel URLs and browser Back/Forward handling. No provider call runs when opening either page or managing a key.
+
 ## Preferred local URL
 
 Use **http://localhost:8000/discover** as the canonical development entry point. Sidebar navigation uses relative clean paths such as `/watchlist` and `/saved-items`, so the hostname stays `localhost`. The Docker host binding `127.0.0.1:8000:8000` is intentionally retained for loopback-only security; it does not force the browser to display `127.0.0.1`. Both aliases reach the same SQLite backend, but their browser storage and cookies are separate. For consistent preferences, open the app through `localhost` only. Legacy hash links remain supported.
