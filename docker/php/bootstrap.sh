@@ -77,7 +77,7 @@ cp /opt/marketplace/laravel-overlay/tests/Feature/BoholLocationTest.php tests/Fe
 if grep -Fq "return view('welcome');" routes/web.php \
   || grep -Fq "Route::redirect('/', '/flipradar/index.html');" routes/web.php \
   || grep -Fq "Route::view('/', 'marketplace.dashboard')" routes/web.php \
-  || grep -Fq '\$dashboardPages = [' routes/web.php \
+  || grep -Fq '$dashboardPages = [' routes/web.php \
   || grep -Fq 'MARKETPLACE_FINDER_MANAGED_ROUTES' routes/web.php; then
   cp /opt/marketplace/laravel-overlay/routes/web.php routes/web.php
   echo "[marketplace] Installed current Marketplace Finder routes."
