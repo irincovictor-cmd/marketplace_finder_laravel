@@ -774,6 +774,14 @@ async function loadWatch(){
     activeWatchId=item.id;watchMatchesPage=1;loadWatchMatches(item.keyword);
    });
    matchBtn.disabled=!item.enabled||item.match_count===0;actions.append(matchBtn);
+   actions.append(button(item.enabled?'Pause':'Resume',async()=>{
+    try{
+     await request('/collections/watchlist','POST',{keyword:item.keyword,max_price:item.max_price,enabled:!item.enabled});
+     if(activeWatchId===item.id&&!item.enabled){activeWatchId=null;document.getElementById('watchMatchesPanel').hidden=true}
+     document.getElementById('watchStatus').textContent='Watchlist entry '+(item.enabled?'paused.':'resumed.')+' No paid scan was started.';
+     await loadWatch();
+    }catch(error){document.getElementById('watchStatus').textContent='Could not update watchlist: '+error.message}
+   }));
    actions.append(button('Remove',async()=>{
     try{
      await request('/collections/watchlist/'+item.id,'DELETE');
@@ -797,6 +805,12 @@ async function loadWatchMatches(keyword=''){
   info.textContent=data.total+' potential match(es) · keyword and budget matched · Bohol sale rules passed · '+(data.watchlist.max_price!==null?'up to '+money(data.watchlist.max_price):'any price')+'. Check exact models and availability on Facebook.';
   for(const item of data.items){
    const row=document.createElement('div');row.className='storageitem';
+   const photo=safeMarketplacePhoto(item.image_url);
+   if(photo){
+    const img=document.createElement('img');img.src=photo;img.alt='Marketplace listing thumbnail';
+    img.loading='lazy';img.referrerPolicy='no-referrer';
+    img.style.cssText='width:72px;height:72px;border-radius:8px;object-fit:cover;flex:none';row.append(img);
+   }
    const desc=document.createElement('div');desc.append(label(item.title,'pill'),document.createElement('br'),
     label(money(item.price)+' · '+(item.city||'Bohol')+' · Last seen '+(item.last_seen_at?new Date(item.last_seen_at).toLocaleDateString():'unknown'),'muted'));
    row.append(desc);
