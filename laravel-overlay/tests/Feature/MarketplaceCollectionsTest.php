@@ -136,4 +136,27 @@ class MarketplaceCollectionsTest extends TestCase
         \Illuminate\Support\Facades\Http::assertNothingSent();
     }
 
+    public function test_saved_and_watchlist_collections_paginate_like_the_original_laravel_project(): void
+    {
+        for ($i = 1; $i <= 23; $i++) {
+            \App\Models\SavedListing::create([
+                'title' => 'Listing '.$i,
+                'listing_url' => 'https://www.facebook.com/marketplace/item/'.(1000+$i),
+            ]);
+            \App\Models\WatchlistEntry::create([
+                'keyword' => 'device '.$i,
+                'max_price' => 10000,
+                'enabled' => true,
+            ]);
+        }
+
+        $this->getJson('/collections/saved?page=1')->assertOk()
+            ->assertJsonPath('total', 23)->assertJsonPath('pages', 2)->assertJsonCount(20, 'items');
+        $this->getJson('/collections/saved?page=2')->assertOk()->assertJsonCount(3, 'items');
+        $this->getJson('/collections/watchlist?page=1')->assertOk()
+            ->assertJsonPath('total', 23)->assertJsonPath('pages', 2)->assertJsonCount(20, 'items');
+        $this->getJson('/collections/watchlist?page=2')->assertOk()->assertJsonCount(3, 'items');
+    }
+
+
 }
