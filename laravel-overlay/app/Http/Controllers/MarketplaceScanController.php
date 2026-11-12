@@ -19,9 +19,10 @@ class MarketplaceScanController extends Controller
         $data = $request->validate([
             'keyword' => ['nullable', 'string', 'max:80', 'regex:/^[a-zA-Z0-9 +._-]+$/'],
             'category' => ['nullable', 'in:All,Electronics,Phones,Laptops,Cameras,Consoles,PC Parts,Other'],
+            'coverage' => ['nullable', 'in:quick,balanced,broad'],
         ]);
 
-        return response()->json($planner->preview($data['keyword'] ?? '', $data['category'] ?? 'All'));
+        return response()->json($planner->preview($data['keyword'] ?? '', $data['category'] ?? 'All', $data['coverage'] ?? 'quick'));
     }
 
     public function scan(
@@ -57,14 +58,14 @@ class MarketplaceScanController extends Controller
             return response()->json(['message' => 'Add your Apify API key in the dashboard settings first.'], 503);
         }
 
-        $terms = $planner->terms($data['keyword'] ?? '', $data['category'] ?? 'All');
+        $terms = $planner->terms($data['keyword'] ?? '', $data['category'] ?? 'All', $data['coverage'] ?? 'quick');
         $batch = (string) Str::uuid();
         $seen = [];
         $rawCount = 0;
         $errors = [];
         $completed = 0;
 
-        // At most two billable actor requests. Each keyword is an independent run,
+        // One to six explicitly approved billable actor requests. Each keyword is an independent run,
         // as in legacy FlipRadar. Dedupe by listing URL or provider id.
         foreach ($terms as $term) {
             try {
@@ -118,6 +119,7 @@ class MarketplaceScanController extends Controller
             'previously_seen_count' => $stored - $newCount,
             'scan_batch' => $batch,
             'planned_terms' => $terms,
+            'coverage' => $data['coverage'] ?? 'quick',
             'completed_requests' => $completed,
             'failed_terms' => $errors,
             'diagnostics' => [
