@@ -80,4 +80,60 @@ class MarketplaceCollectionsTest extends TestCase
             'keyword' => '<script>', 'max_price' => 10000, 'enabled' => true,
         ])->assertUnprocessable()->assertJsonValidationErrors('keyword');
     }
+    public function test_watchlist_matches_only_active_bohol_deals_within_budget_and_paginates(): void
+    {
+        $archive = app(\App\Services\ListingArchiveService::class);
+        $archive->store([
+            ['id' => 'watch-a', 'title' => 'POCO F7 12/256', 'price' => 10500, 'city' => 'Dauis', 'url' => null],
+            ['id' => 'watch-b', 'title' => 'POCO F7 sealed', 'price' => 12500, 'city' => 'Panglao', 'url' => null],
+            ['id' => 'watch-c', 'title' => 'POCO F7', 'price' => 9500, 'city' => 'Mandaue', 'province' => 'Cebu', 'url' => null],
+            ['id' => 'watch-d', 'title' => 'POCO F7 case', 'price' => 500, 'city' => 'Tagbilaran', 'url' => null],
+            ['id' => 'watch-e', 'title' => 'Redmi Note 14', 'price' => 8000, 'city' => 'Dauis', 'url' => null],
+        ]);
+        $watch = $this->postJson('/collections/watchlist', [
+            'keyword' => 'poco f7', 'max_price' => 11000, 'enabled' => true,
+        ])->assertCreated();
+        $id = $watch->json('item.id');
+
+        $this->getJson('/collections/watchlist')->assertOk()
+            ->assertJsonPath('items.0.match_count', 1);
+        $this->getJson('/collections/watchlist/'.$id.'/matches')->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('items.0.title', 'POCO F7 12/256')
+            ->assertJsonPath('source', 'local_sqlite');
+
+        $listing = \App\Models\DiscoveredListing::query()->where('title', 'POCO F7 12/256')->firstOrFail();
+        $this->patchJson('/listings/'.$listing->id.'/manual-status', ['status' => 'sold'])->assertOk();
+        $this->getJson('/collections/watchlist/'.$id.'/matches')->assertOk()->assertJsonPath('total', 0);
+
+        $this->postJson('/collections/watchlist', [
+            'keyword' => 'poco f7', 'max_price' => 11000, 'enabled' => false,
+        ])->assertOk();
+        $this->getJson('/collections/watchlist')->assertOk()->assertJsonPath('items.0.match_count', 0);
+        $this->getJson('/collections/watchlist/'.$id.'/matches')->assertOk()->assertJsonPath('total', 0);
+        $this->assertDatabaseCount('discovered_listings', 5);
+    }
+
+    public function test_watchlist_results_use_native_pagination_without_paid_requests(): void
+    {
+        \Illuminate\Support\Facades\Http::preventStrayRequests();
+        \Illuminate\Support\Facades\Http::fake();
+        $items = [];
+        for ($i = 1; $i <= 17; $i++) {
+            $items[] = ['id' => 'watch-page-'.$i, 'title' => 'iPhone 13 '.$i, 'price' => 8000,
+                'city' => 'Dauis', 'url' => null];
+        }
+        app(\App\Services\ListingArchiveService::class)->store($items);
+        $watch = $this->postJson('/collections/watchlist', [
+            'keyword' => 'iphone 13', 'max_price' => 9000, 'enabled' => true,
+        ])->assertCreated();
+        $id = $watch->json('item.id');
+
+        $this->getJson('/collections/watchlist/'.$id.'/matches?page=1')->assertOk()
+            ->assertJsonCount(12, 'items')->assertJsonPath('total', 17)->assertJsonPath('pages', 2);
+        $this->getJson('/collections/watchlist/'.$id.'/matches?page=2')->assertOk()
+            ->assertJsonCount(5, 'items')->assertJsonPath('page', 2);
+        \Illuminate\Support\Facades\Http::assertNothingSent();
+    }
+
 }
