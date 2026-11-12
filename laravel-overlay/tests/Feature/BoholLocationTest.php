@@ -103,4 +103,59 @@ class BoholLocationTest extends TestCase
         $this->assertSame('outside', $service->assess('Mandaue', 'Bohol')['status']);
     }
 
+    public function test_ambiguous_carmen_can_be_verified_after_checking_source_and_undone(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'carmen-phone', 'title' => 'Redmi 15 phone', 'price' => 11999,
+             'city' => 'Carmen', 'province' => 'PH-07', 'url' => null],
+            ['id' => 'carmen-cebu', 'title' => 'Laptop in Carmen Cebu', 'price' => 12500,
+             'city' => 'Carmen', 'province' => 'Cebu', 'url' => null],
+        ]);
+
+        $ambiguous = \App\Models\DiscoveredListing::query()->where('title', 'Redmi 15 phone')->firstOrFail();
+        $cebu = \App\Models\DiscoveredListing::query()->where('title', 'Laptop in Carmen Cebu')->firstOrFail();
+        $this->assertSame('verify', $ambiguous->location_status);
+
+        $this->getJson('/listings')->assertOk()->assertJsonCount(0, 'items');
+        $this->patchJson('/listings/'.$cebu->id.'/location-review', ['decision' => 'bohol'])
+            ->assertUnprocessable();
+        $this->patchJson('/listings/'.$ambiguous->id.'/location-review', ['decision' => 'bohol'])
+            ->assertOk()->assertJsonPath('manual_location', 'bohol')
+            ->assertJsonPath('automatic_location_status', 'verify');
+
+        $this->getJson('/listings')->assertOk()->assertJsonCount(1, 'items')
+            ->assertJsonPath('items.0.manual_location', 'bohol')
+            ->assertJsonPath('items.0.automatic_location_status', 'verify');
+        $this->getJson('/listings/rejected')->assertOk()
+            ->assertJsonPath('rejected_count', 1);
+        // A later scan must not silently undo the user's check.
+        app(ListingArchiveService::class)->store([
+            ['id' => 'carmen-phone', 'title' => 'Redmi 15 phone', 'price' => 11500,
+             'city' => 'Carmen', 'province' => 'PH-07', 'url' => null],
+        ]);
+        $this->assertDatabaseHas('discovered_listings', [
+            'id' => $ambiguous->id, 'manual_location' => 'bohol',
+            'location_status' => 'verify', 'price' => 11500,
+        ]);
+
+        $this->patchJson('/listings/'.$ambiguous->id.'/location-review', ['decision' => 'auto'])
+            ->assertOk()->assertJsonPath('manual_location', null)
+            ->assertJsonPath('location_status', 'verify');
+        $this->getJson('/listings')->assertOk()->assertJsonCount(0, 'items');
+        $this->assertDatabaseCount('discovered_listings', 2);
+    }
+
+    public function test_manual_location_review_rejects_invalid_decisions(): void
+    {
+        app(ListingArchiveService::class)->store([
+            ['id' => 'town-1', 'title' => 'Phone for sale', 'price' => 8500,
+             'city' => 'Carmen', 'province' => 'PH-07', 'url' => null],
+        ]);
+        $id = \App\Models\DiscoveredListing::query()->firstOrFail()->id;
+        $this->patchJson('/listings/'.$id.'/location-review', ['decision' => 'somewhere'])
+            ->assertUnprocessable()->assertJsonValidationErrors('decision');
+        $this->patchJson('/listings/999999/location-review', ['decision' => 'bohol'])->assertNotFound();
+    }
+
+
 }
