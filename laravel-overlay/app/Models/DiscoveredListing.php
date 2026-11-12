@@ -9,7 +9,7 @@ class DiscoveredListing extends Model
 {
     protected $fillable = [
         'source_key', 'title', 'price', 'manual_status', 'manual_status_updated_at', 'listing_intent', 'city', 'listing_url', 'image_url', 'category',
-        'first_seen_at', 'last_seen_at', 'last_scan_batch', 'province', 'location_text', 'latitude', 'longitude', 'location_status',
+        'first_seen_at', 'last_seen_at', 'last_scan_batch', 'first_scan_batch', 'province', 'location_text', 'latitude', 'longitude', 'location_status',
     ];
 
     /** Shared deal eligibility gate for browsing and watchlist matching. */
