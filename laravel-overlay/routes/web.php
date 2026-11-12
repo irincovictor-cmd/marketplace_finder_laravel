@@ -46,6 +46,7 @@ Route::get('/collections/saved', [MarketplaceCollectionsController::class, 'save
 Route::post('/collections/saved', [MarketplaceCollectionsController::class, 'saveListing'])->name('marketplace.saved.store');
 Route::delete('/collections/saved/{savedListing}', [MarketplaceCollectionsController::class, 'removeSaved'])->name('marketplace.saved.delete');
 Route::get('/collections/watchlist', [MarketplaceCollectionsController::class, 'watchlistIndex'])->name('marketplace.watchlist.index');
+Route::get('/collections/watchlist/{watchlistEntry}/matches', [MarketplaceCollectionsController::class, 'watchlistMatches'])->name('marketplace.watchlist.matches');
 Route::post('/collections/watchlist', [MarketplaceCollectionsController::class, 'saveWatchlist'])->name('marketplace.watchlist.store');
 Route::delete('/collections/watchlist/{watchlistEntry}', [MarketplaceCollectionsController::class, 'removeWatchlist'])->name('marketplace.watchlist.delete');
 
