@@ -1,3 +1,12 @@
+## Find deals search modes
+
+The Find deals page separates two distinct activities into selectable modes:
+
+- **Browse collected listings (free, default):** local SQLite filters only. No Apify requests.
+- **Find new Facebook listings (paid):** the Apify scan planner, provider criteria, cost warning, mandatory checkbox and confirmation dialog. Only an explicitly approved scan makes provider requests.
+
+Only one form is displayed at a time. The listing results stay below the mode switcher; after a completed scan they show Bohol-eligible matches for that batch, and the archive can be reopened without scanning. Switching modes never starts a paid scan. The API key remains in the dedicated sidebar Settings page.
+
 ## Updated dashboard layout: scan first, credentials in Settings
 
 The Find deals page now places **Fresh Marketplace search** above archived-results browsing, with a clearly separated paid-provider panel, search terms, preview, opt-in approval and explicit Run approved searches button. Existing filter and archive behavior is unchanged. **Settings** in the sidebar, available directly at `http://localhost:8000/settings`, owns the Apify API key form (encrypted server-side, no plaintext read-back) and links back to Find deals. This keeps secret management out of the main browsing workflow. The existing **Get fresh results** shortcut still jumps to the top scan form. Both pages retain clean Laravel URLs and browser Back/Forward handling. No provider call runs when opening either page or managing a key.
