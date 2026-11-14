@@ -1,40 +1,35 @@
-## Mobile-friendly layouts
+## Prototype tester access on phones (hamburger menu and shared features)
 
-Both access points are responsive for phones and tablets:
+Docker exposes two separate endpoints on your PC:
 
-- **Guest phone page:** `http://YOUR-WINDOWS-IP:8080/browse` uses one-column listing cards on narrow screens, touch-size inputs/buttons, stacked search filters, and accessible paging.
-- **Owner dashboard:** `http://localhost:8000/discover` keeps the desktop sidebar but presents a horizontally swipeable navigation row on smaller screens, stacked forms and workflow choices, appropriately sized listing photos, and wrapping action buttons. Paid scanning still requires explicit approval.
+- **Owner:** `http://localhost:8000/discover` (PC only). Full original dashboard, including encrypted Apify key management and uncapped owner-approved search coverage.
+- **Tester:** `http://YOUR_WINDOWS_IPV4:8080/browse` (same LAN/Wi-Fi). The **same functional dashboard** with a mobile hamburger menu (☰), Find deals, Saved items, Watchlist, Profit calculator, Activity logs, Rejected listings, and Availability history. Testers can filter, save, remove, change statuses, review locations, and use the calculator. They share the owner's underlying SQLite archive, so their actions affect real records.
 
-Touch-screen testing should cover widths 320–430 px, portrait/landscape, and tablets. These code changes have automated structural tests but require device/browser checks for final visual verification. The LAN guest endpoint is intentionally browse-only; do not expose the private owner dashboard to the network.
+**API key security:** The Settings sidebar item and its credential form are **not rendered** in tester HTML; Nginx denies all `/settings` and `/marketplace/api-key` URLs, regardless of method. The unrestricted owner scan endpoint is also blocked. The tester interface never receives the server's Apify token.
 
-## Open Marketplace Finder from any phone on the same Wi-Fi (read-only LAN share)
+**Paid scans in tester mode:** Testers may submit a new scan only after checking the paid approval checkbox and confirming the exact terms. These scans use the owner's configured Apify key **on the server**, can incur charges on that account, and are restricted to **Quick** (one entered keyword, or two blank-keyword probes). The shared guest endpoint is throttled to **three scan submissions per hour** across the proxy. No scans occur automatically. Do not give LAN access to untrusted people: this is a **shared, unauthenticated prototype workspace**, not an internet-ready multi-user application. For a public internet release, add login/roles, HTTPS, stronger spending limits and per-user data isolation first.
 
-The Docker Compose setup now runs **two separate access points**:
+### Run the update
 
-- **Owner dashboard:** `http://localhost:8000/discover` on your PC only, including Apify key settings, paid scans, Watchlist, and manual editing.
-- **Phone/guest browsing:** `http://YOUR_WINDOWS_PC_IP:8080/browse` from phones or laptops on the **same local network**. This page is responsive and lets visitors browse the existing Bohol-eligible listings, search, filter prices/categories, page through results, and open original Facebook links. It is **read-only**, so visitors cannot use your Apify key, start paid scans, edit tags, save items, or open your admin dashboard.
-
-### Start
 ```bash
 cd ~/project2/myFirstApp/marketplace_finder_laravel
 git pull origin main
 docker compose up -d --build --force-recreate
+docker compose ps
 docker compose exec -T app php artisan test
 ```
 
-On **Windows PowerShell or Command Prompt** (not inside WSL), run `ipconfig`. Find the **IPv4 Address** of the Wi-Fi or Ethernet adapter connected to your phone's network, for example `192.168.1.42`. Open `http://192.168.1.42:8080/browse` from the phone. The PC must remain powered on, Docker Desktop running, and the Compose app/guest containers healthy.
-
-If Windows Firewall blocks port 8080, open **PowerShell as Administrator** and run:
+From **Windows CMD** (not Ubuntu), run `ipconfig` to identify the PC's active Wi-Fi/Ethernet IPv4 address. For example, `192.168.100.165` gives the local-network tester URL `http://192.168.100.165:8080/browse`. Ensure PC, Docker Desktop, guest container, and Windows firewall are configured for port 8080. If needed, as **Administrator** on a Private-profile network:
 
 ```powershell
 New-NetFirewallRule -DisplayName "Marketplace Finder LAN Guest 8080" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8080 -Profile Private -RemoteAddress LocalSubnet
 ```
 
-This restricts the rule to your local subnet on a Private-profile network. You can later remove the rule with `Remove-NetFirewallRule -DisplayName "Marketplace Finder LAN Guest 8080"`. Make sure the router doesn't have **AP/client isolation** enabled, and confirm the phone and PC are on the same Wi-Fi/network. Check Docker Desktop Windows port forwarding if the phone cannot connect. Keep any existing broad port 8080 firewall rules disabled.
+Do not configure router port forwarding or expose port 8080 directly to the wider internet. Users on the same Wi-Fi can view and modify shared prototype data.
 
-**Security boundary:** The owner app still binds to `127.0.0.1:8000`, not the LAN. A dedicated Nginx guest gateway binds `8080`, allowing only GET/HEAD `/browse` and `/listings`; other routes (including API settings, paid scan endpoints, collections, admin/edit routes, and the legacy app) return 404. It removes upstream cookies. Data shown to guests is public to anyone on that LAN; avoid adding private seller information to listing titles. The phone page is not intended for write access and should not be placed behind port forwarding or exposed directly to the Internet. For worldwide access, use a separately authenticated HTTPS deployment.
+### Mobile layout
 
-This matches the LAN-IP access pattern of the user's `djangoFileTTH` project without duplicating its unsafe wildcard host/debug setup.
+On phones/tablets, use the **☰ Menu** button to open the navigation drawer. Tap an item, tap outside, or press Escape to close it. Forms, pricing fields, listing cards and buttons adapt to narrow screens. Desktop retains the sidebar. The old standalone read-only guest page is superseded by the shared tester dashboard.
 
 ## Ambiguous Bohol towns and manual location reviews
 
