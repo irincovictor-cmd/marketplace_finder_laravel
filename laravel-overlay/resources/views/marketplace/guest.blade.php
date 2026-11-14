@@ -29,6 +29,35 @@ button:disabled{opacity:.5;cursor:default}
 .foot{margin-top:20px;font-size:12px;color:var(--muted)}
 @media(max-width:820px){form{grid-template-columns:repeat(2,minmax(0,1fr))}form label:first-child{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){main{padding:18px 12px 40px}.cards{grid-template-columns:1fr}form{grid-template-columns:1fr}form label:first-child{grid-column:auto}.top{align-items:flex-start;flex-direction:column}}
+/* Phone experience: readable controls, touch targets and reliable visibility */
+[hidden]{display:none!important}
+body{overflow-x:hidden}
+main,.panel,.card,.body{min-width:0}
+input,select,button,.view{min-height:44px;touch-action:manipulation}
+input,select{font-size:16px}
+.view{display:inline-flex;align-items:center;justify-content:center;text-align:center}
+#status{line-height:1.5}
+@media(max-width:820px){
+ form{grid-template-columns:repeat(2,minmax(0,1fr))}
+ form label:first-child{grid-column:1/-1}
+ form button{grid-column:1/-1}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:520px){
+ main{padding:17px 12px 42px}
+ h1{margin-top:25px}
+ .panel{padding:14px}
+ form{grid-template-columns:minmax(0,1fr)}
+ form label:first-child,form button{grid-column:auto}
+ .cards{grid-template-columns:minmax(0,1fr);gap:12px}
+ .photo{aspect-ratio:16/10}
+ .body{padding:14px}
+ .view{width:100%}
+ .pager{gap:7px;flex-wrap:wrap}
+ .pager button{flex:1 1 110px}
+ #pageText{order:-1;width:100%;text-align:center}
+ .top{align-items:flex-start;flex-direction:column;gap:4px}
+}
 </style>
 </head>
 <body>
