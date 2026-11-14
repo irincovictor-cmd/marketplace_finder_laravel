@@ -63,6 +63,72 @@ details.settings{margin-top:15px;border:1px solid var(--line);border-radius:14px
 .scan-result-filter .chip{white-space:normal}
 .scan-result-filter .muted:last-child{margin-left:auto}
 @media(max-width:640px){.scan-result-filter .muted:last-child{margin-left:0}}
+/* Responsive owner workspace: mobile-first overrides without hiding functionality */
+html{scroll-padding-top:12px}body{overflow-x:hidden}
+main,.view,.panel,.searchbox,.listing,.storageitem{min-width:0}
+input,select,button,.btn{touch-action:manipulation}
+input,select{min-height:44px}
+.menu a{min-height:43px;display:flex;align-items:center}
+.listing-actions{flex-wrap:wrap}
+.listing-actions .btn{flex:1 1 auto;white-space:normal}
+.log-entry,.storageitem,.listing-info{overflow-wrap:anywhere}
+@media(min-width:641px) and (max-width:1100px){
+ .app{grid-template-columns:200px minmax(0,1fr)}
+ main{padding:28px 22px 55px}
+ .searchrow{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .searchrow>.btn,.searchrow>button{width:100%}
+ .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:950px){
+ .app{display:block}
+ .aside{position:relative;z-index:5;gap:8px;padding:12px 14px}
+ .menu{display:flex;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding:5px 0 8px}
+ .menu a{flex:none;scroll-snap-align:start;min-height:44px;justify-content:center}
+ main{max-width:100%;padding:20px 16px 52px}
+}
+@media(max-width:640px){
+ :root{font-size:14px}
+ main{padding:18px 12px 48px}
+ .aside{padding:10px 12px}
+ .logo{font-size:19px}.tagline{font-size:11px}
+ h1{font-size:clamp(26px,8vw,34px)}
+ h2{font-size:19px}
+ .intro{margin-bottom:18px}
+ .panel,.searchbox,.scan-panel{padding:14px!important;border-radius:14px}
+ .searchrow,.filterrow,.grid2,.grid3,.formrow{grid-template-columns:minmax(0,1fr)!important}
+ .cards{grid-template-columns:minmax(0,1fr)!important}
+ .listing-art{height:auto;aspect-ratio:16/10}
+ .listing-art img{object-fit:cover}
+ .listing-info{padding:13px}
+ .listing-price{font-size:22px}
+ .listing-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .listing-actions>*{width:100%!important;min-width:0;white-space:normal;text-align:center}
+ .storageitem{width:100%;flex-direction:column;align-items:stretch}
+ .storageitem>div{min-width:0}
+ .storageitem .btn,.storageitem a.btn{width:100%}
+ .quicklinks{gap:7px}
+ .chip{min-height:42px;padding:9px 12px}
+ .workflow-option{min-height:120px}
+ .workflow-option strong{font-size:16px}
+ .headrow{flex-direction:column;align-items:stretch}
+ .headrow>.btn{width:100%}
+ .scan-result-filter{padding:12px;gap:8px}
+ .scan-result-filter>button{flex:1 1 130px}
+ .log-actions{display:flex;justify-content:space-between;align-items:center}
+ .log-actions>.btn{flex:1 1 auto;width:auto;min-width:0;white-space:normal}
+ .log-actions>span{flex:0 0 auto}
+ .sectiontop{align-items:flex-start}
+ .results-header{margin-top:20px}
+ .settings-note{align-self:flex-start}
+ input,select,textarea{font-size:16px}
+ #apiKeyForm .log-actions{flex-direction:column}
+ #apiKeyForm .log-actions>.btn{width:100%}
+}
+@media(max-width:370px){
+ .listing-actions{grid-template-columns:minmax(0,1fr)}
+ .log-actions{flex-wrap:wrap}
+ .log-actions>span{order:-1;width:100%;text-align:center}
+}
 </style>
 </head>
 <body>
