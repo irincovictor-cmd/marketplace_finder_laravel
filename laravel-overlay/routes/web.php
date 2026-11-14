@@ -72,5 +72,8 @@ Route::get('/collections/watchlist/{watchlistEntry}/matches', [MarketplaceCollec
 Route::post('/collections/watchlist', [MarketplaceCollectionsController::class, 'saveWatchlist'])->name('marketplace.watchlist.store');
 Route::delete('/collections/watchlist/{watchlistEntry}', [MarketplaceCollectionsController::class, 'removeWatchlist'])->name('marketplace.watchlist.delete');
 
+// Guest browsing is exposed ONLY through the allowlisted port 8080 Nginx proxy.
+Route::view('/browse', 'marketplace.guest')->name('marketplace.guest');
+
 // Original FlipRadar is retained, unchanged, at /flipradar/index.html.
 // Never execute paid Apify scans during boot, tests, or on initial page load.
