@@ -1,3 +1,32 @@
+## Open Marketplace Finder from any phone on the same Wi-Fi (read-only LAN share)
+
+The Docker Compose setup now runs **two separate access points**:
+
+- **Owner dashboard:** `http://localhost:8000/discover` on your PC only, including Apify key settings, paid scans, Watchlist, and manual editing.
+- **Phone/guest browsing:** `http://YOUR_WINDOWS_PC_IP:8080/browse` from phones or laptops on the **same local network**. This page is responsive and lets visitors browse the existing Bohol-eligible listings, search, filter prices/categories, page through results, and open original Facebook links. It is **read-only**, so visitors cannot use your Apify key, start paid scans, edit tags, save items, or open your admin dashboard.
+
+### Start
+```bash
+cd ~/project2/myFirstApp/marketplace_finder_laravel
+git pull origin main
+docker compose up -d --build --force-recreate
+docker compose exec -T app php artisan test
+```
+
+On **Windows PowerShell or Command Prompt** (not inside WSL), run `ipconfig`. Find the **IPv4 Address** of the Wi-Fi or Ethernet adapter connected to your phone's network, for example `192.168.1.42`. Open `http://192.168.1.42:8080/browse` from the phone. The PC must remain powered on, Docker Desktop running, and the Compose app/guest containers healthy.
+
+If Windows Firewall blocks port 8080, open **PowerShell as Administrator** and run:
+
+```powershell
+New-NetFirewallRule -DisplayName "Marketplace Finder LAN Guest 8080" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8080 -Profile Private -RemoteAddress LocalSubnet
+```
+
+This restricts the rule to your local subnet on a Private-profile network. You can later remove the rule with `Remove-NetFirewallRule -DisplayName "Marketplace Finder LAN Guest 8080"`. Make sure the router doesn't have **AP/client isolation** enabled, and confirm the phone and PC are on the same Wi-Fi/network. Check Docker Desktop Windows port forwarding if the phone cannot connect. Keep any existing broad port 8080 firewall rules disabled.
+
+**Security boundary:** The owner app still binds to `127.0.0.1:8000`, not the LAN. A dedicated Nginx guest gateway binds `8080`, allowing only GET/HEAD `/browse` and `/listings`; other routes (including API settings, paid scan endpoints, collections, admin/edit routes, and the legacy app) return 404. It removes upstream cookies. Data shown to guests is public to anyone on that LAN; avoid adding private seller information to listing titles. The phone page is not intended for write access and should not be placed behind port forwarding or exposed directly to the Internet. For worldwide access, use a separately authenticated HTTPS deployment.
+
+This matches the LAN-IP access pattern of the user's `djangoFileTTH` project without duplicating its unsafe wildcard host/debug setup.
+
 ## Ambiguous Bohol towns and manual location reviews
 
 Municipalities such as **Carmen** exist in Bohol and Cebu. Facebook/Apify location state **PH-07** identifies Central Visayas, not Bohol specifically. An ambiguous town plus PH-07 with no reliable Bohol-specific province or coordinates must remain **unverified**—never auto-approve all "Carmen" results.
