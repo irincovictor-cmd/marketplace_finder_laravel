@@ -271,6 +271,26 @@ class MarketplaceScanTest extends TestCase
         $this->assertDatabaseHas('discovered_listings', ['title' => 'JBL speaker', 'first_scan_batch' => $b]);
     }
 
+    public function test_tester_paid_scan_requires_approval_and_limits_costly_coverage(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([], 200)]);
+
+        $base = $this->payload(['keyword' => '', 'category' => 'All', 'coverage' => 'quick']);
+        $this->postJson('/marketplace/tester-scan', [...$base, 'confirm_paid_scan' => false])
+            ->assertUnprocessable()->assertJsonValidationErrors('confirm_paid_scan');
+        Http::assertNothingSent();
+
+        $this->postJson('/marketplace/tester-scan', [...$base, 'coverage' => 'broad'])
+            ->assertUnprocessable()->assertJsonPath('message', 'Tester scanning is limited to Quick (up to two billable keyword requests). Use the owner dashboard for broader scans.');
+        Http::assertNothingSent();
+
+        $this->postJson('/marketplace/tester-scan', $base)
+            ->assertOk()->assertJsonPath('completed_requests', 2);
+        Http::assertSentCount(2);
+    }
+
     public function test_repeated_search_returns_zero_new_listings_and_a_distinct_batch(): void
     {
         config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
