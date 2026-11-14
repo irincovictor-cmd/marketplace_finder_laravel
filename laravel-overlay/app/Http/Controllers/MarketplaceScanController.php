@@ -25,6 +25,26 @@ class MarketplaceScanController extends Controller
         return response()->json($planner->preview($data['keyword'] ?? '', $data['category'] ?? 'All', $data['coverage'] ?? 'quick'));
     }
 
+    /**
+     * Tester scans use the same underlying paid actor and require explicit consent,
+     * but cannot launch a 4- or 6-keyword scan from the LAN demo.
+     * Route throttle limits total guest scan submissions.
+     */
+    public function testerScan(
+        Request $request,
+        MarketplaceScanService $service,
+        ListingArchiveService $archive,
+        BoholLocationService $location,
+        ScanPlanService $planner
+    ): JsonResponse {
+        if ($request->input('coverage', 'quick') !== 'quick') {
+            return response()->json([
+                'message' => 'Tester scanning is limited to Quick (up to two billable keyword requests). Use the owner dashboard for broader scans.',
+            ], 422);
+        }
+        return $this->scan($request, $service, $archive, $location, $planner);
+    }
+
     public function scan(
         Request $request,
         MarketplaceScanService $service,
