@@ -1,3 +1,12 @@
+## Mobile-friendly layouts
+
+Both access points are responsive for phones and tablets:
+
+- **Guest phone page:** `http://YOUR-WINDOWS-IP:8080/browse` uses one-column listing cards on narrow screens, touch-size inputs/buttons, stacked search filters, and accessible paging.
+- **Owner dashboard:** `http://localhost:8000/discover` keeps the desktop sidebar but presents a horizontally swipeable navigation row on smaller screens, stacked forms and workflow choices, appropriately sized listing photos, and wrapping action buttons. Paid scanning still requires explicit approval.
+
+Touch-screen testing should cover widths 320–430 px, portrait/landscape, and tablets. These code changes have automated structural tests but require device/browser checks for final visual verification. The LAN guest endpoint is intentionally browse-only; do not expose the private owner dashboard to the network.
+
 ## Open Marketplace Finder from any phone on the same Wi-Fi (read-only LAN share)
 
 The Docker Compose setup now runs **two separate access points**:
