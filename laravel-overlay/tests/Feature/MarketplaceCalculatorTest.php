@@ -253,28 +253,48 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee("'/location-review'", false);
     }
 
-    public function test_guest_browsing_page_is_read_only_and_phone_friendly(): void
+    public function test_tester_has_full_prototype_sections_but_no_api_key_controls(): void
     {
+        foreach ([
+            '/browse' => 'Find your next great deal',
+            '/browse/saved-items' => 'Saved items',
+            '/browse/watchlist' => 'Your watchlist',
+            '/browse/profit-calculator' => 'Profit calculator',
+            '/browse/activity-logs' => 'Activity logs',
+            '/browse/rejected-listings' => 'Rejected listings',
+            '/browse/availability-history' => 'Availability history',
+        ] as $url => $visible) {
+            $this->get($url)->assertOk()->assertSee($visible);
+        }
+
         $this->get('/browse')->assertOk()
-            ->assertSee('Discover Bohol deals')
-            ->assertSee('Guest browsing')
-            ->assertSee('viewport', false)
-            ->assertSee("fetch('/listings?", false)
+            ->assertSee('id="menuToggle"', false)
+            ->assertSee('id="mobileSideNav"', false)
+            ->assertSee('id="modeScan"', false)
+            ->assertSee('id="watchMatchesPanel"', false)
+            ->assertSee('id="calcProfit"', false)
+            ->assertSee('id="rejectedResults"', false)
+            ->assertSee('id="manualHistoryEntries"', false)
+            ->assertSee('id="scanButton"', false)
+            ->assertSee('id="listingPager"', false)
+            ->assertDontSee('id="apiKeyInput"', false)
+            ->assertDontSee('id="view-settings"', false)
+            ->assertDontSee('href="/settings"', false)
+            ->assertDontSee('/marketplace/api-key', false)
             ->assertDontSee('Save / replace key')
-            ->assertDontSee('Run approved searches');
-        $guest = file_get_contents(resource_path('views/marketplace/guest.blade.php'));
-        $this->assertStringNotContainsString('csrf-token', $guest);
-        $this->assertStringNotContainsString('/marketplace/scan', $guest);
+            ->assertDontSee('Broad · up to 6 searches');
+        $this->get('/browse/settings')->assertNotFound();
     }
 
-    public function test_public_gateway_explicitly_allowlists_browsing_only(): void
+    public function test_guest_gateway_allowlists_tester_actions_but_denies_key_management(): void
     {
         $config = file_get_contents('/opt/marketplace/guest-nginx.conf');
-        $this->assertStringContainsString('location = /browse', $config);
-        $this->assertStringContainsString('location = /listings', $config);
-        $this->assertStringContainsString('limit_except GET', $config);
+        $this->assertStringContainsString('location ~ ^/browse', $config);
+        $this->assertStringContainsString('location ~ ^/(?:listings', $config);
+        $this->assertStringContainsString('marketplace/(?:scan-plan|tester-scan)', $config);
         $this->assertStringContainsString('return 404;', $config);
-        $this->assertStringNotContainsString('location = /settings', $config);
+        $this->assertStringNotContainsString('marketplace/api-key', $config);
+        $this->assertStringNotContainsString('proxy_hide_header Set-Cookie', $config);
     }
 
     public function test_owner_and_guest_pages_include_mobile_responsive_layouts(): void
@@ -284,7 +304,7 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee('aria-label="Main menu"', false);
         $this->get('/browse')->assertOk()
             ->assertSee('name="viewport"', false)
-            ->assertSee('id="pager" hidden', false);
+            ->assertSee('id="menuToggle"', false);
 
         $owner = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
         $guest = file_get_contents(resource_path('views/marketplace/guest.blade.php'));
@@ -292,7 +312,8 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('overscroll-behavior-x:contain', $owner);
         $this->assertStringContainsString('font-size:16px', $owner);
         $this->assertStringContainsString('@media(max-width:520px)', $guest);
-        $this->assertStringContainsString('[hidden]{display:none!important}', $guest);
+        $this->assertStringContainsString('aspect-ratio:16/10', $guest);
+        $this->assertStringContainsString('nav-open', $owner);
     }
 
     public function test_profit_and_roi_are_computed_on_server(): void
