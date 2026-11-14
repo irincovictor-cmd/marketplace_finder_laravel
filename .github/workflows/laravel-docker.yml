@@ -42,7 +42,7 @@ jobs:
       - name: Verify tester phone form can use session and CSRF for calculator
         run: |
           curl -fsS -c /tmp/guest-cookies http://127.0.0.1:8080/browse > /tmp/tester-dashboard.html
-          TOKEN=$(python3 -c 'import re; s=open("/tmp/tester-dashboard.html").read(); m=re.search(r\x27name="csrf-token" content="([^"]+)"\x27,s); print(m.group(1) if m else "")')
+          TOKEN=$(sed -n 's/.*<meta name="csrf-token" content="\([^"]*\)".*/\1/p' /tmp/tester-dashboard.html | head -n 1)
           test -n "$TOKEN"
           CODE=$(curl -s -o /tmp/guest-calc.json -w '%{http_code}' -b /tmp/guest-cookies -c /tmp/guest-cookies \
             -X POST -H "Accept: application/json" -H "Content-Type: application/json" -H "X-CSRF-TOKEN: $TOKEN" \
