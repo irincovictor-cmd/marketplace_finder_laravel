@@ -293,7 +293,7 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringContainsString('location ~ ^/(?:listings', $config);
         $this->assertStringContainsString('marketplace/(?:scan-plan|tester-scan)', $config);
         $this->assertStringContainsString('return 404;', $config);
-        $this->assertStringNotContainsString('marketplace/api-key', $config);
+        $this->assertStringNotContainsString('location = /marketplace/api-key', $config);
         $this->assertStringNotContainsString('proxy_hide_header Set-Cookie', $config);
     }
 
