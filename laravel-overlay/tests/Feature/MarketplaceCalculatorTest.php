@@ -277,6 +277,24 @@ class MarketplaceCalculatorTest extends TestCase
         $this->assertStringNotContainsString('location = /settings', $config);
     }
 
+    public function test_owner_and_guest_pages_include_mobile_responsive_layouts(): void
+    {
+        $this->get('/discover')->assertOk()
+            ->assertSee('name="viewport"', false)
+            ->assertSee('aria-label="Main menu"', false);
+        $this->get('/browse')->assertOk()
+            ->assertSee('name="viewport"', false)
+            ->assertSee('id="pager" hidden', false);
+
+        $owner = file_get_contents(resource_path('views/marketplace/dashboard.blade.php'));
+        $guest = file_get_contents(resource_path('views/marketplace/guest.blade.php'));
+        $this->assertStringContainsString('@media(max-width:640px)', $owner);
+        $this->assertStringContainsString('overscroll-behavior-x:contain', $owner);
+        $this->assertStringContainsString('font-size:16px', $owner);
+        $this->assertStringContainsString('@media(max-width:520px)', $guest);
+        $this->assertStringContainsString('[hidden]{display:none!important}', $guest);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
