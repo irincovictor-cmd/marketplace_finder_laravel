@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
+@if($testerMode ?? false)
+<meta name="robots" content="noindex,nofollow">
+@endif
 <script>
 // Canonical browser address: old 127.0.0.1 bookmarks are moved to localhost.
 // Keep the original path, query and hash; the dashboard later converts #views
@@ -129,21 +132,43 @@ input,select{min-height:44px}
  .log-actions{flex-wrap:wrap}
  .log-actions>span{order:-1;width:100%;text-align:center}
 }
+/* Hamburger drawer for mobile; desktop keeps original sidebar */
+.mobile-topbar,.menu-toggle,.nav-scrim{display:none}
+@media(max-width:950px){
+ .mobile-topbar{display:flex;position:sticky;top:0;z-index:40;align-items:center;justify-content:space-between;background:#0d1627;border-bottom:1px solid var(--line);padding:9px 13px;min-height:57px}
+ .mobile-brand{font-weight:850;letter-spacing:-.4px;font-size:17px}.mobile-brand b{color:var(--orange)}
+ .menu-toggle{display:inline-flex;align-items:center;gap:9px;background:#23334c;border:1px solid #425875;color:var(--text);border-radius:10px;padding:9px 13px;min-height:43px;font-size:17px;font-weight:750}
+ .menu-toggle span{font-size:14px}
+ .aside{display:flex!important;position:fixed;z-index:50;top:0;left:0;bottom:0;width:min(310px,85vw);max-width:85vw;padding:26px 15px 20px;overflow-y:auto;overflow-x:hidden;transform:translateX(-105%);transition:transform .2s ease;box-shadow:14px 0 45px #0008;border-right:1px solid var(--line);border-bottom:0;gap:20px}
+ body.nav-open .aside{transform:translateX(0)}
+ .aside .menu{display:grid;overflow:visible;gap:5px;padding:0;scroll-snap-type:none}
+ .aside .menu a{justify-content:flex-start;width:100%;white-space:normal;text-align:left;min-height:48px;padding:13px}
+ .nav-scrim:not([hidden]){display:block;position:fixed;inset:0;z-index:45;background:#000b;border:0;width:100%;cursor:pointer}
+ body.nav-open{overflow:hidden}
+}
+@media(prefers-reduced-motion:reduce){.aside{transition:none}}
 </style>
 </head>
-<body>
+<body class="{{ ($testerMode ?? false) ? 'tester-mode' : 'owner-mode' }}">
+<div class="mobile-topbar">
+<button type="button" class="menu-toggle" id="menuToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileSideNav">☰ <span>Menu</span></button>
+<span class="mobile-brand">marketplace<b>finder.</b></span>
+</div>
+<button type="button" class="nav-scrim" id="navScrim" aria-label="Close menu" hidden></button>
 <div class="app">
-<aside class="aside">
+<aside class="aside" id="mobileSideNav">
 <div><div class="logo">marketplace<b>finder.</b></div><div class="tagline">Find deals. Buy smarter.</div></div>
 <nav class="menu" aria-label="Main menu">
-<a href="/discover" data-view="discover" aria-current="page">⌕ &nbsp; Find deals</a>
-<a href="/saved-items" data-view="saved">♡ &nbsp; Saved items</a>
-<a href="/watchlist" data-view="watchlist">☆ &nbsp; Watchlist</a>
-<a href="/profit-calculator" data-view="profit">₱ &nbsp; Profit calculator</a>
-<a href="/activity-logs" data-view="activity">▤ &nbsp; Activity logs</a>
-<a href="/rejected-listings" data-view="rejected">⊘ &nbsp; Rejected listings</a>
-<a href="/availability-history" data-view="status">✓ &nbsp; Availability history</a>
+<a href="{{ ($testerMode ?? false) ? '/browse' : '/discover' }}" data-view="discover" aria-current="page">⌕ &nbsp; Find deals</a>
+<a href="{{ ($testerMode ?? false) ? '/browse/saved-items' : '/saved-items' }}" data-view="saved">♡ &nbsp; Saved items</a>
+<a href="{{ ($testerMode ?? false) ? '/browse/watchlist' : '/watchlist' }}" data-view="watchlist">☆ &nbsp; Watchlist</a>
+<a href="{{ ($testerMode ?? false) ? '/browse/profit-calculator' : '/profit-calculator' }}" data-view="profit">₱ &nbsp; Profit calculator</a>
+<a href="{{ ($testerMode ?? false) ? '/browse/activity-logs' : '/activity-logs' }}" data-view="activity">▤ &nbsp; Activity logs</a>
+<a href="{{ ($testerMode ?? false) ? '/browse/rejected-listings' : '/rejected-listings' }}" data-view="rejected">⊘ &nbsp; Rejected listings</a>
+<a href="{{ ($testerMode ?? false) ? '/browse/availability-history' : '/availability-history' }}" data-view="status">✓ &nbsp; Availability history</a>
+@unless($testerMode ?? false)
 <a href="/settings" data-view="settings">⚙ &nbsp; Settings</a>
+@endunless
 </nav>
 
 </aside>
@@ -160,7 +185,11 @@ input,select{min-height:44px}
 </div>
 <div class="workflow-explanation" id="workflowExplanation" role="status">Showing previously collected listings. Filters here are free and never contact Apify.</div>
 <div id="scanWorkspace" hidden>
-<div class="scan-lead"><div><span class="eyebrow">New discoveries</span><h2>Search Facebook Marketplace</h2><p>Fetch new listings only when you approve the Apify requests. Archived browsing below remains free.</p></div><a class="btn sm alt" href="/settings" data-view="settings">API key settings</a></div>
+<div class="scan-lead"><div><span class="eyebrow">New discoveries</span><h2>Search Facebook Marketplace</h2><p>Fetch new listings only when you approve the Apify requests. Archived browsing below remains free.</p></div>@unless($testerMode ?? false)
+<a class="btn sm alt" href="/settings" data-view="settings">API key settings</a>
+@else
+<span class="muted">Tester mode · API key managed by owner</span>
+@endunless</div>
 <details class="settings scan-panel" id="scanSettings" open>
 <summary><span class="scan-heading">Fresh Marketplace search</span><span class="scan-tag">Paid provider · approval required</span><span class="scan-chevron">Configure search</span></summary>
 <p>Scanning uses a third-party Apify actor and may incur charges. Manage your key under Settings → Apify API key. Each scan still requires separate cost approval. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
@@ -239,6 +268,7 @@ input,select{min-height:44px}
 
 
 </section>
+@unless($testerMode ?? false)
 <section class="view" id="view-settings" hidden>
 <div class="intro"><div class="eyebrow">Workspace / Security</div><h1>Settings</h1>
 <p>Manage your private Apify credential and local workspace preferences. Saving or removing your API key never starts a paid scan.</p></div>
@@ -260,6 +290,7 @@ input,select{min-height:44px}
 <div class="hint"><strong>Provider safety</strong><p>Each new Marketplace scan still requires reviewing its plan and approving its billable requests. Keep this localhost application private.</p><a href="/discover" data-view="discover" class="btn sm alt">Back to Find deals</a></div>
 </div>
 </section>
+@endunless
 <section class="view" id="view-activity" hidden>
 <div class="intro">
 <div class="eyebrow">Diagnostics / Activity</div>
@@ -632,20 +663,34 @@ function toggleExtraFilters(open){
 
 let manualHistoryPage=1;
 let manualHistoryLastPage=1;
-const viewPaths={
- discover:'/discover',
- saved:'/saved-items',
- watchlist:'/watchlist',
- profit:'/profit-calculator',
- activity:'/activity-logs',
- rejected:'/rejected-listings',
- status:'/availability-history',
- settings:'/settings'
+const testerMode=@json($testerMode ?? false);
+function setNavDrawer(open){
+ const active=Boolean(open&&window.innerWidth<=950);
+ document.body.classList.toggle('nav-open',active);
+ document.getElementById('navScrim').hidden=!active;
+ const toggle=document.getElementById('menuToggle');
+ toggle.setAttribute('aria-expanded',String(active));
+ toggle.setAttribute('aria-label',active?'Close navigation menu':'Open navigation menu');
+ toggle.firstChild.textContent=active?'✕ ':'☰ ';
+}
+document.getElementById('menuToggle').addEventListener('click',()=>setNavDrawer(!document.body.classList.contains('nav-open')));
+document.getElementById('navScrim').addEventListener('click',()=>setNavDrawer(false));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')setNavDrawer(false)});
+window.addEventListener('resize',()=>{if(window.innerWidth>950)setNavDrawer(false)});
+const viewPaths=testerMode?{
+ discover:'/browse',saved:'/browse/saved-items',watchlist:'/browse/watchlist',
+ profit:'/browse/profit-calculator',activity:'/browse/activity-logs',
+ rejected:'/browse/rejected-listings',status:'/browse/availability-history'
+}:{
+ discover:'/discover',saved:'/saved-items',watchlist:'/watchlist',
+ profit:'/profit-calculator',activity:'/activity-logs',
+ rejected:'/rejected-listings',status:'/availability-history',settings:'/settings'
 };
 const pathViews=Object.fromEntries(Object.entries(viewPaths).map(([view,path])=>[path,view]));
 const views=Object.keys(viewPaths);
 function navigate(view,{updateHistory=true,replace=false,scroll=true}={}){
  if(!views.includes(view))return;
+ setNavDrawer(false);
  views.forEach(v=>{document.getElementById('view-'+v).hidden=v!==view});
  document.querySelectorAll('[data-view]').forEach(link=>{
   if(link.dataset.view===view)link.setAttribute('aria-current','page');
@@ -661,7 +706,7 @@ function navigate(view,{updateHistory=true,replace=false,scroll=true}={}){
  if(view==='activity')renderActivityLogs();
  if(view==='rejected')loadRejectedListings();
  if(view==='status')loadManualStatusHistory();
- if(view==='settings')refreshApiKeyStatus();
+ if(view==='settings'&&!testerMode)refreshApiKeyStatus();
  if(scroll)window.scrollTo({top:0,behavior:'instant'});
 }
 document.querySelectorAll('[data-view]').forEach(link=>link.addEventListener('click',e=>{
@@ -1094,6 +1139,7 @@ document.getElementById('calcForm').addEventListener('submit',async e=>{
   document.getElementById('calcRoi').textContent=Number(data.roi_percent).toFixed(2)+'%';
  }catch(error){status.textContent=error.message}
 });
+@unless($testerMode ?? false)
 async function refreshApiKeyStatus(){
  const flag=document.getElementById('apiKeyState'),message=document.getElementById('apiKeyMessage');
  try{
@@ -1133,6 +1179,8 @@ document.getElementById('apiKeySettings').addEventListener('toggle',()=>{
  if(document.getElementById('apiKeySettings').open)refreshApiKeyStatus();
 });
 refreshApiKeyStatus();
+
+@endunless
 
 let activeScanPlan=null;
 async function refreshScanPlan(){
@@ -1176,7 +1224,7 @@ document.getElementById('scanForm').addEventListener('submit',async e=>{
  if(!data.category)delete data.category;
  data.radius_km=Number(data.radius_km);data.latitude=9.6477;data.longitude=123.8547;data.confirm_paid_scan=true;
  logActivity('scan_submission_attempted',{terms:activeScanPlan.terms,requests:activeScanPlan.requests,keyword:data.keyword||'(blank)',category:data.category||'All',minPrice:data.min_price??null,maxPrice:data.max_price??null,radiusKm:data.radius_km,sort:data.sort_by,area:'Bohol'});
- const outcome=await request('/marketplace/scan','POST',data);
+ const outcome=await request(testerMode?'/marketplace/tester-scan':'/marketplace/scan','POST',data);
  logActivity('scan_completed',{keyword:data.keyword||'(blank)',rawCount:outcome.diagnostics?.raw_count??outcome.raw_count,
   normalized:outcome.diagnostics?.normalized_count??outcome.returned,
   archived:outcome.diagnostics?.archived_count??outcome.archived_count,
