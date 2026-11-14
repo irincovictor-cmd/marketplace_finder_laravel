@@ -203,12 +203,17 @@ input,select{min-height:44px}
 <label>Search coverage (number of Apify requests)
 <select name="coverage" id="scanCoverage">
 <option value="quick" selected>Quick · up to 2 searches</option>
+@unless($testerMode ?? false)
 <option value="balanced">Balanced · up to 4 searches</option>
 <option value="broad">Broad · up to 6 searches</option>
+@endunless
 </select></label>
 <label>Category for saved results<select name="category"><option value="">All</option><option value="Electronics">Electronics</option><option value="Phones">Phones</option><option value="Laptops">Laptops</option><option value="Cameras">Cameras</option><option value="PC Parts">PC Parts</option><option value="Consoles">Consoles</option></select></label>
 </div>
-<p class="muted">A blank keyword searches a limited set of terms selected by coverage. More keywords can increase provider charges, but none guarantees complete Facebook coverage.</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
+<p class="muted">A blank keyword searches a limited set of terms selected by coverage. More keywords can increase provider charges, but none guarantees complete Facebook coverage.
+@if($testerMode ?? false)
+Tester scans are limited to Quick and three approved scan submissions per hour, shared across devices. Each request may incur Apify charges to the owner's configured account.
+@endif</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
 <label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run approved searches</button>
 </form>
@@ -398,7 +403,7 @@ input,select{min-height:44px}
 <div class="panel"><h3>Estimated result</h3><div class="summarygrid"><div><div class="muted">Net profit</div><div id="calcProfit" class="out">—</div></div><div><div class="muted">ROI</div><div id="calcRoi" class="out">—</div></div></div><p class="muted">A manual estimate, not a verified market resale price.</p></div>
 </div>
 </section>
-<div class="notice">Marketplace Finder · Laravel + SQLite · Private local workspace. Listings are stored in your archive.</div>
+<div class="notice">Marketplace Finder · Laravel + SQLite · {{ ($testerMode ?? false) ? 'Shared prototype tester workspace. Changes and approved paid scans use the owner’s server.' : 'Private local workspace. Listings are stored in your archive.' }}</div>
 </main></div>
 <script>
 'use strict';
