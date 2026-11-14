@@ -21,18 +21,24 @@ jobs:
           done
           docker compose logs --tail=120 app
           exit 1
-      - name: Verify phone gateway permits browsing but blocks private actions
+      - name: Verify phone tester gateway supports prototype features and blocks secrets
         run: |
           for i in $(seq 1 20); do
             if curl -fsS http://127.0.0.1:8080/browse >/dev/null 2>&1; then break; fi
             sleep 2
           done
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/browse)" = "200"
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/listings)" = "200"
+          for route in /browse /browse/saved-items /browse/watchlist /browse/profit-calculator /browse/activity-logs /browse/rejected-listings /browse/availability-history /listings /collections/saved /collections/watchlist /marketplace/scan-plan; do
+            test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$route")" = "200"
+          done
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/settings)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/browse/settings)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/marketplace/api-key)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/marketplace/scan)" = "404"
-          test "$(curl -s -o /dev/null -w '%{http_code}' -X PATCH http://127.0.0.1:8080/listings/1/manual-status)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:8080/marketplace/tester-scan)" = "419"
+          if curl -fsS http://127.0.0.1:8080/browse | grep -q 'id="apiKeyInput"'; then
+            echo 'ERROR: secret-management form exposed to testers'
+            exit 1
+          fi
       - name: Verify routes
         run: docker compose exec -T app php artisan route:list
       - name: Lint every PHP file in tracked Laravel overlay
