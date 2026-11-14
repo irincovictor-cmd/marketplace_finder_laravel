@@ -62,6 +62,12 @@ Route::get('/marketplace/scan-plan', [MarketplaceScanController::class, 'preview
 Route::post('/marketplace/scan', [MarketplaceScanController::class, 'scan'])
     ->name('marketplace.scan');
 
+// Controlled tester scanning: explicit payment approval, quick coverage only,
+// and a shared three-scan-per-hour limit across the guest proxy.
+Route::post('/marketplace/tester-scan', [MarketplaceScanController::class, 'testerScan'])
+    ->middleware('throttle:3,60')
+    ->name('marketplace.tester-scan');
+
 
  // Local-only, single-user development collections. Add authentication before deployment.
 Route::get('/collections/saved', [MarketplaceCollectionsController::class, 'savedIndex'])->name('marketplace.saved.index');
@@ -73,7 +79,21 @@ Route::post('/collections/watchlist', [MarketplaceCollectionsController::class, 
 Route::delete('/collections/watchlist/{watchlistEntry}', [MarketplaceCollectionsController::class, 'removeWatchlist'])->name('marketplace.watchlist.delete');
 
 // Guest browsing is exposed ONLY through the allowlisted port 8080 Nginx proxy.
-Route::view('/browse', 'marketplace.guest')->name('marketplace.guest');
+// Tester routes deliberately reuse the owner's working dashboard components.
+// No settings route exists under /browse, and the LAN proxy blocks owner URLs.
+$testerPages = [
+    '/browse' => 'discover',
+    '/browse/saved-items' => 'saved',
+    '/browse/watchlist' => 'watchlist',
+    '/browse/profit-calculator' => 'profit',
+    '/browse/activity-logs' => 'activity',
+    '/browse/rejected-listings' => 'rejected',
+    '/browse/availability-history' => 'status',
+];
+foreach ($testerPages as $path => $name) {
+    Route::get($path, fn () => view('marketplace.dashboard', ['testerMode' => true]))
+        ->name('marketplace.tester.'.$name);
+}
 
 // Original FlipRadar is retained, unchanged, at /flipradar/index.html.
 // Never execute paid Apify scans during boot, tests, or on initial page load.
