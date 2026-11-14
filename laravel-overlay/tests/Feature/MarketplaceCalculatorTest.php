@@ -253,6 +253,30 @@ class MarketplaceCalculatorTest extends TestCase
             ->assertSee("'/location-review'", false);
     }
 
+    public function test_guest_browsing_page_is_read_only_and_phone_friendly(): void
+    {
+        $this->get('/browse')->assertOk()
+            ->assertSee('Discover Bohol deals')
+            ->assertSee('Guest browsing')
+            ->assertSee('viewport', false)
+            ->assertSee("fetch('/listings?", false)
+            ->assertDontSee('Save / replace key')
+            ->assertDontSee('Run approved searches');
+        $guest = file_get_contents(resource_path('views/marketplace/guest.blade.php'));
+        $this->assertStringNotContainsString('csrf-token', $guest);
+        $this->assertStringNotContainsString('/marketplace/scan', $guest);
+    }
+
+    public function test_public_gateway_explicitly_allowlists_browsing_only(): void
+    {
+        $config = file_get_contents('/opt/marketplace/guest-nginx.conf');
+        $this->assertStringContainsString('location = /browse', $config);
+        $this->assertStringContainsString('location = /listings', $config);
+        $this->assertStringContainsString('limit_except GET', $config);
+        $this->assertStringContainsString('return 404;', $config);
+        $this->assertStringNotContainsString('location = /settings', $config);
+    }
+
     public function test_profit_and_roi_are_computed_on_server(): void
     {
         $this->postJson('/calculator/estimate', [
