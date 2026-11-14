@@ -63,6 +63,7 @@ cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_12_000010_track_
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_12_000011_add_manual_location_review.php database/migrations/2026_11_12_000011_add_manual_location_review.php
 cp /opt/marketplace/laravel-overlay/config/marketplace.php config/marketplace.php
 cp /opt/marketplace/laravel-overlay/resources/views/marketplace/dashboard.blade.php resources/views/marketplace/dashboard.blade.php
+cp /opt/marketplace/laravel-overlay/resources/views/marketplace/guest.blade.php resources/views/marketplace/guest.blade.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceCalculatorTest.php tests/Feature/MarketplaceCalculatorTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/MarketplaceScanTest.php tests/Feature/MarketplaceScanTest.php
 cp /opt/marketplace/laravel-overlay/tests/Feature/ApifySettingsTest.php tests/Feature/ApifySettingsTest.php
