@@ -185,7 +185,7 @@ class MarketplaceScanTest extends TestCase
         $this->getJson('/marketplace/scan-plan?category=Phones')
             ->assertOk()->assertJsonPath('requests', 2)
             ->assertJsonPath('terms.0', 'phone')
-            ->assertJsonPath('terms.1', 'redmi');
+            ->assertJsonPath('terms.1', 'smartphone');
 
         $this->getJson('/marketplace/scan-plan?category=Cameras&keyword=Canon')
             ->assertOk()->assertJsonPath('requests', 1)
