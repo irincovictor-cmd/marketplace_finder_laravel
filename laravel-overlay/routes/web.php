@@ -52,6 +52,7 @@ Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calcula
 // Local-only credential management. Never exposes API key in GET or logs.
 Route::get('/marketplace/api-key', [ApifySettingsController::class, 'status'])->name('marketplace.api-key.status');
 Route::post('/marketplace/api-key', [ApifySettingsController::class, 'save'])->middleware('throttle:10,1')->name('marketplace.api-key.save');
+Route::post('/marketplace/api-key/test', [ApifySettingsController::class, 'testConnection'])->middleware('throttle:10,1')->name('marketplace.api-key.test');
 Route::delete('/marketplace/api-key', [ApifySettingsController::class, 'remove'])->middleware('throttle:10,1')->name('marketplace.api-key.remove');
 
 // Runs a paid provider request only after an explicit opt-in and approval.
