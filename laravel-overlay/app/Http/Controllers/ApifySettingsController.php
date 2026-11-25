@@ -47,6 +47,25 @@ class ApifySettingsController extends Controller
         ])->header('Cache-Control', 'no-store');
     }
 
+    public function testConnection(Request $request, ApifyCredentialStore $store): JsonResponse
+    {
+        if ($denied = $this->localOnly($request)) return $denied;
+        $reply = fn (string $status, string $message) => response()->json(['status' => $status, 'message' => $message])->header('Cache-Control', 'no-store');
+        try { $token = $store->getToken(); }
+        catch (\RuntimeException $e) { return $reply('storage_error', 'Saved key cannot be decrypted. Replace the key in Settings.'); }
+        if (trim($token) === '') return $reply('missing', 'No API key configured. Save a key first.');
+        try {
+            $result = \Illuminate\Support\Facades\Http::withToken($token)->acceptJson()->timeout(15)->withOptions(['allow_redirects' => false])->get('https://api.apify.com/v2/users/me');
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return $reply('network_error', 'Cannot reach Apify from the server. Check DNS, internet and TLS connectivity.');
+        }
+        if ($result->successful() && is_array($result->json('data'))) return $reply('valid', 'API key accepted by Apify. This does not verify actor access, remaining credits or scan availability.');
+        if ($result->status() === 401) return $reply('invalid', 'Apify rejected the API key (401). Replace it in Settings.');
+        if ($result->status() === 403) return $reply('forbidden', 'Apify denied access (403). Check token permissions or account restrictions.');
+        if ($result->status() === 429) return $reply('rate_limited', 'Apify rate limited the connection check (429).');
+        return $reply('provider_error', 'Apify connection check returned HTTP '.$result->status().'.');
+    }
+
     public function remove(Request $request, ApifyCredentialStore $store): JsonResponse
     {
         if ($denied = $this->localOnly($request)) return $denied;
