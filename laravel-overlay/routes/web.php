@@ -6,6 +6,27 @@ use App\Http\Controllers\ApifySettingsController;
 use App\Http\Controllers\MarketplaceCollectionsController;
 use App\Http\Controllers\DiscoveredListingController;
 use Illuminate\Support\Facades\Route;
+use App\Services\RemoteDemoAccess;
+use Illuminate\Http\Request;
+
+Route::get('/demo-access', function (Request $request) {
+    $local = ! RemoteDemoAccess::proxied($request);
+    $code = $local ? '<p>Your private remote access code: <strong>'.e(RemoteDemoAccess::code()).'</strong></p><p>Keep this code private. Enter it at /demo-access on your public Marketplace link.</p>' : '';
+    return response('<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><title>Marketplace owner access</title><main style="max-width:440px;margin:10vh auto;padding:20px;font:16px system-ui"><h1>Marketplace owner access</h1>'.$code.'<form method="post" action="/demo-access"><input type="hidden" name="_token" value="'.e(csrf_token()).'"><label>Private access code <input name="code" type="password" required autocomplete="current-password"></label> <button>Sign in</button></form></main>')->header('Cache-Control', 'no-store');
+})->name('demo.access');
+Route::post('/demo-access', function (Request $request) {
+    if (! hash_equals(RemoteDemoAccess::code(), (string) $request->input('code', ''))) {
+        return response('Incorrect access code. Return to the sign-in page and retry.', 403);
+    }
+    $request->session()->regenerate();
+    $request->session()->put('remote_owner_access', RemoteDemoAccess::code());
+    return redirect('/discover');
+})->middleware('throttle:5,1,demo-login:');
+Route::post('/demo-access/logout', function (Request $request) {
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/browse');
+});
 
 // MARKETPLACE_FINDER_MANAGED_ROUTES — generated dashboard routes maintained by the repository overlay.
 // All dashboard entry routes use friendly localhost URLs in local development.
@@ -28,7 +49,7 @@ foreach ($dashboardPages as $path => $name) {
             return redirect('http://localhost:8000'.$targetPath.($request->getQueryString() ? '?'.$request->getQueryString() : ''));
         }
         return view('marketplace.dashboard');
-    })->name('marketplace.'.$name);
+    })->middleware(RemoteDemoAccess::class)->name('marketplace.'.$name);
 }
 
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
@@ -42,7 +63,7 @@ Route::get('/listings/location-audit', [DiscoveredListingController::class, 'loc
     ->name('marketplace.listings.location-audit');
 Route::post('/listings/restore-images', [DiscoveredListingController::class, 'restoreImages'])
     ->middleware('throttle:10,1')
-    ->name('marketplace.listings.restore-images');
+    ->middleware(RemoteDemoAccess::class)->name('marketplace.listings.restore-images');
 
 // Stateful browser clients receive Laravel's CSRF token in the Blade template.
 Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calculate'])
@@ -50,10 +71,10 @@ Route::post('/calculator/estimate', [ProfitCalculatorController::class, 'calcula
     ->name('marketplace.calculator');
 
 // Local-only credential management. Never exposes API key in GET or logs.
-Route::get('/marketplace/api-key', [ApifySettingsController::class, 'status'])->name('marketplace.api-key.status');
-Route::post('/marketplace/api-key', [ApifySettingsController::class, 'save'])->middleware('throttle:10,1')->name('marketplace.api-key.save');
-Route::post('/marketplace/api-key/test', [ApifySettingsController::class, 'testConnection'])->middleware('throttle:10,1')->name('marketplace.api-key.test');
-Route::delete('/marketplace/api-key', [ApifySettingsController::class, 'remove'])->middleware('throttle:10,1')->name('marketplace.api-key.remove');
+Route::get('/marketplace/api-key', [ApifySettingsController::class, 'status'])->middleware(RemoteDemoAccess::class)->name('marketplace.api-key.status');
+Route::post('/marketplace/api-key', [ApifySettingsController::class, 'save'])->middleware('throttle:10,1')->middleware(RemoteDemoAccess::class)->name('marketplace.api-key.save');
+Route::post('/marketplace/api-key/test', [ApifySettingsController::class, 'testConnection'])->middleware('throttle:10,1')->middleware(RemoteDemoAccess::class)->name('marketplace.api-key.test');
+Route::delete('/marketplace/api-key', [ApifySettingsController::class, 'remove'])->middleware('throttle:10,1')->middleware(RemoteDemoAccess::class)->name('marketplace.api-key.remove');
 
 Route::post('/marketplace/tester-connection', [ApifySettingsController::class, 'testerConnection'])
     ->middleware('throttle:10,1,tester-connection:')
@@ -65,7 +86,7 @@ Route::get('/marketplace/scan-plan', [MarketplaceScanController::class, 'preview
     ->middleware('throttle:30,1')
     ->name('marketplace.scan-plan');
 Route::post('/marketplace/scan', [MarketplaceScanController::class, 'scan'])
-    ->name('marketplace.scan');
+    ->middleware(RemoteDemoAccess::class)->name('marketplace.scan');
 
 // Demo tester scanning: explicit payment approval and quick coverage only.
 // No application-level hourly scan quota; stop public tunnels after the demo.
@@ -95,7 +116,7 @@ $testerPages = [
     '/browse/availability-history' => 'status',
 ];
 foreach ($testerPages as $path => $name) {
-    Route::get($path, fn () => view('marketplace.dashboard', ['testerMode' => true]))
+    Route::get($path, fn (Request $request) => RemoteDemoAccess::proxied($request) && RemoteDemoAccess::authorized($request) ? redirect('/discover') : view('marketplace.dashboard', ['testerMode' => true]))
         ->name('marketplace.tester.'.$name);
 }
 
