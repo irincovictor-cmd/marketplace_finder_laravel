@@ -59,8 +59,19 @@ class MarketplaceScanService
             ->timeout(150)
             ->post('https://api.apify.com/v2/acts/curious_coder~facebook-marketplace/run-sync-get-dataset-items?' . $query, $payload);
 
-        if (! $response->successful() || ! is_array($response->json()) || ! array_is_list($response->json())) {
-            throw new RuntimeException('Marketplace provider failed or returned an invalid response.');
+        if (! $response->successful()) {
+            $status = $response->status();
+            $reason = match ($status) {
+                401 => 'Apify rejected the API key (401).',
+                402 => 'Apify payment or usage limit reached (402).',
+                403 => 'Apify denied actor access (403).',
+                429 => 'Apify rate limit reached (429).',
+                default => 'Apify actor request returned HTTP '.$status.'.',
+            };
+            throw new RuntimeException($reason);
+        }
+        if (! is_array($response->json()) || ! array_is_list($response->json())) {
+            throw new RuntimeException('Apify returned an unexpected dataset format.');
         }
 
         $items = [];
