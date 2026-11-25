@@ -212,7 +212,7 @@ input,select{min-height:44px}
 </div>
 <p class="muted">A blank keyword searches a limited set of terms selected by coverage. More keywords can increase provider charges, but none guarantees complete Facebook coverage.
 @if($testerMode ?? false)
-Tester scans are limited to Quick and three approved scan submissions per hour, shared across devices. Each request may incur Apify charges to the owner's configured account.
+Tester scans use Quick coverage with no application-level hourly scan quota. Each request may incur Apify charges to the owner's configured account.
 @endif</p><div id="scanPlanPreview" class="hint" aria-live="polite">Checking scan plan…</div>
 <label class="checkboxrow"><input id="paidScan" type="checkbox" required><span>I approve the potentially billable requests shown in the scan plan. Results and Bohol location accuracy are not guaranteed.</span></label>
 <button class="btn" id="scanButton" type="submit">Run approved searches</button>
