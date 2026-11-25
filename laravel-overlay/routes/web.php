@@ -55,6 +55,10 @@ Route::post('/marketplace/api-key', [ApifySettingsController::class, 'save'])->m
 Route::post('/marketplace/api-key/test', [ApifySettingsController::class, 'testConnection'])->middleware('throttle:10,1')->name('marketplace.api-key.test');
 Route::delete('/marketplace/api-key', [ApifySettingsController::class, 'remove'])->middleware('throttle:10,1')->name('marketplace.api-key.remove');
 
+Route::post('/marketplace/tester-connection', [ApifySettingsController::class, 'testerConnection'])
+    ->middleware('throttle:10,1,tester-connection:')
+    ->name('marketplace.tester-connection');
+
 // Runs a paid provider request only after an explicit opt-in and approval.
 // Its Docker port is bound to localhost; do not expose this unauthenticated route publicly.
 Route::get('/marketplace/scan-plan', [MarketplaceScanController::class, 'preview'])
