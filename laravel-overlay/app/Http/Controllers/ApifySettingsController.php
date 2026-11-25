@@ -50,6 +50,12 @@ class ApifySettingsController extends Controller
     public function testConnection(Request $request, ApifyCredentialStore $store): JsonResponse
     {
         if ($denied = $this->localOnly($request)) return $denied;
+        return $this->testerConnection($store);
+    }
+
+    // Public demo diagnostic: only fixed status messages, no token or account data.
+    public function testerConnection(ApifyCredentialStore $store): JsonResponse
+    {
         $reply = fn (string $status, string $message) => response()->json(['status' => $status, 'message' => $message])->header('Cache-Control', 'no-store');
         try { $token = $store->getToken(); }
         catch (\RuntimeException $e) { return $reply('storage_error', 'Saved key cannot be decrypted. Replace the key in Settings.'); }
