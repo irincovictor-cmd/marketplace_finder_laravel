@@ -291,6 +291,18 @@ class MarketplaceScanTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_demo_tester_can_submit_more_than_three_approved_scans(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/*' => Http::response([], 200)]);
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/marketplace/tester-scan', $this->payload(['coverage' => 'quick']))
+                ->assertOk()->assertJsonPath('completed_requests', 1);
+        }
+        Http::assertSentCount(5);
+    }
+
     public function test_repeated_search_returns_zero_new_listings_and_a_distinct_batch(): void
     {
         config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
