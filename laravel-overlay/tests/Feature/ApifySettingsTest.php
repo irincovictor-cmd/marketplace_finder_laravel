@@ -90,6 +90,18 @@ class ApifySettingsTest extends TestCase
         Http::assertSent(fn ($req) => $req->url() === 'https://api.apify.com/v2/users/me' && $req->hasHeader('Authorization', 'Bearer '.$token));
     }
 
+    public function test_public_connection_check_returns_no_account_data_or_secret(): void
+    {
+        $token = 'apify_api_demoConnection123456789';
+        app(ApifyCredentialStore::class)->save($token);
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/v2/users/me' => Http::response(['data' => ['email' => 'private@example.com', 'token' => $token]], 200)]);
+        $this->postJson('/marketplace/tester-connection')->assertOk()
+            ->assertJsonPath('status', 'valid')->assertDontSee($token)->assertDontSee('private@example.com');
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($req) => $req->method() === 'GET' && $req->url() === 'https://api.apify.com/v2/users/me');
+    }
+
     public function test_environment_token_remains_compatible_without_browser_vault(): void
     {
         config(['marketplace.apify_token' => 'legacy-env-token']);
