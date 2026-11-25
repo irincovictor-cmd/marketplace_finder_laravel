@@ -193,6 +193,11 @@ input,select{min-height:44px}
 <details class="settings scan-panel" id="scanSettings" open>
 <summary><span class="scan-heading">Fresh Marketplace search</span><span class="scan-tag">Paid provider · approval required</span><span class="scan-chevron">Configure search</span></summary>
 <p>Scanning uses a third-party Apify actor and may incur charges. Manage your key under Settings → Apify API key. Each scan still requires separate cost approval. One scan requires confirmation; the actor's $0.10 parameter is not a guaranteed billing limit.</p>
+<div class="hint" style="margin-bottom:14px">
+<strong>Apify API connection</strong>
+<p id="scanConnectionStatus" role="status">Not tested yet. Check the server's saved API key without running a paid search.</p>
+<button class="btn sm alt" type="button" id="scanConnectionTest">Check API connection</button>
+</div>
 <form id="scanForm">
 <div class="grid3">
 <label>Search keyword (optional)<input name="keyword" placeholder="Blank = category-based searches" maxlength="80"></label>
@@ -1195,6 +1200,15 @@ refreshApiKeyStatus();
 
 @endunless
 
+document.getElementById('scanConnectionTest').addEventListener('click',async()=>{
+ const btn=document.getElementById('scanConnectionTest'),status=document.getElementById('scanConnectionStatus');
+ btn.disabled=true;status.textContent='Checking Apify connection…';
+ try{
+  const result=await request(testerMode?'/marketplace/tester-connection':'/marketplace/api-key/test','POST',{});
+  status.textContent=result.message||'Unexpected connection-check response.';
+ }catch(error){status.textContent='Connection check failed: '+error.message;}
+ finally{btn.disabled=false;}
+});
 let activeScanPlan=null;
 async function refreshScanPlan(){
  const form=document.getElementById('scanForm');
