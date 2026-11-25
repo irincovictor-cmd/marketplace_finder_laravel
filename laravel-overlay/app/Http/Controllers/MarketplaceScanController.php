@@ -84,6 +84,7 @@ class MarketplaceScanController extends Controller
         $seen = [];
         $rawCount = 0;
         $errors = [];
+        $reasons = [];
         $completed = 0;
 
         // One to six explicitly approved billable actor requests. Each keyword is an independent run,
@@ -100,13 +101,16 @@ class MarketplaceScanController extends Controller
                 }
             } catch (RuntimeException $e) {
                 $errors[] = $term;
+                // Never expose arbitrary exception messages or provider response bodies.
+                $reason = $e->getMessage();
+                $reasons[] = preg_match('/^(Apify (rejected the API key \(401\)|payment or usage limit reached \(402\)|denied actor access \(403\)|rate limit reached \(429\)|actor request returned HTTP [0-9]{3}|returned an unexpected dataset format)|Saved API key could not be decrypted\. Replace it in settings)\.$/D', $reason) ? $reason : 'Provider request or credential storage failed. Check owner settings and server logs.';
             }
         }
 
         if ($completed === 0) {
             // Do not include provider errors, headers or account secrets.
             return response()->json([
-                'message' => 'All Marketplace provider searches failed. Review Apify status and server configuration.',
+                'message' => 'All Marketplace searches failed: '.implode(' ', array_unique($reasons)),
                 'planned_terms' => $terms,
                 'completed_requests' => 0,
                 'failed_terms' => $errors,
