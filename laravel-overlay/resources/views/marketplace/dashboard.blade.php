@@ -286,6 +286,7 @@ Tester scans use Quick coverage with no application-level hourly scan quota. Eac
 <label>Apify API key<input id="apiKeyInput" name="token" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" maxlength="512" placeholder="apify_api_…" required></label>
 <div class="log-actions">
 <button class="btn sm" type="submit" id="apiKeySave">Save / replace key</button>
+<button class="btn sm alt" type="button" id="apiKeyTest">Test saved API key</button>
 <button class="btn sm alt" type="button" id="apiKeyRemove">Remove saved key</button>
 </div>
 </form>
@@ -742,7 +743,7 @@ async function request(path,method='GET',body){
    error.status=429;error.retryAfter=retrySeconds;
    throw error;
   }
-  const error=new Error(value.errors?Object.values(value.errors).flat().join(' '):value.message||'Request failed');
+  const error=new Error(value.errors?Object.values(value.errors).flat().join(' '):value.message||('Request failed (HTTP '+response.status+')'));
   error.status=response.status;
   throw error;
  }
@@ -1168,6 +1169,13 @@ document.getElementById('apiKeyForm').addEventListener('submit',async e=>{
   await refreshApiKeyStatus();
  }catch(error){message.textContent='Could not save API key. Check its format and try again.'}
  finally{field.value='';save.disabled=false}
+});
+document.getElementById('apiKeyTest').addEventListener('click',async()=>{
+ const btn=document.getElementById('apiKeyTest'),message=document.getElementById('apiKeyMessage');
+ btn.disabled=true;message.textContent='Checking saved key with Apify (no actor run)…';
+ try{const result=await request('/marketplace/api-key/test','POST',{});message.textContent=result.message;}
+ catch(error){message.textContent='Connection check failed: '+error.message;}
+ finally{btn.disabled=false;}
 });
 document.getElementById('apiKeyRemove').addEventListener('click',async()=>{
  if(!confirm('Remove the encrypted API key stored by this app? No scans will be started.'))return;
