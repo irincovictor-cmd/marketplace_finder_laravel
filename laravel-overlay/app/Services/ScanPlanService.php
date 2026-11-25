@@ -7,11 +7,11 @@ class ScanPlanService
     // Explicitly selected scan breadth, not an exhaustive Facebook feed.
     // Each term is a separate potentially billable Apify run.
     private const POOLS = [
-        'Phones' => ['phone', 'redmi', 'iphone', 'samsung', 'poco', 'realme'],
-        'Laptops' => ['laptop', 'notebook', 'asus', 'lenovo', 'acer', 'macbook'],
-        'Cameras' => ['camera', 'canon', 'nikon', 'sony camera', 'fujifilm', 'gopro'],
-        'Consoles' => ['ps5', 'switch', 'xbox', 'playstation', 'ps4', 'steam deck'],
-        'PC Parts' => ['rtx', 'ryzen', 'graphics card', 'ssd', 'monitor', 'motherboard'],
+        'Phones' => ['phone', 'smartphone', 'cellphone', 'mobile phone', 'android phone', '5g phone'],
+        'Laptops' => ['laptop', 'notebook', 'portable computer', 'gaming laptop', 'business laptop', 'ultrabook'],
+        'Cameras' => ['camera', 'digital camera', 'dslr', 'mirrorless camera', 'action camera', 'compact camera'],
+        'Consoles' => ['game console', 'gaming console', 'handheld console', 'video game console', 'portable console', 'home console'],
+        'PC Parts' => ['pc parts', 'computer parts', 'graphics card', 'processor', 'ssd', 'motherboard'],
         'Electronics' => ['phone', 'laptop', 'camera', 'speaker', 'console', 'monitor'],
         'Other' => ['electronics', 'gadget', 'speaker', 'tablet', 'smartwatch', 'headset'],
         'All' => ['phone', 'laptop', 'camera', 'speaker', 'console', 'monitor'],
