@@ -62,10 +62,9 @@ Route::get('/marketplace/scan-plan', [MarketplaceScanController::class, 'preview
 Route::post('/marketplace/scan', [MarketplaceScanController::class, 'scan'])
     ->name('marketplace.scan');
 
-// Controlled tester scanning: explicit payment approval, quick coverage only,
-// and a shared three-scan-per-hour limit across the guest proxy.
+// Demo tester scanning: explicit payment approval and quick coverage only.
+// No application-level hourly scan quota; stop public tunnels after the demo.
 Route::post('/marketplace/tester-scan', [MarketplaceScanController::class, 'testerScan'])
-    ->middleware('throttle:3,60')
     ->name('marketplace.tester-scan');
 
 
