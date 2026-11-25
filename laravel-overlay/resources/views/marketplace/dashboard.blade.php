@@ -188,7 +188,7 @@ input,select{min-height:44px}
 <div class="scan-lead"><div><span class="eyebrow">New discoveries</span><h2>Search Facebook Marketplace</h2><p>Fetch new listings only when you approve the Apify requests. Archived browsing below remains free.</p></div>@unless($testerMode ?? false)
 <a class="btn sm alt" href="/settings" data-view="settings">API key settings</a>
 @else
-<span class="muted">Tester mode · API key managed by owner</span>
+<a class="btn sm alt" href="/demo-access">Owner sign-in / API key settings</a>
 @endunless</div>
 <details class="settings scan-panel" id="scanSettings" open>
 <summary><span class="scan-heading">Fresh Marketplace search</span><span class="scan-tag">Paid provider · approval required</span><span class="scan-chevron">Configure search</span></summary>
@@ -281,12 +281,12 @@ Tester scans use Quick coverage with no application-level hourly scan quota. Eac
 @unless($testerMode ?? false)
 <section class="view" id="view-settings" hidden>
 <div class="intro"><div class="eyebrow">Workspace / Security</div><h1>Settings</h1>
-<p>Manage your private Apify credential and local workspace preferences. Saving or removing your API key never starts a paid scan.</p></div>
+<p>Manage your private Apify credential and workspace preferences. Saving or removing your API key never starts a paid scan.</p><p><a class="btn sm alt" href="/demo-access">Remote owner access</a></p><form method="post" action="/demo-access/logout">@csrf<button class="btn sm alt" type="submit">Sign out remote owner</button></form></div>
 <div class="panel settings-panel">
 <div class="headrow"><div><h2>Apify API key</h2><p>Encrypted on this Laravel installation, never displayed after saving.</p></div><span class="settings-note">Local server only</span></div>
 <details class="settings" id="apiKeySettings" open>
 <summary>Key management <span id="apiKeyState" class="muted">Checking…</span></summary>
-<p>Paste your Apify API key here instead of editing .env. Laravel encrypts it using this installation's APP_KEY and stores it in private server storage (not the browser or GitHub). The key is never shown again. Use only on localhost; anyone with access to this local app can replace it.</p>
+<p>Paste your Apify API key here instead of editing .env. Laravel encrypts it using this installation's APP_KEY and stores it in private server storage (not the browser or GitHub). The key is never shown again. Available locally and to authenticated remote owners. Keep your access code private.</p>
 <form id="apiKeyForm" autocomplete="off">
 <label>Apify API key<input id="apiKeyInput" name="token" type="password" autocomplete="new-password" spellcheck="false" autocapitalize="off" maxlength="512" placeholder="apify_api_…" required></label>
 <div class="log-actions">
