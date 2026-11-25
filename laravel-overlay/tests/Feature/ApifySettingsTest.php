@@ -102,6 +102,25 @@ class ApifySettingsTest extends TestCase
         Http::assertSent(fn ($req) => $req->method() === 'GET' && $req->url() === 'https://api.apify.com/v2/users/me');
     }
 
+    public function test_remote_owner_credentials_require_access_code_and_session(): void
+    {
+        $proxy = ['X-Marketplace-Demo-Proxy' => '1'];
+        $token = 'apify_api_remoteOwner123456789';
+        $this->get('/settings', $proxy)->assertRedirect('/demo-access');
+        $this->postJson('/marketplace/api-key', ['token' => $token], $proxy)->assertForbidden();
+        $this->postJson('/marketplace/scan', [], $proxy)->assertForbidden();
+        $code = \App\Services\RemoteDemoAccess::code();
+        $this->get('/demo-access', $proxy)->assertOk()->assertDontSee($code);
+        $this->get('/demo-access')->assertOk()->assertSee($code);
+        $this->post('/demo-access', ['code' => 'wrong'], $proxy)->assertForbidden();
+        $this->post('/demo-access', ['code' => $code], $proxy)->assertRedirect('/discover');
+        $this->get('/browse', $proxy)->assertRedirect('/discover');
+        $this->get('/settings', $proxy)->assertOk()->assertSee('Test saved API key');
+        $this->postJson('/marketplace/api-key', ['token' => $token], $proxy)->assertOk()->assertDontSee($token);
+        $this->post('/demo-access/logout', [], $proxy)->assertRedirect('/browse');
+        $this->deleteJson('/marketplace/api-key', [], $proxy)->assertForbidden();
+    }
+
     public function test_environment_token_remains_compatible_without_browser_vault(): void
     {
         config(['marketplace.apify_token' => 'legacy-env-token']);
