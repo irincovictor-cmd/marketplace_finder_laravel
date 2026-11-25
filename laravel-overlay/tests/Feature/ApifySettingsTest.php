@@ -75,6 +75,21 @@ class ApifySettingsTest extends TestCase
             && ! str_contains($req->url(), $token));
     }
 
+    public function test_connection_check_is_private_and_never_runs_an_actor(): void
+    {
+        $token = 'apify_api_testConnection123456789';
+        Http::preventStrayRequests();
+        Http::fake(['https://api.apify.com/v2/users/me' => Http::sequence()->push(['data' => ['id' => 'test']], 200)->push([], 401)]);
+        $this->postJson('/marketplace/api-key/test')->assertOk()->assertJsonPath('status', 'missing');
+        Http::assertNothingSent();
+        $this->postJson('/marketplace/api-key', ['token' => $token])->assertOk();
+        $this->postJson('http://example.com/marketplace/api-key/test')->assertForbidden();
+        $this->postJson('/marketplace/api-key/test')->assertOk()->assertJsonPath('status', 'valid')->assertDontSee($token);
+        $this->postJson('/marketplace/api-key/test')->assertOk()->assertJsonPath('status', 'invalid')->assertDontSee($token);
+        Http::assertSentCount(2);
+        Http::assertSent(fn ($req) => $req->url() === 'https://api.apify.com/v2/users/me' && $req->hasHeader('Authorization', 'Bearer '.$token));
+    }
+
     public function test_environment_token_remains_compatible_without_browser_vault(): void
     {
         config(['marketplace.apify_token' => 'legacy-env-token']);
