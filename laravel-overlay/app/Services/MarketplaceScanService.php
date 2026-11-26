@@ -128,6 +128,13 @@ class MarketplaceScanService
         $candidates = [
             $item['primary_listing_photo_url'] ?? null,
             data_get($item, 'primary_listing_photo.image.uri'),
+            data_get($item, 'primary_listing_photo.photo_image_url'),
+            data_get($item, 'primary_listing_photo.image.url'),
+            data_get($item, 'primaryListingPhoto.image.uri'),
+            $item['primaryPhotoUrl'] ?? null,
+            $item['imageUrl'] ?? null,
+            data_get($item, 'listing_image.uri'),
+            data_get($item, 'photoUrls.0'),
             data_get($item, 'primary_listing_photo.uri'),
             data_get($item, 'listing_photos.0.image.uri'),
             data_get($item, 'listing_photos.0.uri'),
@@ -151,22 +158,7 @@ class MarketplaceScanService
      */
     private function safeImageUrl(mixed $candidate): ?string
     {
-        if (! is_string($candidate) || strlen($candidate) > 4096) {
-            return null;
-        }
-        $url = parse_url($candidate);
-        if (! is_array($url) || strtolower($url['scheme'] ?? '') !== 'https'
-            || isset($url['user']) || isset($url['pass'])) {
-            return null;
-        }
-        $host = strtolower($url['host'] ?? '');
-        // Accept any fbcdn / fbsbx host variant used by Marketplace CDN.
-        if ($host === 'fbcdn.net' || str_ends_with($host, '.fbcdn.net')
-            || $host === 'fbsbx.com' || str_ends_with($host, '.fbsbx.com')
-            || str_contains($host, 'fbcdn.net') || str_contains($host, 'fbsbx.com')) {
-            return $candidate;
-        }
-        return null;
+        return ListingPhotoCache::safeUrl($candidate);
     }
 
     private function marketplaceUrl(mixed $candidate): ?string
