@@ -52,6 +52,14 @@ foreach ($dashboardPages as $path => $name) {
     })->middleware(RemoteDemoAccess::class)->name('marketplace.'.$name);
 }
 
+Route::get('/listings/{listing}/photo', function (\App\Models\DiscoveredListing $listing, \App\Services\ListingPhotoCache $cache) {
+    $path = $cache->fetch($listing->id, $listing->image_url);
+    if (! $path) return response('', 404)->header('Cache-Control', 'no-store');
+    $info = @getimagesize($path);
+    if (! $info) abort(404);
+    return response()->file($path, ['Content-Type' => $info['mime'], 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'public, max-age=86400']);
+})->whereNumber('listing')->middleware('throttle:120,1')->name('marketplace.listings.photo');
+
 Route::get('/listings', [DiscoveredListingController::class, 'index'])->name('marketplace.listings');
 Route::get('/listings/manual-status-history', [DiscoveredListingController::class, 'manualStatusHistory'])->name('marketplace.listings.status-history');
 Route::patch('/listings/{listing}/manual-status', [DiscoveredListingController::class, 'updateManualStatus'])->name('marketplace.listings.manual-status');
