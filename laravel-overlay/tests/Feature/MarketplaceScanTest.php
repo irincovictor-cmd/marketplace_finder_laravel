@@ -197,6 +197,36 @@ class MarketplaceScanTest extends TestCase
         $this->assertDatabaseHas('discovered_listings', ['title' => 'Canon camera', 'image_url' => $photo]);
     }
 
+    public function test_targeted_photo_recovery_only_accepts_requested_listing_ids(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        $photo = 'https://scontent.xx.fbcdn.net/recovered.jpg';
+        Http::fake(['https://api.apify.com/*' => Http::response([
+            ['id' => '123456', 'listingPhotos' => [['url' => $photo]]],
+            ['id' => '999999', 'primary_listing_photo_url' => $photo],
+            ['id' => '456789', 'listingUrl' => 'https://www.facebook.com/marketplace/item/999999/',
+                'primary_listing_photo_url' => $photo],
+        ])]);
+        $result = app(\App\Services\MarketplaceScanService::class)->recoverPhotos(['123456', '456789']);
+        $this->assertSame([123456 => $photo], $result);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request['urls'] === [
+            'https://www.facebook.com/marketplace/item/123456/',
+            'https://www.facebook.com/marketplace/item/456789/',
+        ] && $request['getListingDetails'] === true && $request['getAllListingPhotos'] === true);
+    }
+
+    public function test_photo_recovery_requires_owner_and_paid_confirmation(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake();
+        $this->postJson('/listings/photo-recovery', [], ['X-Marketplace-Demo-Proxy' => '1'])->assertForbidden();
+        $this->postJson('/listings/photo-recovery', [])->assertUnprocessable()
+            ->assertJsonValidationErrors('confirm_paid_recovery');
+        Http::assertNothingSent();
+    }
+
     public function test_scan_plan_is_free_and_category_aware(): void
     {
         Http::preventStrayRequests();
