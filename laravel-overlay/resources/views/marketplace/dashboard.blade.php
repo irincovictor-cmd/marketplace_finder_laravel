@@ -920,16 +920,21 @@ async function loadListings(){
  const card=document.createElement('article');card.className='listing';
  const art=document.createElement('div');art.className='listing-art';
  const fallback=document.createElement('span');fallback.className='photo-fallback';fallback.textContent=({'Phones':'📱','Laptops':'💻','Cameras':'📷','PC Parts':'🖥️','Consoles':'🎮'})[item.category]||'📦';
- if(item.image_url && typeof item.image_url==='string'){
+ const directPhoto=safeMarketplacePhoto(item.image_url);
+ if(directPhoto && Number.isInteger(Number(item.id))){
    const img=document.createElement('img');
-   img.src=item.image_url;
    img.alt='Photo of '+item.title;
    img.loading='lazy';img.decoding='async';img.referrerPolicy='no-referrer';
-   img.addEventListener('error',()=>{img.remove();art.prepend(fallback);photoLabel.textContent='Photo unavailable';});
+   let triedDirect=false;
+   img.addEventListener('error',()=>{
+    if(!triedDirect){triedDirect=true;img.src=directPhoto;return}
+    img.remove();art.prepend(fallback);photoLabel.textContent='Original photo unavailable';
+   });
+   img.src='/listings/'+Number(item.id)+'/photo';
    art.append(img);
  }else{art.append(fallback)}
  const photoLabel=document.createElement('span');photoLabel.className='photo-label';
- photoLabel.textContent=item.image_url?'Marketplace photo':'Photo unavailable';art.append(photoLabel);
+ photoLabel.textContent=directPhoto?'Marketplace photo':'Original photo unavailable';art.append(photoLabel);
  const body=document.createElement('div');body.className='listing-info';
  const badge=label(item.category+' · Saved in discovery history','pill');
  const h=document.createElement('h3');h.textContent=item.title;
