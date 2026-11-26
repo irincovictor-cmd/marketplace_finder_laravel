@@ -177,6 +177,26 @@ class MarketplaceScanTest extends TestCase
             ->assertJsonPath('items.0.image_url', 'https://scontent.xx.fbcdn.net/example-product.jpg');
     }
 
+    public function test_nested_photo_fields_and_cdn_hostname_validation(): void
+    {
+        config(['marketplace.scan_enabled' => true, 'marketplace.apify_token' => 'fake-test-token']);
+        Http::preventStrayRequests();
+        $photo = 'https://scontent.xx.fbcdn.net/actual-photo.jpg';
+        Http::fake(['https://api.apify.com/*' => Http::response([
+            ['id' => 'nested-photo', 'marketplace_listing_title' => 'Canon camera',
+                'listing_price' => ['amount' => 15000], 'location' => ['city' => 'Dauis'],
+                'primary_listing_photo' => ['photo_image_url' => $photo]],
+            ['id' => 'spoof-photo', 'marketplace_listing_title' => 'Laptop',
+                'listing_price' => ['amount' => 15000], 'location' => ['city' => 'Dauis'],
+                'primary_listing_photo_url' => 'https://fbcdn.net.evil.example/photo.jpg'],
+        ], 200)]);
+        $this->postJson('/marketplace/scan', $this->payload())->assertOk()
+            ->assertJsonPath('listings.0.image_url', $photo)
+            ->assertJsonPath('listings.1.image_url', null);
+        Http::assertSentCount(1);
+        $this->assertDatabaseHas('discovered_listings', ['title' => 'Canon camera', 'image_url' => $photo]);
+    }
+
     public function test_scan_plan_is_free_and_category_aware(): void
     {
         Http::preventStrayRequests();
