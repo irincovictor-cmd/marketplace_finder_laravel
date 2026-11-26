@@ -298,6 +298,7 @@ Tester scans use Quick coverage with no application-level hourly scan quota. Eac
 <p class="muted" id="apiKeyMessage" role="status">No validation or paid scan happens when you save a key.</p>
 </details>
 
+<div class="hint"><strong>Archived listing photos</strong><p>Find up to five active Bohol listings with missing or expired photo URLs. Preview the selected listings before approving a potentially billable recovery.</p><button class="btn sm alt" type="button" id="recoverArchivedPhotos">Restore missing photos</button></div>
 <div class="hint"><strong>Provider safety</strong><p>Each new Marketplace scan still requires reviewing its plan and approving its billable requests. Keep this localhost application private.</p><a href="/discover" data-view="discover" class="btn sm alt">Back to Find deals</a></div>
 </div>
 </section>
@@ -861,6 +862,19 @@ document.getElementById('scanOnlyNew').addEventListener('click',()=>{
 document.getElementById('scanAllSeen').addEventListener('click',()=>{
  batchScope='all';listingPage=1;loadListings();
 });
+let photoRecoveryBusy=false;
+async function recoverListingPhotos(ids,control){
+ if(photoRecoveryBusy)return;
+ if(!confirm('Recover original photos for '+ids.length+' listing(s)? This can consume Apify credits. One targeted actor run will be submitted.'))return;
+ photoRecoveryBusy=true;control.disabled=true;
+ const old=control.textContent;control.textContent='Recovering…';
+ try{
+  const result=await request('/listings/photo-recovery','POST',{ids,confirm_paid_recovery:true});
+  alert(result.message);
+  await loadListings();
+ }catch(e){alert(e.message+' Check Apify run history before retrying.')}
+ finally{photoRecoveryBusy=false;control.disabled=false;control.textContent=old}
+}
 async function loadListings(){
  const box=document.getElementById('listingResults');
  const feedback=document.getElementById('searchFeedback');
@@ -921,6 +935,8 @@ async function loadListings(){
  const art=document.createElement('div');art.className='listing-art';
  const fallback=document.createElement('span');fallback.className='photo-fallback';fallback.textContent=({'Phones':'📱','Laptops':'💻','Cameras':'📷','PC Parts':'🖥️','Consoles':'🎮'})[item.category]||'📦';
  const directPhoto=safeMarketplacePhoto(item.image_url);
+ const restorePhoto=button('Restore photo',()=>recoverListingPhotos([item.id],restorePhoto));
+ restorePhoto.hidden=true;
  if(directPhoto && Number.isInteger(Number(item.id))){
    const img=document.createElement('img');
    img.alt='Photo of '+item.title;
@@ -928,11 +944,11 @@ async function loadListings(){
    let triedDirect=false;
    img.addEventListener('error',()=>{
     if(!triedDirect){triedDirect=true;img.src=directPhoto;return}
-    img.remove();art.prepend(fallback);photoLabel.textContent='Original photo unavailable';
+    img.remove();art.prepend(fallback);photoLabel.textContent='Original photo unavailable';if(!testerMode&&item.url)restorePhoto.hidden=false;
    });
    img.src='/listings/'+Number(item.id)+'/photo';
    art.append(img);
- }else{art.append(fallback)}
+ }else{art.append(fallback);if(!testerMode&&item.url)restorePhoto.hidden=false;}
  const photoLabel=document.createElement('span');photoLabel.className='photo-label';
  photoLabel.textContent=directPhoto?'Marketplace photo':'Original photo unavailable';art.append(photoLabel);
  const body=document.createElement('div');body.className='listing-info';
@@ -943,7 +959,7 @@ async function loadListings(){
  const actions=document.createElement('div');actions.className='listing-actions';
  if(item.url){
   const a=document.createElement('a');a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';a.className='btn sm alt';a.textContent='View listing';
-  actions.append(a);
+  actions.append(a);if(!testerMode)actions.append(restorePhoto);
   actions.append(button('♡ Save',async()=>{try{await request('/collections/saved','POST',{title:item.title,listing_url:item.url,price:item.price,city:item.city});alert('Saved to your collection')}catch(e){alert(e.message)}}));
  }else{actions.append(label('Listing link unavailable','muted'))}
  const availability=makeManualStatusControl(item,()=>loadListings());
@@ -1197,6 +1213,17 @@ document.getElementById('apiKeyRemove').addEventListener('click',async()=>{
   document.getElementById('apiKeyInput').value='';
   await refreshApiKeyStatus();
  }catch(error){message.textContent='Could not remove saved API key: '+error.message;btn.disabled=false}
+});
+document.getElementById('recoverArchivedPhotos').addEventListener('click',async()=>{
+ const control=document.getElementById('recoverArchivedPhotos');
+ if(photoRecoveryBusy)return;
+ control.disabled=true;
+ try{
+  const result=await request('/listings/photo-recovery-candidates');
+  if(!result.items.length){alert('No missing or expired photo URLs found among eligible archived listings.');return;}
+  if(!confirm('Selected listings:\\n'+result.items.map(x=>x.title).join('\\n')+'\\nContinue to paid recovery approval?'))return;
+  await recoverListingPhotos(result.items.map(x=>x.id),control);
+ }catch(e){alert(e.message)}finally{control.disabled=false}
 });
 document.getElementById('apiKeySettings').addEventListener('toggle',()=>{
  if(document.getElementById('apiKeySettings').open)refreshApiKeyStatus();
