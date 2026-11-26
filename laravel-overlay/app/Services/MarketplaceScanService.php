@@ -123,6 +123,44 @@ class MarketplaceScanService
      * Fall back to common nested photo fields used by the same actor.
      * Never trust or fetch remote URLs server-side (SSRF risk).
      */
+    // One explicitly approved run targeting only the selected archived item IDs.
+    public function recoverPhotos(array $ids): array
+    {
+        $ids = array_values(array_unique($ids));
+        if (count($ids) < 1 || count($ids) > 5) throw new RuntimeException('Select one to five listings.');
+        foreach ($ids as $id) if (! is_string($id) || ! ctype_digit($id)) throw new RuntimeException('Invalid listing identity.');
+        $token = app(ApifyCredentialStore::class)->getToken();
+        if (! filled($token)) throw new RuntimeException('Add an API key in Settings first.');
+        $payload = [
+            'urls' => array_map(fn ($id) => 'https://www.facebook.com/marketplace/item/'.$id.'/', $ids),
+            'getListingDetails' => true,
+            'getAllListingPhotos' => true,
+            'maxPagesPerUrl' => 1,
+            'proxy' => ['useApifyProxy' => true, 'apifyProxyCountry' => 'PH'],
+        ];
+        $query = http_build_query(['clean' => 'true', 'limit' => count($ids),
+            'maxTotalChargeUsd' => config('marketplace.max_charge_usd', 0.10)]);
+        $response = Http::withToken($token)->acceptJson()->timeout(95)->withOptions(['allow_redirects' => false])
+            ->post('https://api.apify.com/v2/acts/curious_coder~facebook-marketplace/run-sync-get-dataset-items?'.$query, $payload);
+        if (! $response->successful()) throw new RuntimeException('Photo recovery provider HTTP '.$response->status().'.');
+        $rows = $response->json();
+        if (! is_array($rows) || ! array_is_list($rows)) throw new RuntimeException('Unexpected photo recovery response.');
+        $photos = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) continue;
+            $id = (string) ($row['id'] ?? $row['listing_id'] ?? $row['listingId'] ?? '');
+            $url = $this->marketplaceUrl($row['listingUrl'] ?? $row['listing_url'] ?? $row['itemUrl'] ?? $row['url'] ?? null);
+            if ($url && preg_match('#^/marketplace/item/([0-9]+)/?$#', parse_url($url, PHP_URL_PATH) ?: '', $match)) {
+                if (ctype_digit($id) && $id !== $match[1]) continue;
+                $id = $match[1];
+            }
+            if (! in_array($id, $ids, true)) continue;
+            $photo = $this->extractImageUrl($row);
+            if ($photo) $photos[$id] = $photo;
+        }
+        return $photos;
+    }
+
     private function extractImageUrl(array $item): ?string
     {
         $candidates = [
@@ -139,6 +177,14 @@ class MarketplaceScanService
             data_get($item, 'listing_photos.0.image.uri'),
             data_get($item, 'listing_photos.0.uri'),
             data_get($item, 'listingPhotos.0.image.uri'),
+            data_get($item, 'listingPhotos.0.uri'),
+            data_get($item, 'listingPhotos.0.url'),
+            data_get($item, 'listingPhotos.0.image.url'),
+            data_get($item, 'listingPhotos.0.photo_image_url'),
+            data_get($item, 'listingPhotos.0'),
+            data_get($item, 'listing_photos.0'),
+            data_get($item, 'photos.0.url'),
+            data_get($item, 'photos.0'),
             data_get($item, 'image.uri'),
             $item['image_url'] ?? null,
             $item['photo_url'] ?? null,
