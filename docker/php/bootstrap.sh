@@ -48,6 +48,7 @@ cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000002_create
 cp /opt/marketplace/laravel-overlay/app/Models/SavedListing.php app/Models/SavedListing.php
 cp /opt/marketplace/laravel-overlay/app/Models/WatchlistEntry.php app/Models/WatchlistEntry.php
 cp /opt/marketplace/laravel-overlay/database/migrations/2026_11_11_000001_create_marketplace_collections.php database/migrations/2026_11_11_000001_create_marketplace_collections.php
+cp /opt/marketplace/laravel-overlay/app/Services/ListingPhotoCache.php app/Services/ListingPhotoCache.php
 cp /opt/marketplace/laravel-overlay/app/Services/MarketplaceScanService.php app/Services/MarketplaceScanService.php
 cp /opt/marketplace/laravel-overlay/app/Services/ScanPlanService.php app/Services/ScanPlanService.php
 cp /opt/marketplace/laravel-overlay/app/Services/RemoteDemoAccess.php app/Services/RemoteDemoAccess.php
