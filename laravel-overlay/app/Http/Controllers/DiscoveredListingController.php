@@ -343,6 +343,65 @@ class DiscoveredListingController extends Controller
         return response()->json(['updated' => $updated]);
     }
 
+    // Preview a small batch without contacting Apify.
+    public function photoRecoveryCandidates(\App\Services\ListingPhotoCache $cache): JsonResponse
+    {
+        $items = [];
+        foreach (DiscoveredListing::activeBohol()->whereNotNull('listing_url')->orderByDesc('last_seen_at')->cursor() as $listing) {
+            if (is_file($cache->path($listing->id)) || ! $this->listingId($listing->listing_url)) continue;
+            $url = \App\Services\ListingPhotoCache::safeUrl($listing->image_url);
+            parse_str(parse_url($url ?? '', PHP_URL_QUERY) ?? '', $query);
+            $expiry = $query['oe'] ?? null;
+            if ($url && (! is_string($expiry) || ! ctype_xdigit($expiry) || strlen($expiry) > 8 || hexdec($expiry) > time())) continue;
+            $items[] = ['id' => $listing->id, 'title' => $listing->title];
+            if (count($items) >= 5) break;
+        }
+        return response()->json(['items' => $items]);
+    }
+
+    public function recoverPhotos(Request $request, \App\Services\MarketplaceScanService $service, \App\Services\ListingPhotoCache $cache): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:5'],
+            'ids.*' => ['required', 'integer', 'distinct', 'exists:discovered_listings,id'],
+            'confirm_paid_recovery' => ['required', 'accepted'],
+        ]);
+        $lock = \Illuminate\Support\Facades\Cache::lock('marketplace-photo-recovery', 180);
+        if (! $lock->get()) return response()->json(['message' => 'A photo recovery is already running. Do not submit again.'], 409);
+        try {
+            $records = DiscoveredListing::activeBohol()->whereIn('id', $data['ids'])->get();
+            $targets = [];
+            foreach ($records as $listing) {
+                if (is_file($cache->path($listing->id))) continue;
+                $link = parse_url($listing->listing_url ?? '');
+                if (! is_array($link) || strtolower($link['scheme'] ?? '') !== 'https') continue;
+                $host = strtolower($link['host'] ?? '');
+                if ($host !== 'facebook.com' && ! str_ends_with($host, '.facebook.com')) continue;
+                if (! preg_match('#^/marketplace/item/([0-9]+)/?$#', $link['path'] ?? '', $match)) continue;
+                $targets[$match[1]][] = $listing;
+            }
+            if (! $targets) return response()->json(['updated' => 0, 'requested' => 0, 'message' => 'No eligible uncached listings selected. No Apify request made.']);
+            $photos = $service->recoverPhotos(array_map('strval', array_keys($targets)));
+            $updated = 0;
+            foreach ($targets as $id => $listings) {
+                if (! isset($photos[$id])) continue;
+                foreach ($listings as $listing) {
+                    $listing->image_url = $photos[$id];
+                    $listing->save();
+                    $updated++;
+                }
+            }
+            return response()->json(['updated' => $updated, 'requested' => count($targets),
+                'message' => $updated.' archived photo URL(s) refreshed. Images are cached when displayed. Missing results do not indicate a sold listing.']);
+        } catch (\Throwable $e) {
+            $reason = $e->getMessage();
+            $safe = preg_match('/^Photo recovery provider HTTP [0-9]{3}\\.$/D', $reason) || $reason === 'Add an API key in Settings first.';
+            return response()->json(['message' => $safe ? $reason : 'Photo recovery did not complete. Check Apify run history before retrying; the request may have incurred charges.'], 502);
+        } finally {
+            $lock->release();
+        }
+    }
+
     private function listingId(string $link): string
     {
         preg_match('#/marketplace/item/([0-9]+)#', parse_url($link, PHP_URL_PATH) ?: '', $matches);
